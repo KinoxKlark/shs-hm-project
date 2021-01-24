@@ -25,8 +25,13 @@ if %BUILD_PIPELINE% == %WIN_VS_PIPELINE% (
 
 echo VS Pipeline:
 
-cl /std:c++14 /Od /DDEBUG /Zi /EHsc /I "%INC_SFML%" ..\%SOURCES_DIR%main.cpp ^
+cl /std:c++14 /Od /DDEBUG /Zi /EHsc ^
+   /I "%INC_SFML%" ^
+   /I ..\vendors\imgui ^
+   /I ..\vendors\imgui-sfml ^
+   ..\%SOURCES_DIR%main.cpp ^
    /link ^
+   Opengl32.lib^
    /LIBPATH:"%LIB_SFML%"^
    sfml-main.lib^
    sfml-graphics.lib^
@@ -43,7 +48,7 @@ cl /std:c++14 /Od /DDEBUG /Zi /EHsc /I "%INC_SFML%" ..\%SOURCES_DIR%main.cpp ^
     
     echo GCC Pipeline:
     
-    g++ -c -g -D DEBUG ..\%SOURCES_DIR%main.cpp -I%INC_SFML%
+    g++ -c -g -D DEBUG ..\%SOURCES_DIR%main.cpp -I%INC_SFML% -I..\vendors\imgui -I..\vendors\imgui-sfml
     g++ main.o -o main.exe -L%LIB_SFML% -lsfml-main -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
     
 )

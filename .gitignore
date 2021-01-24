@@ -39,3 +39,4 @@ config.bat
 *.lnk
 misc/
 TAGS
+imgui.ini
