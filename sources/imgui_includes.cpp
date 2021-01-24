@@ -1,6 +1,8 @@
 
 // Imgui Config
+
 #define IMGUI_USER_CONFIG "imgui_config.h"
+
 #include <imgui-SFML.h>
 #include <imgui.h>
 #include <imgui-SFML.cpp>

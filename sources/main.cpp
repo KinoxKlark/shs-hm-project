@@ -33,6 +33,7 @@ int main()
 
 		window.clear();
 
+		ImGui::ShowDemoWindow();
 		ImGui::Begin("Test");
 		ImGui::Text("Yolo");
 		ImGui::End();

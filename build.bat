@@ -48,8 +48,8 @@ cl /std:c++14 /Od /DDEBUG /Zi /EHsc ^
     
     echo GCC Pipeline:
     
-    g++ -c -g -D DEBUG ..\%SOURCES_DIR%main.cpp -I%INC_SFML% -I..\vendors\imgui -I..\vendors\imgui-sfml
-    g++ main.o -o main.exe -L%LIB_SFML% -lsfml-main -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
+    g++ -c -g -D DEBUG ..\%SOURCES_DIR%main.cpp -I..\%SOURCES_DIR% -I%INC_SFML% -I..\vendors\imgui -I..\vendors\imgui-sfml
+    g++ main.o -o main.exe -lOpengl32 -L%LIB_SFML% -lsfml-main -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
     
 )
    
