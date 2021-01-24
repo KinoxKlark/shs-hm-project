@@ -2,7 +2,7 @@
 struct Renderer
 {
 	sf::RenderWindow *window;
-	sf::View camera;
+	sf::View view;
 };
 
 void render(Renderer *renderer);
