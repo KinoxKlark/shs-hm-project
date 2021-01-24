@@ -3,94 +3,42 @@
 
 #include <SFML/Graphics.hpp>
 
-struct Application
-{
-	sf::RenderWindow *window;
-	sf::Clock update_clock;
-	sf::Time frame_duration;
-	sf::Time frame_target_duration;
+#include "application.h"
+#include "renderer.h"
 
-	sf::Clock debug_clock;
-};
+Application *global_app = nullptr;
+Renderer *global_renderer = nullptr;
 
-Application *global_app;
+#include "renderer.cpp"
+#include "inputs.cpp"
+#include "game.cpp"
+#include "application.cpp"
 
-void process_inputs_and_events(Application *app)
-{
-	sf::Event event;
-	while(app->window->pollEvent(event))
-	{
-#ifdef DEBUG
-		ImGui::SFML::ProcessEvent(event);
-#endif
-		if(event.type == sf::Event::Closed)
-			app->window->close();
-	}
-}
-
-void update(Application *app, sf::Time dt)
-{
-#ifdef DEBUG
-	ImGui::SFML::Update(*app->window, dt);
-#endif
-
-
-	
-#ifdef DEBUG
-	ImGui::ShowDemoWindow();
-	ImGui::Begin("Debug Infos");
-	int debug_time = app->debug_clock.restart().asMilliseconds();
-	ImGui::Text("Frame duration: %ims (%.2ffps)", debug_time, 1e3/(float)debug_time);
-	ImGui::End();
-#endif
-}
-
-void render(Application *app)
-{
-	app->window->clear();
-
-
-#ifdef DEBUG
-	ImGui::SFML::Render(*app->window);
-#endif
-	app->window->display();
-}
 
 int main()
 {
-	Application app;
-	app.window = new sf::RenderWindow(sf::VideoMode(800,600), "SHS");
-	app.frame_duration = sf::Time::Zero;
-	app.frame_target_duration = sf::seconds(1.f/60.f);
-	global_app = &app;
+	Application *app = application_init();
+	Renderer *renderer = renderer_init(app);
 	
-#ifdef DEBUG
-	ImGui::SFML::Init(*app.window);
-#endif
-	
-	while(app.window->isOpen())
+	while(app->window->isOpen())
 	{
 
-		app.frame_duration += app.update_clock.restart();
-		if(app.frame_duration > app.frame_target_duration)
+		app->frame_duration += app->update_clock.restart();
+		if(app->frame_duration > app->frame_target_duration)
 		{
-			app.frame_duration -= app.frame_target_duration; 
+			app->frame_duration -= app->frame_target_duration; 
 		
-			process_inputs_and_events(&app);
+			process_inputs_and_events(app);
 
-			update(&app,app.update_clock.restart());
+			update(app,app->update_clock.restart());
 			
-			render(&app);
+			render(renderer);
 		}
 		
 	}
 
-#ifdef DEBUG
-	ImGui::SFML::Shutdown();
-#endif
-
-
-	delete app.window;
+	renderer_shutdown(renderer);
+	application_shutdown(app);
 	
     return 0;
 }
