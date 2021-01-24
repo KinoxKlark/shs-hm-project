@@ -5,6 +5,10 @@ int main()
 {
     std::cout << "Hello World\n";
 
+#ifdef DEBUG
+	std::cout << "Debug\n";
+#endif
+
 	sf::RenderWindow window(sf::VideoMode(800,600), "Hello");
 
 	while(window.isOpen())

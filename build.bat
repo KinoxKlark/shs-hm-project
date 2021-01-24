@@ -21,9 +21,12 @@ ctags -e -R %SOURCES_DIR%
 
 pushd %BUILD_DIR%
 
-cl /std:c++14 /Od /Zi /EHsc /I "%INC_SFML%" ..\%SOURCES_DIR%main.cpp ^
+if %BUILD_PIPELINE% == %WIN_VS_PIPELINE% (
+
+echo VS Pipeline:
+
+cl /std:c++14 /Od /DDEBUG /Zi /EHsc /I "%INC_SFML%" ..\%SOURCES_DIR%main.cpp ^
    /link ^
-   /SUBSYSTEM:WINDOWS ^
    /LIBPATH:"%LIB_SFML%"^
    sfml-main.lib^
    sfml-graphics.lib^
@@ -31,5 +34,18 @@ cl /std:c++14 /Od /Zi /EHsc /I "%INC_SFML%" ..\%SOURCES_DIR%main.cpp ^
    sfml-system.lib^
    sfml-audio.lib^
    /out:main.exe
+   
+   REM Pour enlever le terminal
+   REM /SUBSYSTEM:WINDOWS ^
+   
+   
+) else if %BUILD_PIPELINE% == %WIN_GCC_PIPELINE% (
+    
+    echo GCC Pipeline:
+    
+    g++ -c -g -D DEBUG ..\%SOURCES_DIR%main.cpp -I%INC_SFML%
+    g++ main.o -o main.exe -L%LIB_SFML% -lsfml-main -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
+    
+)
    
 popd

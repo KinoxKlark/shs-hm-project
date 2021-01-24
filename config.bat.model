@@ -1,4 +1,12 @@
 
+REM Possible Pipelines:
+set WIN_VS_PIPELINE=0
+set WIN_GCC_PIPELINE=1
+
+
+REM Config:
+set BUILD_PIPELINE=
+
 set INC_SFML=
 set LIB_SFML=
 set DLL_SFML=
