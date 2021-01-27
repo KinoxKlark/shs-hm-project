@@ -10,7 +10,7 @@ void update(Application *app, sf::Time dt)
 
 	// TODO(Sam): Update...
 
-	for(size_t idx(0); idx < data->users_duration.size(); ++idx)
+	for(u32 idx(0); idx < data->users_duration.size(); ++idx)
 	{
 		data->users_duration[idx] -= dt.asMilliseconds();
 		if(data->users_duration[idx] <= 0)
@@ -24,7 +24,7 @@ void update(Application *app, sf::Time dt)
 	data->next_user_duration -= dt.asMilliseconds();
 	if(data->next_user_duration <= 0)
 	{
-		for(int idx(0); idx < random_between(1,10); ++idx)
+		for(u32 idx(0); idx < random_between(1,10); ++idx)
 		{
 			data->next_user_duration = random_between(2000, 5000);
 			data->users.push_back(random_between(0,100));

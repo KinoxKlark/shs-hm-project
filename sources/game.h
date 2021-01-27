@@ -1,8 +1,8 @@
 
 struct GameData {
-	std::vector<int> users;
-	std::vector<int> users_duration;
-	int next_user_duration;
+	std::vector<i32> users;
+	std::vector<i32> users_duration;
+	i32 next_user_duration;
 };
 
 inline GameData* game_data_init();

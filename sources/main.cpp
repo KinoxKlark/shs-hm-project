@@ -5,6 +5,7 @@
 
 struct Application;
 
+#include "internals.h"
 #include "rng.h"
 #include "game.h"
 #include "application.h"

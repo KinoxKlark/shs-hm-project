@@ -1,14 +1,14 @@
 
 inline
-void random_init(unsigned int seed)
+void random_init(u32 seed)
 {
 	srand(seed);
 }
 
 inline
-int random_between(int min, int max)
+i32 random_between(i32 min, i32 max)
 {
-	int delta = max - min;
-	int result = rand() % delta + min;
+	i32 delta = max - min;
+	i32 result = rand() % delta + min;
 	return result;
 }
