@@ -3,6 +3,10 @@
 
 #include <SFML/Graphics.hpp>
 
+struct Application;
+
+#include "rng.h"
+#include "game.h"
 #include "application.h"
 #include "renderer.h"
 
@@ -22,7 +26,6 @@ int main()
 	
 	while(app->window->isOpen())
 	{
-
 		app->frame_duration += app->update_clock.restart();
 		if(app->frame_duration > app->frame_target_duration)
 		{
@@ -30,7 +33,7 @@ int main()
 		
 			process_inputs_and_events(app);
 
-			update(app,app->update_clock.restart());
+			update(app,app->frame_target_duration);
 			
 			render(renderer);
 		}
