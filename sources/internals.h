@@ -8,7 +8,7 @@ template<bool test> class CompileAssertClass;
 template<> class CompileAssertClass<true>{ };
 #define CompileAssert(value) (CompileAssertClass<value>())
 
-#define Assert(value) { if(!(value)) *(int*)0 = 0; }
+#define Assert(value) { if(!(value)) { *(int*)0 = 0; } }
 
 #define InvalidCodePath Assert(false)
 #define InvalidDefaultCase default: Assert(false)

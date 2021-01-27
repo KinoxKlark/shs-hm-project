@@ -99,6 +99,23 @@ typedef sf::Vector2<i32> v2i;
 typedef sf::Vector2<u32> v2u;
 typedef sf::Vector2<r64> v2_64;
 
+template<typename T>
+struct Vector4 {
+	union {
+		struct {
+			T left, right, top, bottom;
+		};
+		struct {
+			T x, y, z, w;
+		};
+	};
+};
+
+typedef Vector4<r32> v4;
+typedef Vector4<i32> v4i;
+typedef Vector4<u32> v4u;
+typedef Vector4<r64> v4_64;
+
 struct m2x2 {
 	union{
 	r32 data[2][2];
@@ -432,4 +449,16 @@ inline sf::Vector2<T> hadamar_inv(sf::Vector2<T> v1, sf::Vector2<T> v2)
 	return result;
 }
 
+template<typename T>
+inline sf::Vector2<T> rect_pos(sf::Rect<T> rect)
+{
+	sf::Vector2<T> result = {rect.left, rect.top};
+	return result;
+}
 
+template<typename T>
+inline sf::Vector2<T> rect_size(sf::Rect<T> rect)
+{
+	sf::Vector2<T> result = {rect.width, rect.height};
+	return result;
+}
