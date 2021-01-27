@@ -1,6 +1,9 @@
 
 struct Application
 {
+	// Inputs
+	Inputs inputs;
+	
 	// Renderer
 	sf::RenderWindow *window;
 	sf::Clock update_clock;

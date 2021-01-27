@@ -74,8 +74,10 @@ bool GuiButton(GuiManager *gui, sf::String label)
 	obj.size = v2(.3, .2);
 	obj.margin = {1,1,1,1};
 	obj.padding = {};
-	obj.bg_color = sf::Color(50,50,50);
+	obj.bg_color = sf::Color(100,50,100);
 
+	// TODO(Sam): This code is duplicated in every element, we should abstract it
+	
 	assert(gui->elements_count < gui->elements.size());
 	u32 idx = gui->elements_count++;
 
@@ -92,19 +94,30 @@ bool GuiButton(GuiManager *gui, sf::String label)
 	v2 outer_size = hadamar(rect_size(container_region), relative_size);
 	v2 inner_size = { outer_size.x - (obj.margin.left+obj.margin.right)*gui->margin_unit,
 					  outer_size.y - (obj.margin.top+obj.margin.bottom)*gui->margin_unit };
-
+	
 	v2 outer_pos = pos_offset + rect_pos(container_region);
 	v2 inner_pos = outer_pos + v2(obj.margin.left*gui->margin_unit, obj.margin.top*gui->margin_unit);
 
+	rect inner_bounds = rect(inner_pos, inner_size);
+	rect outer_bounds = rect(outer_pos, outer_size);
+
+	// Button Behavior
+	bool pressed = false;
+	if(inner_bounds.contains(global_app->inputs.mouse_pos))
+	{
+		obj.bg_color = sf::Color(150,100,150);
+		pressed = global_app->inputs.mouse_pressed;
+	}
+	
 	gui->elements[idx].parent = parent_container;
-	gui->elements[idx].inner_bounds = rect(inner_pos, inner_size);
-	gui->elements[idx].outer_bounds = rect(outer_pos, outer_size);
+	gui->elements[idx].inner_bounds = inner_bounds;
+	gui->elements[idx].outer_bounds = outer_bounds;
 	gui->elements[idx].next_valid_pos_offset = {0,0};
 	gui->elements[idx].obj = obj;
 
 	parent_container->next_valid_pos_offset.y += outer_size.y;
 			
-	return false;
+	return pressed;
 }
 
 #ifdef DEBUG

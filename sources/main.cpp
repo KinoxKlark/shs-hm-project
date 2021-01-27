@@ -9,6 +9,7 @@ struct Application;
 #include "math.h"
 #include "rng.h"
 #include "gui.h"
+#include "inputs.h"
 #include "game.h"
 #include "application.h"
 #include "renderer.h"

@@ -1,5 +1,4 @@
 
-
 void update(Application *app, sf::Time dt)
 {
 #ifdef DEBUG
@@ -57,7 +56,7 @@ void update(Application *app, sf::Time dt)
 		GuiBeginContainer(global_gui_manager, obj2);
 		if(GuiButton(global_gui_manager, "Click Me"))
 		{
-			
+			data->click_counter++;
 		}
 		GuiEndContainer(global_gui_manager);
 
@@ -77,6 +76,9 @@ void update(Application *app, sf::Time dt)
 	GuiDebug(global_gui_manager);
 #endif
 
+	ImGui::Begin("Click");
+	ImGui::Text("Clicked %u times!", data->click_counter);
+	ImGui::End();
 	
 	ImGui::Begin("Users");
 	if(ImGui::BeginTable("Users", 2))
@@ -118,6 +120,8 @@ GameData* game_data_init()
 			get_random_number_between(2000, 5000)});
 
 	data->next_user_duration = get_random_number_between(2000, 5000);
+
+	data->click_counter = 0;
 	
 	return data;
 }
