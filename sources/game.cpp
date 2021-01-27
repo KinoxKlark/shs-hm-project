@@ -32,6 +32,52 @@ void update(Application *app, sf::Time dt)
 		}
 	}
 
+	
+	// TODO(Sam): Put this in the right place
+	GuiObject obj1;
+	obj1.size = v2(.5, GUI_STRETCH);
+	obj1.margin = {1, 1, 1, 1};
+	obj1.padding = {};
+	obj1.bg_color = sf::Color(150, 150, 150);
+
+	GuiObject obj2;
+	obj2.size = v2(GUI_STRETCH, .5);
+	obj2.margin = {1,1,1,1};
+	obj2.padding = {};
+	obj2.bg_color = sf::Color(255, 150, 150);
+
+	GuiObject obj3;
+	obj3.size = v2(.33, .5);
+	obj3.margin = {};
+	obj3.padding = {};
+	obj3.bg_color = sf::Color(150, 255, 150);
+	
+	GuiBeginContainer(global_gui_manager, obj1);
+	{
+		GuiBeginContainer(global_gui_manager, obj2);
+		if(GuiButton(global_gui_manager, "Click Me"))
+		{
+			
+		}
+		GuiEndContainer(global_gui_manager);
+
+		GuiBeginContainer(global_gui_manager, obj3);
+		{
+			GuiBeginContainer(global_gui_manager, obj2);
+			GuiEndContainer(global_gui_manager);
+			GuiBeginContainer(global_gui_manager, obj2);
+			GuiEndContainer(global_gui_manager);
+		}
+		GuiEndContainer(global_gui_manager);
+	}
+	GuiEndContainer(global_gui_manager);
+
+
+#ifdef DEBUG
+	GuiDebug(global_gui_manager);
+#endif
+
+	
 	ImGui::Begin("Users");
 	if(ImGui::BeginTable("Users", 2))
 	{

@@ -8,13 +8,16 @@ struct Application;
 #include "internals.h"
 #include "math.h"
 #include "rng.h"
+#include "gui.h"
 #include "game.h"
 #include "application.h"
 #include "renderer.h"
 
 Application *global_app = nullptr;
 Renderer *global_renderer = nullptr;
+GuiManager *global_gui_manager = nullptr;
 
+#include "gui.cpp"
 #include "renderer.cpp"
 #include "inputs.cpp"
 #include "game.cpp"
@@ -25,6 +28,7 @@ int main()
 {
 	Application *app = application_init();
 	Renderer *renderer = renderer_init(app);
+	GuiManager *gui = gui_init();
 	
 	while(app->window->isOpen())
 	{
@@ -35,13 +39,18 @@ int main()
 		
 			process_inputs_and_events(app);
 
+			// TODO(Sam): Put this at the right place...
+			gui->margin_unit = .02*global_renderer->window->getSize().x; 
+			
 			update(app,app->frame_target_duration);
 			
 			render(renderer);
+			GuiReset(gui);
 		}
 		
 	}
 
+	gui_shutdown(gui);
 	renderer_shutdown(renderer);
 	application_shutdown(app);
 	

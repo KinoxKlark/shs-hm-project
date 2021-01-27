@@ -3,46 +3,25 @@
 void render(Renderer *renderer)
 {
 	v2u render_region = renderer->window->getSize();
-	renderer->view = sf::View(sf::FloatRect(0.f, 0.f, render_region.x, render_region.y));
-	renderer->window->setView(renderer->view);
+	//renderer->view = sf::View(rect(0.f, 0.f, render_region.x, render_region.y));
+	//renderer->window->setView(renderer->view);
+
 	renderer->window->clear();
 
-	// TODO(Sam): Put this in the right place
-	GuiObject obj1;
-	obj1.size = v2(.5, GUI_STRETCH);
-	obj1.margin = {1, 1, 1, 1};
-	obj1.padding = {};
-	obj1.bg_color = sf::Color(150, 150, 150);
-
-	GuiObject obj2;
-	obj2.size = v2(GUI_STRETCH, .5);
-	obj2.margin = {1,1,1,1};
-	obj2.padding = {};
-	obj2.bg_color = sf::Color(255, 150, 150);
-
-	GuiObject obj3;
-	obj3.size = v2(.33, .5);
-	obj3.margin = {};
-	obj3.padding = {};
-	obj3.bg_color = sf::Color(150, 255, 150);
+	GuiManager *gui = global_gui_manager;
 	
-	GuiBeginContainer(renderer, obj1);
+	sf::RectangleShape rect_shape;
+	for(u32 idx(0); idx < gui->elements_count; ++idx)
 	{
-		GuiBeginContainer(renderer, obj2);
-		GuiEndContainer(renderer);
-
-		GuiBeginContainer(renderer, obj3);
-		{
-			GuiBeginContainer(renderer, obj2);
-			GuiEndContainer(renderer);
-			GuiBeginContainer(renderer, obj2);
-			GuiEndContainer(renderer);
-		}
-		GuiEndContainer(renderer);
+		GuiElement *element = &gui->elements[idx];
+		rect_shape.setSize(rect_size(element->inner_bounds));
+		rect_shape.setPosition(rect_pos(element->inner_bounds));
+		rect_shape.setFillColor(element->obj.bg_color);
+		renderer->window->draw(rect_shape);
 	}
-	GuiEndContainer(renderer);
 
 	
+	/*
 	std::stack<rect> container_region, outer_container_region;
 	container_region.push({0., 0., renderer->view.getSize().x, renderer->view.getSize().y});
 	outer_container_region.push(container_region.top());
@@ -93,6 +72,7 @@ void render(Renderer *renderer)
 
 			++container_depth;
 		} break;
+
 		case GuiCmdType::END_CONTAINER:
 		{
 			assert(("END_CONTAINER must be used once per BEGIN_CONTAINER",container_depth > 0));
@@ -102,6 +82,30 @@ void render(Renderer *renderer)
 			container_region.top().top += previous_region.height;
 			--container_depth;
 		} break;
+
+		case GuiCmdType::BUTTON:
+		{
+			GuiObject *obj = &cmd->obj;
+			v2 relative_size = {
+				obj->size.x < 0 ? 1.f : obj->size.x,
+				obj->size.y < 0 ? 1.f : obj->size.y
+			};
+			v2 outer_size = hadamar(rect_size(container_region.top()), relative_size);
+			v2 inner_size = { outer_size.x - (obj->margin.left+obj->margin.right)*margin_unit,
+							  outer_size.y - (obj->margin.top+obj->margin.bottom)*margin_unit };
+
+			v2 outer_pos = rect_pos(container_region.top());
+			v2 inner_pos = outer_pos + v2(obj->margin.left*margin_unit, obj->margin.top*margin_unit);
+			
+			rect_shape.setSize(inner_size);
+			rect_shape.setPosition(inner_pos);
+			rect_shape.setFillColor(obj->bg_color);
+			renderer->window->draw(rect_shape);
+
+			container_region.top().top += outer_size.y;
+
+			
+		} break;
 		
 		InvalidDefaultCase;
 		};
@@ -109,11 +113,13 @@ void render(Renderer *renderer)
 
 	assert(("BEGIN_CONTAINER/END_CONTAINER must always be en pair",container_depth == 0));
 	GuiClearCmd(renderer);
+	*/
 
 
 #ifdef DEBUG
 	ImGui::SFML::Render(*renderer->window);
 #endif
+	
 	renderer->window->display();
 }
 
@@ -121,7 +127,7 @@ Renderer* renderer_init(Application *app)
 {
 	Renderer *renderer = new Renderer();
 	renderer->window = app->window;
-	renderer->view = sf::View(sf::FloatRect(0.f, 0.f, app->window->getSize().x, app->window->getSize().y));
+	//renderer->view = sf::View(sf::FloatRect(0.f, 0.f, app->window->getSize().x, app->window->getSize().y));
 	global_renderer = renderer;
 	
 #ifdef DEBUG

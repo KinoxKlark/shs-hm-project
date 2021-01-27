@@ -245,7 +245,7 @@ inline
 m2x2 inverse(m2x2& mat)
 {
 	r32 det = determinant(mat);
-	Assert(abs(det) > 1e-6);
+	assert(abs(det) > 1e-6);
 
 	r32 invDet = 1.f/det;
 
@@ -261,7 +261,7 @@ inline
 m3x3 inverse(m3x3& mat)
 {
 	r32 det = determinant(mat);
-	Assert(abs(det) > 1e-6);
+	assert(abs(det) > 1e-6);
 
 	r32 invDet = 1.f/det;
 
