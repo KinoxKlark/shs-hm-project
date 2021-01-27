@@ -24,11 +24,11 @@ void update(Application *app, sf::Time dt)
 	data->next_user_duration -= dt.asMilliseconds();
 	if(data->next_user_duration <= 0)
 	{
-		for(u32 idx(0); idx < random_between(1,10); ++idx)
+		for(u32 idx(0); idx < get_random_number_between(1,10); ++idx)
 		{
-			data->next_user_duration = random_between(2000, 5000);
-			data->users.push_back(random_between(0,100));
-			data->users_duration.push_back(random_between(2000, 5000));
+			data->next_user_duration = get_random_number_between(2000, 5000);
+			data->users.push_back(get_random_number_between(0,100));
+			data->users_duration.push_back(get_random_number_between(2000, 5000));
 		}
 	}
 
@@ -67,11 +67,11 @@ GameData* game_data_init()
 	GameData* data = new GameData();
 	data->users = std::vector<int>({42, 21, 13});
 	data->users_duration = std::vector<int>({
-			random_between(2000, 5000),
-			random_between(2000, 5000),
-			random_between(2000, 5000)});
+			get_random_number_between(2000, 5000),
+			get_random_number_between(2000, 5000),
+			get_random_number_between(2000, 5000)});
 
-	data->next_user_duration = random_between(2000, 5000);
+	data->next_user_duration = get_random_number_between(2000, 5000);
 	
 	return data;
 }

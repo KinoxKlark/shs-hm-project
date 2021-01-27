@@ -2,13 +2,29 @@
 inline
 void random_init(u32 seed)
 {
-	srand(seed);
+	std::srand(seed);
 }
 
 inline
-i32 random_between(i32 min, i32 max)
+u32 get_random_number()
 {
-	i32 delta = max - min;
-	i32 result = rand() % delta + min;
+	u32 result = std::rand();
+	return result;
+}
+
+inline
+i32 get_random_number_between(i32 min, i32 max)
+{
+	assert(min < max);
+	i32 result = get_random_number() % (max-min) + min;
+	return result;
+}
+
+inline
+r32 get_random_number_between(r32 min, r32 max)
+{
+	assert(min < max);
+	r32 result = (r32)(get_random_number())/RAND_MAX;
+	result = min + (max-min)*result;
 	return result;
 }
