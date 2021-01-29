@@ -6,8 +6,8 @@
 #define PI 3.14159265358979323846264338327950288419716939937510
 #define PI_2 .5*PI
 
-#define min(a,b) (((a) < (b)) ? (a) : (b))
-#define max(a,b) (((a) > (b)) ? (a) : (b))
+#define Min(a,b) (((a) < (b)) ? (a) : (b))
+#define Max(a,b) (((a) > (b)) ? (a) : (b))
 
 inline r32 clamp(r32 nb, r32 min, r32 max)
 {
@@ -45,6 +45,7 @@ r32 fast_atan(r32 z)
 }
 
 inline // Thank's Nic Taylor
+
 r32 fast_atan2(r32 y, r32 x)
 {
     const r32 n1 = 0.97239411f;

@@ -3,7 +3,7 @@
 
 #ifdef DEBUG
 
-#define IMGUI_USER_CONFIG "imgui_config.h"
+#define IMGUI_USER_CONFIG <imgui_config.h>
 
 #include <imgui-SFML.h>
 #include <imgui.h>

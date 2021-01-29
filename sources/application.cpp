@@ -1,3 +1,4 @@
+
 Application* application_init()
 {
 	Application *app = new Application();

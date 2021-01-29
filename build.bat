@@ -17,8 +17,6 @@ if not exist %BUILD_DIR% (
    copy %DLL_SFML%\*.dll %BUILD_DIR%
 )
 
-ctags -e -R %SOURCES_DIR%
-
 pushd %BUILD_DIR%
 
 if %BUILD_PIPELINE% == %WIN_VS_PIPELINE% (
@@ -26,6 +24,7 @@ if %BUILD_PIPELINE% == %WIN_VS_PIPELINE% (
 echo VS Pipeline:
 
 cl /std:c++14 /Od /DDEBUG /Zi /EHsc ^
+   /I ..\sources\includes ^
    /I "%INC_SFML%" ^
    /I ..\vendors\imgui ^
    /I ..\vendors\imgui-sfml ^
@@ -47,9 +46,12 @@ cl /std:c++14 /Od /DDEBUG /Zi /EHsc ^
 ) else if %BUILD_PIPELINE% == %WIN_GCC_PIPELINE% (
     
     echo GCC Pipeline:
-    
-    g++ -c -g -D DEBUG ..\%SOURCES_DIR%main.cpp -I..\%SOURCES_DIR% -I%INC_SFML% -I..\vendors\imgui -I..\vendors\imgui-sfml
-    g++ main.o -o main.exe -lOpengl32 -L%LIB_SFML% -lsfml-main -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
+
+	REM -E pour afficher la sortie du preprocessor
+	echo 1
+    g++ -g -DDEBUG -c ..\%SOURCES_DIR%main.cpp -o main.o -I..\sources\includes -I%INC_SFML% -I..\vendors\imgui -I..\vendors\imgui-sfml
+	echo 2
+	g++ main.o -o main.exe -lOpengl32 -L%LIB_SFML% -lsfml-main -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
     
 )
    
