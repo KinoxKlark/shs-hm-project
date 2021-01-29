@@ -3,6 +3,8 @@
 
 #include <SFML/Graphics.hpp>
 
+// Dummy
+
 struct Application;
 
 #include "internals.h"
