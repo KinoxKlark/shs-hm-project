@@ -48,9 +48,7 @@ cl /std:c++14 /Od /DDEBUG /Zi /EHsc ^
     echo GCC Pipeline:
 
 	REM -E pour afficher la sortie du preprocessor
-	echo 1
     g++ -g -DDEBUG -c ..\%SOURCES_DIR%main.cpp -o main.o -I..\sources\includes -I%INC_SFML% -I..\vendors\imgui -I..\vendors\imgui-sfml
-	echo 2
 	g++ main.o -o main.exe -lOpengl32 -L%LIB_SFML% -lsfml-main -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
     
 )
