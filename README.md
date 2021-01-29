@@ -12,6 +12,10 @@ Copy `config.bat.model` to `config.bat` and edit it to specify SFML 5.1 location
 
 To compile, simply run `build.bat` script. 
 
+### Recup script
+
+The script `recup.bat` does a `git pull` followed by a `call build.bat` and can be use for quickly get and compile the project. It should be use once the configuration has been done.
+
 ## Dependencies
 
 * SFML 5.1 x64
