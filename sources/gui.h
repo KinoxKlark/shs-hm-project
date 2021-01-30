@@ -59,11 +59,17 @@ struct GuiElement {
 	r32 line_width;
 	GuiElementAlignment alignment;
 	GuiObject obj;
+
+	// TODO(Sam): Clean GuiElement
+	u32 selected_tab_id;
+	r32 next_tab_pos;
+	u32 properties_id;
 };
 
 struct GuiElementProperties {
 	bool touched;
 	r32 timer;
+	u32 selected_tab_id;
 };
 
 struct GuiManager {
@@ -72,7 +78,6 @@ struct GuiManager {
 	GuiElement *most_recent_container;
 	r32 margin_unit;
 
-	// TODO(Sam): Manage untouched elements that should be removed
 	std::unordered_map<u32, GuiElementProperties> properties;
 
 	sf::Font font;
@@ -106,6 +111,11 @@ void GuiReset(GuiManager *gui)
 inline void GuiBeginContainer(GuiManager *gui, GuiObject obj,
 							  GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
 inline void GuiEndContainer(GuiManager *gui);
+inline void _GuiBeginTabs(GuiManager *gui, u32 id, GuiObject obj);
+#define GuiBeginTabs(gui, obj) _GuiBeginTabs(gui, GET_UNIQUE_ID(), obj)
+inline void GuiEndTabs(GuiManager *gui);
+inline bool _GuiTab(GuiManager *gui, u32 id, sf::String label);
+#define GuiTab(gui, label) _GuiTab(gui, GET_UNIQUE_ID(), label)
 inline bool _GuiButton(GuiManager *gui, u32 id, sf::String label);
 #define GuiButton(gui, label) _GuiButton(gui, GET_UNIQUE_ID(), label)
 

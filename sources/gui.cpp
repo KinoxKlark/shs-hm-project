@@ -136,27 +136,35 @@ u32 GuiAddElementToContainer(GuiManager *gui, GuiObject obj, GuiElementAlignment
 }
 
 inline
+void GuiCreateRootContainer(GuiManager *gui)
+{
+	GuiElement *parent_container = gui->most_recent_container;
+	
+	assert(("Root container already exist", !parent_container));
+	assert(("Problem with root container", gui->elements_count == 0));
+	++gui->elements_count;
+	gui->elements[0].parent = nullptr;
+	gui->elements[0].inner_bounds = {0., 0.,
+									 (r32)global_renderer->window->getSize().x,
+									 (r32)global_renderer->window->getSize().y};
+	gui->elements[0].outer_bounds = gui->elements[0].inner_bounds;
+	gui->elements[0].next_valid_block_pos = {0,0};
+	gui->elements[0].line_width = 0.f;
+	gui->elements[0].alignment = GuiElementAlignment::HORIZONTAL;
+
+	gui->elements[0].obj.bg_color = sf::Color::White;
+
+	gui->most_recent_container = &gui->elements[0];
+		
+}
+
+inline
 void GuiBeginContainer(GuiManager *gui, GuiObject obj, GuiElementAlignment alignment)
 {
 	GuiElement *parent_container = gui->most_recent_container;
 	
 	if(!parent_container)
-	{
-		assert(("Problem with root container", gui->elements_count == 0));
-		++gui->elements_count;
-		gui->elements[0].parent = nullptr;
-		gui->elements[0].inner_bounds = {0., 0.,
-							(r32)global_renderer->window->getSize().x,
-							(r32)global_renderer->window->getSize().y};
-		gui->elements[0].outer_bounds = gui->elements[0].inner_bounds;
-		gui->elements[0].next_valid_block_pos = {0,0};
-		gui->elements[0].line_width = 0.f;
-		gui->elements[0].alignment = GuiElementAlignment::HORIZONTAL;
-
-		gui->elements[0].obj.bg_color = sf::Color::White;
-
-		gui->most_recent_container = &gui->elements[0];
-	}
+		GuiCreateRootContainer(gui);
 	
 	u32 idx = GuiAddElementToContainer(gui, obj, alignment);
 
@@ -168,6 +176,111 @@ void GuiEndContainer(GuiManager *gui)
 {
 	assert(("GuiEndContainer() must be called once per GuiBeginContainer() call!", gui->most_recent_container));
 	gui->most_recent_container = gui->most_recent_container->parent;
+}
+
+inline
+void _GuiBeginTabs(GuiManager *gui, u32 id, GuiObject obj)
+{
+	GuiElementProperties *props;
+	if(gui->properties.find(id) == gui->properties.end())
+	{
+		props = &gui->properties[id];
+		props->selected_tab_id = 0;
+	}
+	else
+	{
+		props = &gui->properties[id];
+	}
+	props->touched = true;
+
+	// TODO(Sam): Magic value
+	r32 tab_bar_height = 2;
+	obj.margin.top += tab_bar_height;
+	GuiBeginContainer(gui, obj);
+
+	GuiElement *container = gui->most_recent_container;
+	container->selected_tab_id = props->selected_tab_id;
+	container->next_tab_pos = 0.f;
+	container->properties_id = id;
+}
+
+inline
+void GuiEndTabs(GuiManager *gui)
+{
+	GuiEndContainer(gui);
+}
+
+inline
+bool _GuiTab(GuiManager *gui, u32 id, sf::String label)
+{
+	GuiElementProperties *props = &gui->properties[id];
+	props->touched = true;
+
+	GuiElement *container = gui->most_recent_container;
+
+	if(container->selected_tab_id == 0)
+		container->selected_tab_id = id;
+
+	// TODO(Sam): Magic value
+	r32 tab_bar_height = 2*gui->margin_unit;
+	
+	GuiObject obj;
+	obj.margin = {.5,.5,0,0};
+	obj.padding = {.5,.5,.5,.5};
+	obj.bg_color = container->selected_tab_id == id ? sf::Color(50, 100, 100) : sf::Color(100, 150, 150);
+	obj.text.setString(label);
+	obj.text.setFont(gui->font);
+	obj.text.setCharacterSize(18);
+	obj.text.setFillColor(sf::Color::White);
+
+	rect region = container->inner_bounds;
+	region.top -= tab_bar_height;
+	region.height = tab_bar_height;
+	
+	v2 text_size = rect_size(obj.text.getLocalBounds());
+
+	obj.size = {
+		(text_size.x + (obj.margin.left + obj.margin.right
+						+ obj.padding.left + obj.padding.right)*gui->margin_unit)/region.width,
+		1
+	};
+
+	v2 relative_size = {
+		obj.size.x < 0 ? 1.f : obj.size.x,
+		obj.size.y < 0 ? 1.f : obj.size.y
+	};
+	v2 outer_size = hadamar(rect_size(region), relative_size);
+	v2 inner_size = { outer_size.x - (obj.margin.left+obj.margin.right)*gui->margin_unit,
+					  outer_size.y - (obj.margin.top+obj.margin.bottom)*gui->margin_unit };
+
+	v2 offset_pos = v2(container->next_tab_pos,0);
+	
+	v2 outer_pos = offset_pos + rect_pos(region);
+	v2 inner_pos = outer_pos + v2(obj.margin.left*gui->margin_unit, obj.margin.top*gui->margin_unit);
+	
+	assert(gui->elements_count < gui->elements.size());
+	u32 idx = gui->elements_count++;
+	gui->elements[idx].parent = container;
+	gui->elements[idx].inner_bounds = rect(inner_pos, inner_size);
+	gui->elements[idx].outer_bounds = rect(outer_pos, outer_size);
+	gui->elements[idx].next_valid_block_pos = {0,0};
+	gui->elements[idx].line_width = 0.f;
+	gui->elements[idx].alignment = GuiElementAlignment::NONE;
+	gui->elements[idx].obj = obj;
+
+	container->next_tab_pos += outer_size.x;
+
+	bool selected = container->selected_tab_id == id;
+	if(gui->elements[idx].inner_bounds.contains(global_app->inputs.mouse_pos))
+	{
+		if(global_app->inputs.mouse_pressed)
+		{
+			gui->properties[container->properties_id].selected_tab_id = id;
+			container->selected_tab_id = id;
+		}
+	}
+	
+	return selected;
 }
 
 inline

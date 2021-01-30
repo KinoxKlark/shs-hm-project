@@ -98,18 +98,36 @@ void update(Application *app, sf::Time dt)
 	}
 	GuiEndContainer(global_gui_manager);
 
-	GuiBeginContainer(global_gui_manager, obj1);
+	GuiBeginTabs(global_gui_manager, obj1);
 	{
-		GuiBeginContainer(global_gui_manager, obj2, GuiElementAlignment::HORIZONTAL);
-		if(GuiButton(global_gui_manager, "Click click click click!!!"))
+		if(GuiTab(global_gui_manager, "Tab1"))
 		{
-			data->click_counter++;
+			GuiBeginContainer(global_gui_manager, obj3);
+			{
+				GuiBeginContainer(global_gui_manager, obj2);
+				GuiEndContainer(global_gui_manager);
+				GuiBeginContainer(global_gui_manager, obj2);
+				GuiEndContainer(global_gui_manager);
+			}
+			GuiEndContainer(global_gui_manager);
 		}
-		GuiButton(global_gui_manager, "@#!ιό");
-		GuiEndContainer(global_gui_manager);
 
+		if(GuiTab(global_gui_manager, "Tab2"))
+		{
+			GuiBeginContainer(global_gui_manager, obj2, GuiElementAlignment::HORIZONTAL);
+			if(GuiButton(global_gui_manager, "Click Me"))
+			{
+				data->click_counter++;
+			}
+			GuiEndContainer(global_gui_manager);
+		}
+
+		if(GuiTab(global_gui_manager, "Tab3"))
+		{
+			
+		}
 	}
-	GuiEndContainer(global_gui_manager);
+	GuiEndTabs(global_gui_manager);
 
 #ifdef DEBUG
 	GuiDebug(global_gui_manager);
