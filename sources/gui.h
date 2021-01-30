@@ -10,11 +10,19 @@ struct GuiObject
 	sf::Color bg_color;
 };
 
+enum class GuiElementAlignment {
+	NONE,
+	HORIZONTAL,
+	VERTICAL
+};
+
 struct GuiElement {
 	GuiElement *parent;
 	rect inner_bounds;
 	rect outer_bounds;
-	v2 next_valid_pos_offset;
+	v2 next_valid_block_pos;
+	r32 line_width;
+	GuiElementAlignment alignment;
 	GuiObject obj;
 };
 
@@ -35,7 +43,8 @@ void GuiReset(GuiManager *gui)
 	gui->most_recent_container = nullptr;
 }
 
-inline void GuiBeginContainer(GuiManager *gui, GuiObject obj);
+inline void GuiBeginContainer(GuiManager *gui, GuiObject obj,
+							  GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
 inline void GuiEndContainer(GuiManager *gui);
 inline bool GuiButton(GuiManager *gui, sf::String label);
 
