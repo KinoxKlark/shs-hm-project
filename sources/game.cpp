@@ -124,7 +124,7 @@ void update(Application *app, sf::Time dt)
 	ImGui::End();
 	
 #ifdef DEBUG
-	ImGui::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
 	ImGui::Begin("Debug Infos");
 	int debug_time = app->debug_clock.restart().asMilliseconds();
 	ImGui::Text("Frame duration: %ims (%.2ffps)", debug_time, 1e3/(float)debug_time);
