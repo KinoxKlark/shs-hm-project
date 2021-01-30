@@ -23,6 +23,8 @@ if %BUILD_PIPELINE% == %WIN_VS_PIPELINE% (
 
 echo VS Pipeline:
 
+REM /P for output preprocessor
+
 cl /std:c++14 /Od /DDEBUG /Zi /EHsc ^
    /I ..\sources\includes ^
    /I "%INC_SFML%" ^

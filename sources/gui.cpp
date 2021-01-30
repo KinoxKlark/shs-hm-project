@@ -23,6 +23,16 @@ inline GuiManager* gui_init()
 	return gui;
 }
 
+inline void gui_update(GuiManager *gui, sf::Time dt)
+{
+	for(auto it = gui->properties.begin(); it != gui->properties.end(); ++it)
+	{
+		GuiElementProperties *props = &(it->second);
+		props->timer -= dt.asSeconds();
+		if(props->timer < 0.f) props->timer = 0.f;
+	}
+}
+
 inline void gui_shutdown(GuiManager* gui)
 {
 	global_gui_manager = nullptr;
@@ -161,13 +171,19 @@ void GuiEndContainer(GuiManager *gui)
 }
 
 inline
-bool GuiButton(GuiManager *gui, sf::String label)
+bool _GuiButton(GuiManager *gui, u32 id, sf::String label)
 {
+	GuiElementProperties *props = &gui->properties[id];
+	props->touched = true;
+
 	GuiObject obj;
 	
 	obj.margin = {1,1,1,1};
 	obj.padding = {.5,.5,.5,.5};
-	obj.bg_color = sf::Color(100,50,100);
+	obj.bg_color = sf::Color(
+		(1.f-props->timer)*100 + props->timer*255,
+		(1.f-props->timer)*50 + props->timer*255,
+		(1.f-props->timer)*100 + props->timer*255);
 	obj.text.setString(label);
 	obj.text.setFont(gui->font);
 	obj.text.setCharacterSize(18);
@@ -191,8 +207,11 @@ bool GuiButton(GuiManager *gui, sf::String label)
 	bool pressed = false;
 	if(gui->elements[idx].inner_bounds.contains(global_app->inputs.mouse_pos))
 	{
-		gui->elements[idx].obj.bg_color = sf::Color(150,100,150);
+		if(props->timer <= 0.f)
+			gui->elements[idx].obj.bg_color = sf::Color(150,100,150);
 		pressed = global_app->inputs.mouse_pressed;
+		if(pressed)
+			props->timer = 1.f;
 	}
 	
 	
@@ -203,6 +222,27 @@ bool GuiButton(GuiManager *gui, sf::String label)
 void GuiDebug(GuiManager *gui)
 {
 	ImGui::Begin("GUI Debug");
+
+	if(ImGui::BeginTable("Properties", 2))
+	{
+		ImGui::TableSetupColumn("id");
+		ImGui::TableSetupColumn("timer");
+
+		ImGui::TableHeadersRow();
+		for(auto it = gui->properties.begin(); it != gui->properties.end(); ++it)
+		{
+			GuiElementProperties *props = &(it->second);
+
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("%u", it->first);
+
+			ImGui::TableSetColumnIndex(1);
+			ImGui::Text("%.2f", props->timer);
+		}
+
+		ImGui::EndTable();
+	}
 
 	ImGui::Text("%u elements", gui->elements_count);
 

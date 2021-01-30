@@ -5,6 +5,8 @@ void update(Application *app, sf::Time dt)
 	ImGui::SFML::Update(*app->window, dt);
 #endif
 
+	gui_update(global_gui_manager, dt);
+
 	GameData *data = app->data;
 
 	// TODO(Sam): Update...
@@ -76,12 +78,14 @@ void update(Application *app, sf::Time dt)
 		{
 			data->click_counter++;
 		}
-		GuiButton(global_gui_manager, "Hello");
+		if(GuiButton(global_gui_manager, "Hello"))
+		{
+			//GuiButton(global_gui_manager, "YEP");
+		}
 		GuiButton(global_gui_manager, "I am a button");
 		GuiButton(global_gui_manager, "Click Here");
 		GuiButton(global_gui_manager, "CLICK!");
 		GuiEndContainer(global_gui_manager);
-
 		
 		GuiBeginContainer(global_gui_manager, obj3);
 		{
