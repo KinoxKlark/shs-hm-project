@@ -3,8 +3,8 @@
 void render(Renderer *renderer)
 {
 	v2u render_region = renderer->window->getSize();
-	//renderer->view = sf::View(rect(0.f, 0.f, render_region.x, render_region.y));
-	//renderer->window->setView(renderer->view);
+	renderer->view = sf::View(rect(0.f, 0.f, render_region.x, render_region.y));
+	renderer->window->setView(renderer->view);
 
 	renderer->window->clear();
 
@@ -127,7 +127,7 @@ Renderer* renderer_init(Application *app)
 {
 	Renderer *renderer = new Renderer();
 	renderer->window = app->window;
-	//renderer->view = sf::View(sf::FloatRect(0.f, 0.f, app->window->getSize().x, app->window->getSize().y));
+	renderer->view = sf::View(sf::FloatRect(0.f, 0.f, app->window->getSize().x, app->window->getSize().y));
 	global_renderer = renderer;
 	
 #ifdef DEBUG
