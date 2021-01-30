@@ -15,33 +15,18 @@ inline void gui_shutdown(GuiManager* gui)
 }
 
 inline
-void GuiBeginContainer(GuiManager *gui, GuiObject obj, GuiElementAlignment alignment)
+u32 GuiAddElementToContainer(GuiManager *gui, GuiObject obj, GuiElementAlignment alignment)
 {
 	assert(gui->elements_count < gui->elements.size());
 	u32 idx = gui->elements_count++;
 
 	GuiElement *parent_container = gui->most_recent_container;
-	rect container_region;
-	v2 next_valid_block_pos;
-	GuiElementAlignment parent_alignment;
-	r32 parent_line_width;
-	if(parent_container)
-	{
-		container_region = parent_container->inner_bounds;
-		next_valid_block_pos = parent_container->next_valid_block_pos;
-		parent_alignment = parent_container->alignment;
-		parent_line_width = parent_container->line_width;
-	}
-	else
-	{
-		// TODO(Sam): Find a better way to deal with root element
-		container_region = {0., 0.,
-							(r32)global_renderer->window->getSize().x,
-							(r32)global_renderer->window->getSize().y};
-		next_valid_block_pos = {0,0};
-		parent_alignment = GuiElementAlignment::HORIZONTAL;
-		parent_line_width = 0.f;
-	}
+	assert(("GuiAddElementToContainer() must be called with a valid container", parent_container));
+
+	rect container_region = parent_container->inner_bounds;
+	v2 next_valid_block_pos = parent_container->next_valid_block_pos;
+	GuiElementAlignment parent_alignment = parent_container->alignment;
+	r32 parent_line_width = parent_container->line_width;
 	
 	v2 relative_size = {
 		obj.size.x < 0 ? 1.f : obj.size.x,
@@ -110,7 +95,35 @@ void GuiBeginContainer(GuiManager *gui, GuiObject obj, GuiElementAlignment align
 		InvalidDefaultCase;
 		}
 	}
+
+	return idx;
+}
+
+inline
+void GuiBeginContainer(GuiManager *gui, GuiObject obj, GuiElementAlignment alignment)
+{
+	GuiElement *parent_container = gui->most_recent_container;
 	
+	if(!parent_container)
+	{
+		assert(("Problem with root container", gui->elements_count == 0));
+		++gui->elements_count;
+		gui->elements[0].parent = nullptr;
+		gui->elements[0].inner_bounds = {0., 0.,
+							(r32)global_renderer->window->getSize().x,
+							(r32)global_renderer->window->getSize().y};
+		gui->elements[0].outer_bounds = gui->elements[0].inner_bounds;
+		gui->elements[0].next_valid_block_pos = {0,0};
+		gui->elements[0].line_width = 0.f;
+		gui->elements[0].alignment = GuiElementAlignment::HORIZONTAL;
+
+		gui->elements[0].obj.bg_color = sf::Color::White;
+
+		gui->most_recent_container = &gui->elements[0];
+	}
+	
+	u32 idx = GuiAddElementToContainer(gui, obj, alignment);
+
 	gui->most_recent_container = &gui->elements[idx];
 }
 
@@ -130,89 +143,16 @@ bool GuiButton(GuiManager *gui, sf::String label)
 	obj.padding = {};
 	obj.bg_color = sf::Color(100,50,100);
 
-	// TODO(Sam): This code is duplicated in every element, we should abstract it
-	
-	assert(gui->elements_count < gui->elements.size());
-	u32 idx = gui->elements_count++;
+	u32 idx = GuiAddElementToContainer(gui, obj, GuiElementAlignment::NONE);
 
-	GuiElement *parent_container = gui->most_recent_container;
-	assert(("GuiBeginContainer() must be call before adding a Button", parent_container));
-	
-	rect container_region = parent_container->inner_bounds;
-	
-	v2 relative_size = {
-		obj.size.x < 0 ? 1.f : obj.size.x,
-		obj.size.y < 0 ? 1.f : obj.size.y
-	};
-	v2 outer_size = hadamar(rect_size(container_region), relative_size);
-	v2 inner_size = { outer_size.x - (obj.margin.left+obj.margin.right)*gui->margin_unit,
-					  outer_size.y - (obj.margin.top+obj.margin.bottom)*gui->margin_unit };
-
-	v2 offset_pos = parent_container->next_valid_block_pos;
-	switch(parent_container->alignment)
-	{
-	case GuiElementAlignment::HORIZONTAL:
-	{
-		if(offset_pos.x + outer_size.x > parent_container->inner_bounds.width)
-		{
-			offset_pos = v2(0, offset_pos.y + parent_container->line_width);
-			parent_container->line_width = 0.f;
-			parent_container->next_valid_block_pos = offset_pos;
-		}
-	} break;
-	case GuiElementAlignment::VERTICAL:
-	{
-		if(offset_pos.y + outer_size.y > parent_container->inner_bounds.height)
-		{
-			offset_pos = v2(offset_pos.x + parent_container->line_width,0);
-			parent_container->line_width = 0.f;
-			parent_container->next_valid_block_pos = offset_pos;
-		}
-	} break;
-	case GuiElementAlignment::NONE: break;
-	InvalidDefaultCase;
-	}
-	
-	v2 outer_pos = offset_pos + rect_pos(container_region);
-	v2 inner_pos = outer_pos + v2(obj.margin.left*gui->margin_unit, obj.margin.top*gui->margin_unit);
-
-	rect inner_bounds = rect(inner_pos, inner_size);
-	rect outer_bounds = rect(outer_pos, outer_size);
-
-	// Button Behavior
+    // Button Behavior
 	bool pressed = false;
-	if(inner_bounds.contains(global_app->inputs.mouse_pos))
+	if(gui->elements[idx].inner_bounds.contains(global_app->inputs.mouse_pos))
 	{
-		obj.bg_color = sf::Color(150,100,150);
+		gui->elements[idx].obj.bg_color = sf::Color(150,100,150);
 		pressed = global_app->inputs.mouse_pressed;
 	}
 	
-	gui->elements[idx].parent = parent_container;
-	gui->elements[idx].inner_bounds = inner_bounds;
-	gui->elements[idx].outer_bounds = outer_bounds;
-	gui->elements[idx].next_valid_block_pos = {0,0};
-	gui->elements[idx].line_width = 0.f;
-	gui->elements[idx].alignment = GuiElementAlignment::NONE;
-	gui->elements[idx].obj = obj;
-
-	switch(parent_container->alignment)
-	{
-	case GuiElementAlignment::HORIZONTAL:
-	{
-		parent_container->next_valid_block_pos.x += outer_size.x;
-		parent_container->line_width = Max(parent_container->line_width, outer_size.y);
-	} break;
-	case GuiElementAlignment::VERTICAL:
-	{
-		parent_container->next_valid_block_pos.y += outer_size.y;
-		parent_container->line_width = Max(parent_container->line_width, outer_size.x);
-	} break;
-	case GuiElementAlignment::NONE:
-	{
-		parent_container->next_valid_block_pos = {0,0};
-	} break;
-	InvalidDefaultCase;
-	}
 	
 	return pressed;
 }
