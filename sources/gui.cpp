@@ -1,9 +1,24 @@
+#include <sysinfoapi.h>
 
 inline GuiManager* gui_init()
 {
 	GuiManager* gui = new GuiManager();
 	gui->most_recent_container = nullptr;
 	gui->elements_count = 0;
+
+	// TODO(Sam): Window independent code!
+	TCHAR windir[1024];
+	GetWindowsDirectory(windir, ArraySize(windir));
+	sf::String font_file = sf::String(windir);
+	font_file.insert(font_file.getSize(), "\\fonts\\Segoeui.ttf");
+
+	// TODO(Sam): Font fallback from assets if windows font fail
+	if(!gui->font.loadFromFile(font_file))
+	{
+		// TODO(Sam): Proper error management
+		assert(("Problem with font loading!", false));
+	}
+	
 	global_gui_manager = gui;
 	return gui;
 }
@@ -149,10 +164,26 @@ inline
 bool GuiButton(GuiManager *gui, sf::String label)
 {
 	GuiObject obj;
-	obj.size = v2(.3333, .2);
+	
 	obj.margin = {1,1,1,1};
-	obj.padding = {};
+	obj.padding = {.5,.5,.5,.5};
 	obj.bg_color = sf::Color(100,50,100);
+	obj.text.setString(label);
+	obj.text.setFont(gui->font);
+	obj.text.setCharacterSize(18);
+	obj.text.setFillColor(sf::Color::White);
+
+	assert(("Buttons can only be puts in container", gui->most_recent_container));
+
+	v2 region = rect_size(gui->most_recent_container->inner_bounds);
+	v2 text_size = rect_size(obj.text.getLocalBounds());
+
+	obj.size = {
+		(text_size.x + (obj.margin.left + obj.margin.right
+						+ obj.padding.left + obj.padding.right)*gui->margin_unit)/region.x,
+		(text_size.y + (obj.margin.top + obj.margin.bottom
+						+ obj.padding.top + obj.padding.bottom)*gui->margin_unit)/region.y
+	};
 
 	u32 idx = GuiAddElementToContainer(gui, obj, GuiElementAlignment::NONE);
 

@@ -8,6 +8,9 @@ struct GuiObject
 	v4 margin;
 	v4 padding;
 	sf::Color bg_color;
+
+	// TODO(Sam): Proper text management
+	sf::Text text;
 };
 
 enum class GuiElementAlignment {
@@ -31,6 +34,8 @@ struct GuiManager {
 	u32 elements_count;
 	GuiElement *most_recent_container;
 	r32 margin_unit;
+
+	sf::Font font;
 };
 
 inline GuiManager* gui_init();

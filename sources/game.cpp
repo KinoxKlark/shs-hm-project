@@ -76,10 +76,10 @@ void update(Application *app, sf::Time dt)
 		{
 			data->click_counter++;
 		}
-		GuiButton(global_gui_manager, "Click Me");
-		GuiButton(global_gui_manager, "Click Me");
-		GuiButton(global_gui_manager, "Click Me");
-		GuiButton(global_gui_manager, "Click Me");
+		GuiButton(global_gui_manager, "Hello");
+		GuiButton(global_gui_manager, "I am a button");
+		GuiButton(global_gui_manager, "Click Here");
+		GuiButton(global_gui_manager, "CLICK!");
 		GuiEndContainer(global_gui_manager);
 
 		
@@ -94,6 +94,18 @@ void update(Application *app, sf::Time dt)
 	}
 	GuiEndContainer(global_gui_manager);
 
+	GuiBeginContainer(global_gui_manager, obj1);
+	{
+		GuiBeginContainer(global_gui_manager, obj2, GuiElementAlignment::HORIZONTAL);
+		if(GuiButton(global_gui_manager, "Click click click click!!!"))
+		{
+			data->click_counter++;
+		}
+		GuiButton(global_gui_manager, "@#!ιό");
+		GuiEndContainer(global_gui_manager);
+
+	}
+	GuiEndContainer(global_gui_manager);
 
 #ifdef DEBUG
 	GuiDebug(global_gui_manager);
