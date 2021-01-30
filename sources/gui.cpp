@@ -36,6 +36,17 @@ u32 GuiAddElementToContainer(GuiManager *gui, GuiObject obj, GuiElementAlignment
 	v2 inner_size = { outer_size.x - (obj.margin.left+obj.margin.right)*gui->margin_unit,
 					  outer_size.y - (obj.margin.top+obj.margin.bottom)*gui->margin_unit };
 
+	if(inner_size.x < gui->margin_unit)
+	{
+		inner_size.x = gui->margin_unit;
+		outer_size.x = (1+obj.margin.left+obj.margin.right)*gui->margin_unit;
+	}
+	if(inner_size.y < gui->margin_unit)
+	{
+		inner_size.y = gui->margin_unit;
+		outer_size.y = (1+obj.margin.top+obj.margin.bottom)*gui->margin_unit;
+	}
+
 	v2 offset_pos = next_valid_block_pos;
 	switch(parent_alignment)
 	{
@@ -138,7 +149,7 @@ inline
 bool GuiButton(GuiManager *gui, sf::String label)
 {
 	GuiObject obj;
-	obj.size = v2(.3, .2);
+	obj.size = v2(.3333, .2);
 	obj.margin = {1,1,1,1};
 	obj.padding = {};
 	obj.bg_color = sf::Color(100,50,100);
