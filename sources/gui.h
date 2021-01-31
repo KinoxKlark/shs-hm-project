@@ -80,6 +80,8 @@ struct GuiElementProperties {
 
 	bool dragged;
 	v2 drag_grab_offset;
+	v2 drag_pos;
+	v2 drag_target_pos;
 };
 
 struct GuiManager {

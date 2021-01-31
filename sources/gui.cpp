@@ -35,6 +35,17 @@ inline void gui_update(GuiManager *gui, sf::Time dt)
 		if(props->timer_active)
 			props->timer -= dt.asSeconds();
 		if(props->timer < 0.f) props->timer = 0.f;
+
+		// TODO(Sam): We will want a flag test to know which props to update
+		if(props->drag_target_pos != props->drag_pos)
+		{
+			v2 delta_before = props->drag_target_pos - props->drag_pos;
+			v2 speed = 3e3f*safe_normalize(delta_before);
+			props->drag_pos += speed*dt.asSeconds();
+			v2 delta_after = props->drag_target_pos - props->drag_pos;
+			if(dot(delta_before, delta_after) <= 0.f)
+				props->drag_pos = props->drag_target_pos;
+		}
 	}
 }
 
@@ -387,7 +398,7 @@ void _GuiBeginDraggableContainer(GuiManager *gui, u32 id, GuiObject obj, GuiElem
 	props->touched = true;
 
 	GuiObject drag_source_obj = obj;
-	if(props->dragged)
+	if(props->dragged || props->drag_pos != props->drag_target_pos)
 		drag_source_obj.bg_color = sf::Color(255,255,255,50);
 	GuiBeginContainer(gui, drag_source_obj, alignment);
 
@@ -409,13 +420,15 @@ void _GuiBeginDraggableContainer(GuiManager *gui, u32 id, GuiObject obj, GuiElem
  		else
 		{
 			if(global_app->inputs.mouse_released)
+			{
 				props->dragged = false;
+				props->drag_target_pos = rect_pos(drag_source->inner_bounds);
+			}
 		}
 	}
 
-	if(props->dragged)
+	if(props->dragged || props->drag_pos != props->drag_target_pos)
 	{
-
 		assert(gui->elements_count < gui->elements.size());
 		u32 idx = gui->elements_count++;
 
@@ -426,9 +439,19 @@ void _GuiBeginDraggableContainer(GuiManager *gui, u32 id, GuiObject obj, GuiElem
 		payload->render = false;
 		payload->obj = obj;
 
-		payload->inner_bounds.left = global_app->inputs.mouse_pos.x - props->drag_grab_offset.x;
-		payload->inner_bounds.top = global_app->inputs.mouse_pos.y - props->drag_grab_offset.y;
-
+		if(props->dragged)
+		{
+			payload->inner_bounds.left = global_app->inputs.mouse_pos.x - props->drag_grab_offset.x;
+			payload->inner_bounds.top = global_app->inputs.mouse_pos.y - props->drag_grab_offset.y;
+		
+			props->drag_pos = rect_pos(payload->inner_bounds);
+		}
+		else
+		{
+			payload->inner_bounds.left = props->drag_pos.x;
+			payload->inner_bounds.top = props->drag_pos.y;
+		}
+		
 		gui->push_to_dragging_payload = true;
 		gui->dragging_payload = idx;
 		gui->dragging_payload_size = 1;
