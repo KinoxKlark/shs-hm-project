@@ -179,7 +179,7 @@ void GuiEndContainer(GuiManager *gui)
 }
 
 inline
-void _GuiBeginTabs(GuiManager *gui, u32 id, GuiObject obj)
+void _GuiBeginTabs(GuiManager *gui, u32 id, GuiObject obj, GuiElementAlignment alignment)
 {
 	GuiElementProperties *props;
 	if(gui->properties.find(id) == gui->properties.end())
@@ -196,7 +196,7 @@ void _GuiBeginTabs(GuiManager *gui, u32 id, GuiObject obj)
 	// TODO(Sam): Magic value
 	r32 tab_bar_height = 2;
 	obj.margin.top += tab_bar_height;
-	GuiBeginContainer(gui, obj);
+	GuiBeginContainer(gui, obj, alignment);
 
 	GuiElement *container = gui->most_recent_container;
 	container->selected_tab_id = props->selected_tab_id;
@@ -211,12 +211,13 @@ void GuiEndTabs(GuiManager *gui)
 }
 
 inline
-bool _GuiTab(GuiManager *gui, u32 id, sf::String label)
+bool _GuiTab(GuiManager *gui, u32 id, sf::String label, GuiElementAlignment alignment)
 {
 	GuiElementProperties *props = &gui->properties[id];
 	props->touched = true;
 
 	GuiElement *container = gui->most_recent_container;
+	container->alignment = alignment;
 
 	if(container->selected_tab_id == 0)
 		container->selected_tab_id = id;

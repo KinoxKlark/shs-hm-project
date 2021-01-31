@@ -55,46 +55,7 @@ void update(Application *app, sf::Time dt)
 	
 	GuiBeginContainer(global_gui_manager, obj1, GuiElementAlignment::HORIZONTAL);
 	{
-		GuiBeginContainer(global_gui_manager, obj3);
-		{
-			GuiBeginContainer(global_gui_manager, obj2);
-			GuiEndContainer(global_gui_manager);
-			GuiBeginContainer(global_gui_manager, obj2);
-			GuiEndContainer(global_gui_manager);
-		}
-		GuiEndContainer(global_gui_manager);
-
-		GuiBeginContainer(global_gui_manager, obj3);
-		{
-			GuiBeginContainer(global_gui_manager, obj2);
-			GuiEndContainer(global_gui_manager);
-			GuiBeginContainer(global_gui_manager, obj2);
-			GuiEndContainer(global_gui_manager);
-		}
-		GuiEndContainer(global_gui_manager);
-
-		GuiBeginContainer(global_gui_manager, obj2, GuiElementAlignment::HORIZONTAL);
-		if(GuiButton(global_gui_manager, "Click Me"))
-		{
-			data->click_counter++;
-		}
-		if(GuiButton(global_gui_manager, "Hello"))
-		{
-			//GuiButton(global_gui_manager, "YEP");
-		}
-		GuiButton(global_gui_manager, "I am a button");
-		GuiButton(global_gui_manager, "Click Here");
-		GuiButton(global_gui_manager, "CLICK!");
-		GuiEndContainer(global_gui_manager);
 		
-		GuiBeginContainer(global_gui_manager, obj3);
-		{
-			GuiBeginContainer(global_gui_manager, obj2);
-			GuiEndContainer(global_gui_manager);
-			GuiBeginContainer(global_gui_manager, obj2);
-			GuiEndContainer(global_gui_manager);
-		}
-		GuiEndContainer(global_gui_manager);
 	}
 	GuiEndContainer(global_gui_manager);
 
@@ -106,6 +67,12 @@ void update(Application *app, sf::Time dt)
 			{
 				GuiBeginContainer(global_gui_manager, obj2);
 				GuiEndContainer(global_gui_manager);
+				GuiBeginContainer(global_gui_manager, obj2);
+				GuiEndContainer(global_gui_manager);
+			}
+			GuiEndContainer(global_gui_manager);
+			GuiBeginContainer(global_gui_manager, obj3);
+			{
 				GuiBeginContainer(global_gui_manager, obj2);
 				GuiEndContainer(global_gui_manager);
 			}
@@ -122,9 +89,48 @@ void update(Application *app, sf::Time dt)
 			GuiEndContainer(global_gui_manager);
 		}
 
-		if(GuiTab(global_gui_manager, "Tab3"))
+		if(GuiTab(global_gui_manager, "Tab3", GuiElementAlignment::HORIZONTAL))
 		{
-			
+			GuiBeginContainer(global_gui_manager, obj3);
+			{
+				GuiBeginContainer(global_gui_manager, obj2);
+				GuiEndContainer(global_gui_manager);
+				GuiBeginContainer(global_gui_manager, obj2);
+				GuiEndContainer(global_gui_manager);
+			}
+			GuiEndContainer(global_gui_manager);
+
+			GuiBeginContainer(global_gui_manager, obj3);
+			{
+				GuiBeginContainer(global_gui_manager, obj2);
+				GuiEndContainer(global_gui_manager);
+				GuiBeginContainer(global_gui_manager, obj2);
+				GuiEndContainer(global_gui_manager);
+			}
+			GuiEndContainer(global_gui_manager);
+
+			GuiBeginContainer(global_gui_manager, obj2, GuiElementAlignment::HORIZONTAL);
+			if(GuiButton(global_gui_manager, "Click Me"))
+			{
+				data->click_counter++;
+			}
+			if(GuiButton(global_gui_manager, "Hello"))
+			{
+				//GuiButton(global_gui_manager, "YEP");
+			}
+			GuiButton(global_gui_manager, "I am a button");
+			GuiButton(global_gui_manager, "Click Here");
+			GuiButton(global_gui_manager, "CLICK!");
+			GuiEndContainer(global_gui_manager);
+		
+			GuiBeginContainer(global_gui_manager, obj3);
+			{
+				GuiBeginContainer(global_gui_manager, obj2);
+				GuiEndContainer(global_gui_manager);
+				GuiBeginContainer(global_gui_manager, obj2);
+				GuiEndContainer(global_gui_manager);
+			}
+			GuiEndContainer(global_gui_manager);
 		}
 	}
 	GuiEndTabs(global_gui_manager);

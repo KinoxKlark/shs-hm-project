@@ -111,11 +111,13 @@ void GuiReset(GuiManager *gui)
 inline void GuiBeginContainer(GuiManager *gui, GuiObject obj,
 							  GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
 inline void GuiEndContainer(GuiManager *gui);
-inline void _GuiBeginTabs(GuiManager *gui, u32 id, GuiObject obj);
-#define GuiBeginTabs(gui, obj) _GuiBeginTabs(gui, GET_UNIQUE_ID(), obj)
+inline void _GuiBeginTabs(GuiManager *gui, u32 id, GuiObject obj,
+							  GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
+#define GuiBeginTabs(gui, obj, ...) _GuiBeginTabs(gui, GET_UNIQUE_ID(), obj, __VA_ARGS__)
 inline void GuiEndTabs(GuiManager *gui);
-inline bool _GuiTab(GuiManager *gui, u32 id, sf::String label);
-#define GuiTab(gui, label) _GuiTab(gui, GET_UNIQUE_ID(), label)
+inline bool _GuiTab(GuiManager *gui, u32 id, sf::String label,
+					GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
+#define GuiTab(gui, label, ...) _GuiTab(gui, GET_UNIQUE_ID(), label, __VA_ARGS__)
 inline bool _GuiButton(GuiManager *gui, u32 id, sf::String label);
 #define GuiButton(gui, label) _GuiButton(gui, GET_UNIQUE_ID(), label)
 
