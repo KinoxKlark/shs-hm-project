@@ -112,6 +112,8 @@ void GuiReset(GuiManager *gui)
 	}
 }
 
+#define GET_4TH_ARG(arg1, arg2, arg3, arg4, ...) arg4
+
 // Container
 inline void GuiBeginContainer(GuiManager *gui, GuiObject obj,
 							  GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
@@ -120,11 +122,17 @@ inline void GuiEndContainer(GuiManager *gui);
 // Tabs
 inline void _GuiBeginTabs(GuiManager *gui, u32 id, GuiObject obj,
 							  GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
-#define GuiBeginTabs(gui, obj, ...) _GuiBeginTabs(gui, GET_UNIQUE_ID(), obj, __VA_ARGS__)
+#define _GuiBeginTabs_2ARGS(gui, obj) _GuiBeginTabs(gui, GET_UNIQUE_ID(), obj)
+#define _GuiBeginTabs_3ARGS(gui, obj, alignment) _GuiBeginTabs(gui, GET_UNIQUE_ID(), obj, alignment)
+#define _GuiBeginTabs_MACRO(...) GET_4TH_ARG(__VA_ARGS__, _GuiBeginTabs_3ARGS, _GuiBeginTabs_2ARGS)
+#define GuiBeginTabs(...) _GuiBeginTabs_MACRO(__VA_ARGS__)(__VA_ARGS__)
 inline void GuiEndTabs(GuiManager *gui);
 inline bool _GuiTab(GuiManager *gui, u32 id, sf::String label,
 					GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
-#define GuiTab(gui, label, ...) _GuiTab(gui, GET_UNIQUE_ID(), label, __VA_ARGS__)
+#define _GuiTab_2ARGS(gui, label) _GuiTab(gui, GET_UNIQUE_ID(), label)
+#define _GuiTab_3ARGS(gui, label, alignment) _GuiTab(gui, GET_UNIQUE_ID(), label, alignment)
+#define _GuiTab_MACRO(...) GET_4TH_ARG(__VA_ARGS__, _GuiTab_3ARGS, _GuiTab_2ARGS)
+#define GuiTab(...) _GuiTab_MACRO(__VA_ARGS__)(__VA_ARGS__)
 
 // Grids
 inline void GuiBeginGrid(GuiManager *gui, u32 n_rows, u32 n_cols, GuiObject obj);
