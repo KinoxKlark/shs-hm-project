@@ -55,6 +55,12 @@ void update(Application *app, sf::Time dt)
 
 	GuiObject obj4 = obj1;
 	obj4.padding = {1,1,1,1};
+
+	GuiObject obj5;
+	obj5.size = {1.f/3.f, .25};
+	obj5.margin = {1,1,1,1};
+	obj5.padding = {};
+	obj5.bg_color = sf::Color(255,150,150);
 	
 	GuiBeginGrid(global_gui_manager, 2, 3, obj4);
 	{
@@ -85,20 +91,28 @@ void update(Application *app, sf::Time dt)
 	{
 		if(GuiTab(global_gui_manager, "Tab1"))
 		{
-			GuiBeginContainer(global_gui_manager, obj3);
+			GuiBeginDraggableContainer(global_gui_manager, obj5);
+			GuiButton(global_gui_manager, "Test");
+			GuiEndDraggableContainer(global_gui_manager);
+	
+			GuiBeginDraggableContainer(global_gui_manager, obj5);
+			GuiEndDraggableContainer(global_gui_manager);
+			
+			GuiBeginDraggableContainer(global_gui_manager, obj5);
 			{
-				GuiBeginContainer(global_gui_manager, obj2);
-				GuiEndContainer(global_gui_manager);
-				GuiBeginContainer(global_gui_manager, obj2);
+				GuiBeginContainer(global_gui_manager, obj3);
 				GuiEndContainer(global_gui_manager);
 			}
-			GuiEndContainer(global_gui_manager);
-			GuiBeginContainer(global_gui_manager, obj3);
-			{
-				GuiBeginContainer(global_gui_manager, obj2);
-				GuiEndContainer(global_gui_manager);
-			}
-			GuiEndContainer(global_gui_manager);
+			GuiEndDraggableContainer(global_gui_manager);
+			
+			GuiBeginDraggableContainer(global_gui_manager, obj5);
+			GuiEndDraggableContainer(global_gui_manager);
+			
+			GuiBeginDraggableContainer(global_gui_manager, obj5);
+			GuiEndDraggableContainer(global_gui_manager);
+			
+			GuiBeginDraggableContainer(global_gui_manager, obj5);
+			GuiEndDraggableContainer(global_gui_manager);
 		}
 
 		if(GuiTab(global_gui_manager, "Tab2"))

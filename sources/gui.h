@@ -6,8 +6,8 @@
 #define STRINGIFY(x) STRINGIFY2(x)
 #define STRINGIFY2(x) #x
 #define FILE_AND_LINE __FILE__ " " STRINGIFY(__LINE__)
-#define GET_UNIQUE_ID() hash(FILE_AND_LINE)
-
+#define GET_UNIQUE_ID_OLD() hash(FILE_AND_LINE)
+#define GET_UNIQUE_ID() (__COUNTER__+1)
 
 #include <iostream>
 template<size_t N, size_t I=0>
@@ -53,6 +53,7 @@ enum class GuiElementAlignment {
 
 struct GuiElement {
 	u32 id;
+	bool render;
 	GuiElement *parent;
 	rect inner_bounds;
 	rect outer_bounds;
@@ -73,7 +74,12 @@ struct GuiElement {
 struct GuiElementProperties {
 	bool touched;
 	r32 timer;
+	bool timer_active;
+
 	u32 selected_tab_id;
+
+	bool dragged;
+	v2 drag_grab_offset;
 };
 
 struct GuiManager {
@@ -81,6 +87,10 @@ struct GuiManager {
 	u32 elements_count;
 	GuiElement *most_recent_container;
 	r32 margin_unit;
+
+	bool push_to_dragging_payload;
+	u32 dragging_payload;
+	u32 dragging_payload_size;
 
 	std::unordered_map<u32, GuiElementProperties> properties;
 
@@ -97,6 +107,11 @@ void GuiReset(GuiManager *gui)
 	gui->elements_count = 0;
 	gui->most_recent_container = nullptr;
 
+	gui->push_to_dragging_payload = false;
+	gui->dragging_payload = -1;
+	gui->dragging_payload_size = 0;
+
+	
 	for(auto it = gui->properties.begin(); it != gui->properties.end();)
 	{
 		GuiElementProperties *props = &(it->second);
@@ -139,6 +154,15 @@ inline bool _GuiTab(GuiManager *gui, u32 id, sf::String label,
 inline void GuiBeginGrid(GuiManager *gui, u32 n_rows, u32 n_cols, GuiObject obj);
 inline void GuiEndGrid(GuiManager *gui);
 inline void GuiSelectGridCell(GuiManager *gui, u32 row, u32 col);
+
+// Draggable
+inline void _GuiBeginDraggableContainer(GuiManager *gui, u32 id, GuiObject obj,
+									   GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
+#define _GuiBeginDraggableContainer_2ARGS(gui, obj) _GuiBeginDraggableContainer(gui, GET_UNIQUE_ID(), obj)
+#define _GuiBeginDraggableContainer_3ARGS(gui, obj, alignment) _GuiBeginDraggableContainer(gui, GET_UNIQUE_ID(), obj, (GuiElementAlignment)(alignment))
+#define _GuiBeginDraggableContainer_MACRO(...) EXPAND(GET_4TH_ARG(__VA_ARGS__, _GuiBeginDraggableContainer_3ARGS, _GuiBeginDraggableContainer_2ARGS))
+#define GuiBeginDraggableContainer(...) EXPAND(_GuiBeginDraggableContainer_MACRO(__VA_ARGS__)(__VA_ARGS__))
+inline void GuiEndDraggableContainer(GuiManager *gui);
 
 // Button
 inline bool _GuiButton(GuiManager *gui, u32 id, sf::String label);

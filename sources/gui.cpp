@@ -18,6 +18,10 @@ inline GuiManager* gui_init()
 		// TODO(Sam): Proper error management
 		assert(("Problem with font loading!", false));
 	}
+
+	gui->push_to_dragging_payload = false;
+	gui->dragging_payload = -1;
+	gui->dragging_payload_size = 0;
 	
 	global_gui_manager = gui;
 	return gui;
@@ -28,7 +32,8 @@ inline void gui_update(GuiManager *gui, sf::Time dt)
 	for(auto it = gui->properties.begin(); it != gui->properties.end(); ++it)
 	{
 		GuiElementProperties *props = &(it->second);
-		props->timer -= dt.asSeconds();
+		if(props->timer_active)
+			props->timer -= dt.asSeconds();
 		if(props->timer < 0.f) props->timer = 0.f;
 	}
 }
@@ -103,6 +108,7 @@ u32 GuiAddElementToContainer(GuiManager *gui, GuiObject obj, GuiElementAlignment
 	v2 inner_pos = outer_pos + v2(obj.margin.left*gui->margin_unit, obj.margin.top*gui->margin_unit);
 
 	gui->elements[idx].id = idx;
+	gui->elements[idx].render = parent_container->render;
 	gui->elements[idx].parent = parent_container;
 	gui->elements[idx].inner_bounds = rect(inner_pos, inner_size);
 	gui->elements[idx].outer_bounds = rect(outer_pos, outer_size);
@@ -133,6 +139,9 @@ u32 GuiAddElementToContainer(GuiManager *gui, GuiObject obj, GuiElementAlignment
 		}
 	}
 
+	if(gui->push_to_dragging_payload)
+		++gui->dragging_payload_size;
+
 	return idx;
 }
 
@@ -144,6 +153,7 @@ void GuiCreateRootContainer(GuiManager *gui)
 	assert(("Root container already exist", !parent_container));
 	assert(("Problem with root container", gui->elements_count == 0));
 	++gui->elements_count;
+	gui->elements[0].render = true;
 	gui->elements[0].parent = nullptr;
 	gui->elements[0].inner_bounds = {0., 0.,
 									 (r32)global_renderer->window->getSize().x,
@@ -214,8 +224,8 @@ void GuiEndTabs(GuiManager *gui)
 inline
 bool _GuiTab(GuiManager *gui, u32 id, sf::String label, GuiElementAlignment alignment)
 {
-	GuiElementProperties *props = &gui->properties[id];
-	props->touched = true;
+	//GuiElementProperties *props = &gui->properties[id];
+	//props->touched = true;
 
 	GuiElement *container = gui->most_recent_container;
 	container->alignment = alignment;
@@ -262,6 +272,7 @@ bool _GuiTab(GuiManager *gui, u32 id, sf::String label, GuiElementAlignment alig
 	
 	assert(gui->elements_count < gui->elements.size());
 	u32 idx = gui->elements_count++;
+	gui->elements[idx].render = container->render;
 	gui->elements[idx].parent = container;
 	gui->elements[idx].inner_bounds = rect(inner_pos, inner_size);
 	gui->elements[idx].outer_bounds = rect(outer_pos, outer_size);
@@ -360,6 +371,80 @@ void GuiSelectGridCell(GuiManager *gui, u32 row, u32 col)
 }
 
 inline
+void _GuiBeginDraggableContainer(GuiManager *gui, u32 id, GuiObject obj, GuiElementAlignment alignment)
+{
+	GuiElementProperties *props;
+	if(gui->properties.find(id) == gui->properties.end())
+	{
+		props = &gui->properties[id];
+		props->dragged = false;
+		props->drag_grab_offset = {0,0};
+	}
+	else
+	{
+		props = &gui->properties[id];
+	}
+	props->touched = true;
+
+	GuiObject drag_source_obj = obj;
+	if(props->dragged)
+		drag_source_obj.bg_color = sf::Color(255,255,255,50);
+	GuiBeginContainer(gui, drag_source_obj, alignment);
+
+	GuiElement *drag_source = gui->most_recent_container;
+
+	if(gui->dragging_payload == -1)
+	{
+		if(!props->dragged)
+		{
+			if(drag_source->inner_bounds.contains(global_app->inputs.mouse_pos))
+			{
+				if(global_app->inputs.mouse_pressed)
+				{
+					props->dragged = true;
+					props->drag_grab_offset = global_app->inputs.mouse_pos - rect_pos(drag_source->inner_bounds);
+				}
+			}
+		}
+ 		else
+		{
+			if(global_app->inputs.mouse_released)
+				props->dragged = false;
+		}
+	}
+
+	if(props->dragged)
+	{
+
+		assert(gui->elements_count < gui->elements.size());
+		u32 idx = gui->elements_count++;
+
+		GuiElement *payload = &gui->elements[idx];
+
+		*payload = *drag_source;
+		payload->id = id;
+		payload->render = false;
+		payload->obj = obj;
+
+		payload->inner_bounds.left = global_app->inputs.mouse_pos.x - props->drag_grab_offset.x;
+		payload->inner_bounds.top = global_app->inputs.mouse_pos.y - props->drag_grab_offset.y;
+
+		gui->push_to_dragging_payload = true;
+		gui->dragging_payload = idx;
+		gui->dragging_payload_size = 1;
+
+		gui->most_recent_container = payload;
+	}
+}
+
+inline
+void GuiEndDraggableContainer(GuiManager *gui)
+{
+	GuiEndContainer(gui);
+	gui->push_to_dragging_payload = false;
+}
+
+inline
 bool _GuiButton(GuiManager *gui, u32 id, sf::String label)
 {
 	GuiElementProperties *props = &gui->properties[id];
@@ -400,7 +485,12 @@ bool _GuiButton(GuiManager *gui, u32 id, sf::String label)
 			gui->elements[idx].obj.bg_color = sf::Color(150,100,150);
 		pressed = global_app->inputs.mouse_pressed;
 		if(pressed)
+		{
 			props->timer = 1.f;
+			props->timer_active = false;
+		}
+		if(global_app->inputs.mouse_released)
+			props->timer_active = true;
 	}
 	
 	
@@ -411,6 +501,8 @@ bool _GuiButton(GuiManager *gui, u32 id, sf::String label)
 void GuiDebug(GuiManager *gui)
 {
 	ImGui::Begin("GUI Debug");
+
+	ImGui::Text("Payload: %u (size: %u)", gui->dragging_payload, gui->dragging_payload_size);
 
 	if(ImGui::BeginTable("Properties", 2))
 	{
