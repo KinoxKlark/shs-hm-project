@@ -1,34 +1,9 @@
 #include <sysinfoapi.h>
 
-inline GuiManager* gui_init()
+inline void gui_update(sf::Time dt)
 {
-	GuiManager* gui = new GuiManager();
-	gui->most_recent_container = nullptr;
-	gui->elements_count = 0;
-
-	// TODO(Sam): Window independent code!
-	TCHAR windir[1024];
-	GetWindowsDirectory(windir, ArraySize(windir));
-	sf::String font_file = sf::String(windir);
-	font_file.insert(font_file.getSize(), "\\fonts\\Segoeui.ttf");
-
-	// TODO(Sam): Font fallback from assets if windows font fail
-	if(!gui->font.loadFromFile(font_file))
-	{
-		// TODO(Sam): Proper error management
-		assert(("Problem with font loading!", false));
-	}
-
-	gui->push_to_dragging_payload = false;
-	gui->dragging_payload = -1;
-	gui->dragging_payload_size = 0;
+	GuiManager *gui = global_gui_manager;
 	
-	global_gui_manager = gui;
-	return gui;
-}
-
-inline void gui_update(GuiManager *gui, sf::Time dt)
-{
 	for(auto it = gui->properties.begin(); it != gui->properties.end(); ++it)
 	{
 		GuiElementProperties *props = &(it->second);
@@ -49,15 +24,12 @@ inline void gui_update(GuiManager *gui, sf::Time dt)
 	}
 }
 
-inline void gui_shutdown(GuiManager* gui)
-{
-	global_gui_manager = nullptr;
-	delete gui;
-}
 
 inline
-u32 GuiAddElementToContainer(GuiManager *gui, GuiObject obj, GuiElementAlignment alignment)
+u32 GuiAddElementToContainer(GuiObject obj, GuiElementAlignment alignment)
 {
+	GuiManager *gui = global_gui_manager;
+	
 	assert(gui->elements_count < gui->elements.size());
 	u32 idx = gui->elements_count++;
 
@@ -157,8 +129,10 @@ u32 GuiAddElementToContainer(GuiManager *gui, GuiObject obj, GuiElementAlignment
 }
 
 inline
-void GuiCreateRootContainer(GuiManager *gui)
+void GuiCreateRootContainer()
 {
+	GuiManager *gui = global_gui_manager;
+	
 	GuiElement *parent_container = gui->most_recent_container;
 	
 	assert(("Root container already exist", !parent_container));
@@ -181,28 +155,34 @@ void GuiCreateRootContainer(GuiManager *gui)
 }
 
 inline
-void GuiBeginContainer(GuiManager *gui, GuiObject obj, GuiElementAlignment alignment)
+void GuiBeginContainer(GuiObject obj, GuiElementAlignment alignment)
 {
+	GuiManager *gui = global_gui_manager;
+	
 	GuiElement *parent_container = gui->most_recent_container;
 	
 	if(!parent_container)
-		GuiCreateRootContainer(gui);
+		GuiCreateRootContainer();
 	
-	u32 idx = GuiAddElementToContainer(gui, obj, alignment);
+	u32 idx = GuiAddElementToContainer(obj, alignment);
 
 	gui->most_recent_container = &gui->elements[idx];
 }
 
 inline
-void GuiEndContainer(GuiManager *gui)
+void GuiEndContainer()
 {
+	GuiManager *gui = global_gui_manager;
+	
 	assert(("GuiEndContainer() must be called once per GuiBeginContainer() call!", gui->most_recent_container));
 	gui->most_recent_container = gui->most_recent_container->parent;
 }
 
 inline
-void _GuiBeginTabs(GuiManager *gui, u32 id, GuiObject obj, GuiElementAlignment alignment)
+void _GuiBeginTabs(u32 id, GuiObject obj, GuiElementAlignment alignment)
 {
+	GuiManager *gui = global_gui_manager;
+	
 	GuiElementProperties *props;
 	if(gui->properties.find(id) == gui->properties.end())
 	{
@@ -218,7 +198,7 @@ void _GuiBeginTabs(GuiManager *gui, u32 id, GuiObject obj, GuiElementAlignment a
 	// TODO(Sam): Magic value
 	r32 tab_bar_height = 2;
 	obj.margin.top += tab_bar_height;
-	GuiBeginContainer(gui, obj, alignment);
+	GuiBeginContainer(obj, alignment);
 
 	GuiElement *container = gui->most_recent_container;
 	container->selected_tab_id = props->selected_tab_id;
@@ -227,14 +207,18 @@ void _GuiBeginTabs(GuiManager *gui, u32 id, GuiObject obj, GuiElementAlignment a
 }
 
 inline
-void GuiEndTabs(GuiManager *gui)
+void GuiEndTabs()
 {
-	GuiEndContainer(gui);
+	GuiManager *gui = global_gui_manager;
+	
+	GuiEndContainer();
 }
 
 inline
-bool _GuiTab(GuiManager *gui, u32 id, sf::String label, GuiElementAlignment alignment)
+bool _GuiTab(u32 id, sf::String label, GuiElementAlignment alignment)
 {
+	GuiManager *gui = global_gui_manager;
+	
 	//GuiElementProperties *props = &gui->properties[id];
 	//props->touched = true;
 
@@ -308,14 +292,16 @@ bool _GuiTab(GuiManager *gui, u32 id, sf::String label, GuiElementAlignment alig
 }
 
 inline
-void GuiBeginGrid(GuiManager *gui, u32 n_rows, u32 n_cols, GuiObject obj)
+void GuiBeginGrid(u32 n_rows, u32 n_cols, GuiObject obj)
 {
+	GuiManager *gui = global_gui_manager;
+	
 	assert(("Grid must contain at least one cell", n_rows*n_cols > 0));
 
 	GuiObject grid_obj = obj;
 	grid_obj.padding = {};
 	
-	GuiBeginContainer(gui, grid_obj, GuiElementAlignment::HORIZONTAL);
+	GuiBeginContainer(grid_obj, GuiElementAlignment::HORIZONTAL);
 	u32 idx = gui->most_recent_container->id;
 	gui->most_recent_container->grid_n_rows = n_rows;
 	gui->most_recent_container->grid_n_cols = n_cols;
@@ -354,26 +340,30 @@ void GuiBeginGrid(GuiManager *gui, u32 n_rows, u32 n_cols, GuiObject obj)
 			cell_obj.margin.right = obj.padding.right;
 		}
 		
-		GuiBeginContainer(gui, cell_obj);
+		GuiBeginContainer(cell_obj);
 		u32 idx = gui->most_recent_container->id;
 		assert(idx == last_id + 1);
 		last_id = idx;
-		GuiEndContainer(gui);
+		GuiEndContainer();
 	}
 
 	gui->most_recent_container = &gui->elements[idx+1];
 }
 
 inline
-void GuiEndGrid(GuiManager *gui)
+void GuiEndGrid()
 {
+	GuiManager *gui = global_gui_manager;
+	
 	gui->most_recent_container = gui->most_recent_container->parent;
-	GuiEndContainer(gui);
+	GuiEndContainer();
 }
 
 inline
-void GuiSelectGridCell(GuiManager *gui, u32 row, u32 col)
+void GuiSelectGridCell(u32 row, u32 col)
 {
+	GuiManager *gui = global_gui_manager;
+	
 	GuiElement *container = gui->most_recent_container->parent;
 
 	assert(("Out of bound grid cell", row < container->grid_n_rows && col < container->grid_n_cols));
@@ -382,8 +372,10 @@ void GuiSelectGridCell(GuiManager *gui, u32 row, u32 col)
 }
 
 inline
-void _GuiBeginDraggableContainer(GuiManager *gui, u32 id, GuiObject obj, GuiElementAlignment alignment)
+void _GuiBeginDraggableContainer(u32 id, GuiObject obj, GuiElementAlignment alignment)
 {
+	GuiManager *gui = global_gui_manager;
+	
 	GuiElementProperties *props;
 	if(gui->properties.find(id) == gui->properties.end())
 	{
@@ -400,7 +392,7 @@ void _GuiBeginDraggableContainer(GuiManager *gui, u32 id, GuiObject obj, GuiElem
 	GuiObject drag_source_obj = obj;
 	if(props->dragged || props->drag_pos != props->drag_target_pos)
 		drag_source_obj.bg_color = sf::Color(255,255,255,50);
-	GuiBeginContainer(gui, drag_source_obj, alignment);
+	GuiBeginContainer(drag_source_obj, alignment);
 
 	GuiElement *drag_source = gui->most_recent_container;
 
@@ -461,15 +453,19 @@ void _GuiBeginDraggableContainer(GuiManager *gui, u32 id, GuiObject obj, GuiElem
 }
 
 inline
-void GuiEndDraggableContainer(GuiManager *gui)
+void GuiEndDraggableContainer()
 {
-	GuiEndContainer(gui);
+	GuiManager *gui = global_gui_manager;
+	
+	GuiEndContainer();
 	gui->push_to_dragging_payload = false;
 }
 
 inline
-bool _GuiButton(GuiManager *gui, u32 id, sf::String label)
+bool _GuiButton(u32 id, sf::String label)
 {
+	GuiManager *gui = global_gui_manager;
+	
 	GuiElementProperties *props = &gui->properties[id];
 	props->touched = true;
 
@@ -498,7 +494,7 @@ bool _GuiButton(GuiManager *gui, u32 id, sf::String label)
 						+ obj.padding.top + obj.padding.bottom)*gui->margin_unit)/region.y
 	};
 
-	u32 idx = GuiAddElementToContainer(gui, obj, GuiElementAlignment::NONE);
+	u32 idx = GuiAddElementToContainer(obj, GuiElementAlignment::NONE);
 
     // Button Behavior
 	bool pressed = false;
@@ -521,8 +517,10 @@ bool _GuiButton(GuiManager *gui, u32 id, sf::String label)
 }
 
 #ifdef DEBUG
-void GuiDebug(GuiManager *gui)
+void GuiDebug()
 {
+	GuiManager *gui = global_gui_manager;
+	
 	ImGui::Begin("GUI Debug");
 
 	ImGui::Text("Payload: %u (size: %u)", gui->dragging_payload, gui->dragging_payload_size);

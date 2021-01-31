@@ -99,13 +99,50 @@ struct GuiManager {
 	sf::Font font;
 };
 
-inline GuiManager* gui_init();
+GuiManager *global_gui_manager = nullptr;
+
+inline GuiManager* gui_init()
+{
+	GuiManager* gui = new GuiManager();
+	gui->most_recent_container = nullptr;
+	gui->elements_count = 0;
+
+	// TODO(Sam): Window independent code!
+	TCHAR windir[1024];
+	GetWindowsDirectory(windir, ArraySize(windir));
+	sf::String font_file = sf::String(windir);
+	font_file.insert(font_file.getSize(), "\\fonts\\Segoeui.ttf");
+
+	// TODO(Sam): Font fallback from assets if windows font fail
+	if(!gui->font.loadFromFile(font_file))
+	{
+		// TODO(Sam): Proper error management
+		assert(("Problem with font loading!", false));
+	}
+
+	gui->push_to_dragging_payload = false;
+	gui->dragging_payload = -1;
+	gui->dragging_payload_size = 0;
+	
+	global_gui_manager = gui;
+	return gui;
+}
+
+inline void gui_shutdown()
+{
+	GuiManager *gui = global_gui_manager;
+	
+	global_gui_manager = nullptr;
+	delete gui;
+}
+
 inline void gui_update(GuiManager *gui, sf::Time dt);
-inline void gui_shutdown(GuiManager* gui);
 
 inline
-void GuiReset(GuiManager *gui)
+void GuiReset()
 {
+	GuiManager *gui = global_gui_manager;
+	
 	gui->elements_count = 0;
 	gui->most_recent_container = nullptr;
 
@@ -130,45 +167,41 @@ void GuiReset(GuiManager *gui)
 }
 
 #define EXPAND(x) x
-#define GET_4TH_ARG(arg1, arg2, arg3, arg4, ...) arg4
+#define GET_3TH_ARG(arg1, arg2, arg3, ...) arg3
 
 // Container
-inline void GuiBeginContainer(GuiManager *gui, GuiObject obj,
-							  GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
-inline void GuiEndContainer(GuiManager *gui);
+inline void GuiBeginContainer(GuiObject obj, GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
+inline void GuiEndContainer();
 
 // Tabs
-inline void _GuiBeginTabs(GuiManager *gui, u32 id, GuiObject obj,
-							  GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
-#define _GuiBeginTabs_2ARGS(gui, obj) _GuiBeginTabs(gui, GET_UNIQUE_ID(), obj)
-#define _GuiBeginTabs_3ARGS(gui, obj, alignment) _GuiBeginTabs(gui, GET_UNIQUE_ID(), obj, (GuiElementAlignment)(alignment))
-#define _GuiBeginTabs_MACRO(...) EXPAND(GET_4TH_ARG(__VA_ARGS__, _GuiBeginTabs_3ARGS, _GuiBeginTabs_2ARGS))
+inline void _GuiBeginTabs(u32 id, GuiObject obj, GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
+#define _GuiBeginTabs_1ARGS(obj) _GuiBeginTabs(GET_UNIQUE_ID(), obj)
+#define _GuiBeginTabs_2ARGS(obj, alignment) _GuiBeginTabs(GET_UNIQUE_ID(), obj, (GuiElementAlignment)(alignment))
+#define _GuiBeginTabs_MACRO(...) EXPAND(GET_3TH_ARG(__VA_ARGS__, _GuiBeginTabs_2ARGS, _GuiBeginTabs_1ARGS))
 #define GuiBeginTabs(...) EXPAND(_GuiBeginTabs_MACRO(__VA_ARGS__)(__VA_ARGS__))
-inline void GuiEndTabs(GuiManager *gui);
-inline bool _GuiTab(GuiManager *gui, u32 id, sf::String label,
-					GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
-#define _GuiTab_2ARGS(gui, label) _GuiTab(gui, GET_UNIQUE_ID(), label)
-#define _GuiTab_3ARGS(gui, label, alignment) _GuiTab(gui, GET_UNIQUE_ID(), label, (GuiElementAlignment)(alignment))
-#define _GuiTab_MACRO(...) EXPAND(GET_4TH_ARG(__VA_ARGS__, _GuiTab_3ARGS, _GuiTab_2ARGS))
+inline void GuiEndTabs();
+inline bool _GuiTab(u32 id, sf::String label, GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
+#define _GuiTab_1ARGS(label) _GuiTab(GET_UNIQUE_ID(), label)
+#define _GuiTab_2ARGS(label, alignment) _GuiTab(GET_UNIQUE_ID(), label, (GuiElementAlignment)(alignment))
+#define _GuiTab_MACRO(...) EXPAND(GET_3TH_ARG(__VA_ARGS__, _GuiTab_2ARGS, _GuiTab_1ARGS))
 #define GuiTab(...) EXPAND(_GuiTab_MACRO(__VA_ARGS__)(__VA_ARGS__))
 
 // Grids
-inline void GuiBeginGrid(GuiManager *gui, u32 n_rows, u32 n_cols, GuiObject obj);
-inline void GuiEndGrid(GuiManager *gui);
-inline void GuiSelectGridCell(GuiManager *gui, u32 row, u32 col);
+inline void GuiBeginGrid(u32 n_rows, u32 n_cols, GuiObject obj);
+inline void GuiEndGrid();
+inline void GuiSelectGridCell(u32 row, u32 col);
 
 // Draggable
-inline void _GuiBeginDraggableContainer(GuiManager *gui, u32 id, GuiObject obj,
-									   GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
-#define _GuiBeginDraggableContainer_2ARGS(gui, obj) _GuiBeginDraggableContainer(gui, GET_UNIQUE_ID(), obj)
-#define _GuiBeginDraggableContainer_3ARGS(gui, obj, alignment) _GuiBeginDraggableContainer(gui, GET_UNIQUE_ID(), obj, (GuiElementAlignment)(alignment))
-#define _GuiBeginDraggableContainer_MACRO(...) EXPAND(GET_4TH_ARG(__VA_ARGS__, _GuiBeginDraggableContainer_3ARGS, _GuiBeginDraggableContainer_2ARGS))
+inline void _GuiBeginDraggableContainer(u32 id, GuiObject obj, GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
+#define _GuiBeginDraggableContainer_1ARGS(obj) _GuiBeginDraggableContainer(GET_UNIQUE_ID(), obj)
+#define _GuiBeginDraggableContainer_2ARGS(obj, alignment) _GuiBeginDraggableContainer(GET_UNIQUE_ID(), obj, (GuiElementAlignment)(alignment))
+#define _GuiBeginDraggableContainer_MACRO(...) EXPAND(GET_3TH_ARG(__VA_ARGS__, _GuiBeginDraggableContainer_2ARGS, _GuiBeginDraggableContainer_1ARGS))
 #define GuiBeginDraggableContainer(...) EXPAND(_GuiBeginDraggableContainer_MACRO(__VA_ARGS__)(__VA_ARGS__))
-inline void GuiEndDraggableContainer(GuiManager *gui);
+inline void GuiEndDraggableContainer();
 
 // Button
-inline bool _GuiButton(GuiManager *gui, u32 id, sf::String label);
-#define GuiButton(gui, label) _GuiButton(gui, GET_UNIQUE_ID(), label)
+inline bool _GuiButton(u32 id, sf::String label);
+#define GuiButton(label) _GuiButton(GET_UNIQUE_ID(), label)
 
 // Debug
-void GuiDebug(GuiManager *gui);
+void GuiDebug();

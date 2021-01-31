@@ -16,7 +16,6 @@ struct Application;
 
 Application *global_app = nullptr;
 Renderer *global_renderer = nullptr;
-GuiManager *global_gui_manager = nullptr;
 
 #include "gui.cpp"
 #include "renderer.cpp"
@@ -47,12 +46,12 @@ int main()
 			update(app,app->frame_target_duration);
 			
 			render(renderer);
-			GuiReset(gui);
+			GuiReset();
 		}
 		
 	}
 
-	gui_shutdown(gui);
+	gui_shutdown();
 	renderer_shutdown(renderer);
 	application_shutdown(app);
 	
