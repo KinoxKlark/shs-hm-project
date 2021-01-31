@@ -52,6 +52,7 @@ enum class GuiElementAlignment {
 };
 
 struct GuiElement {
+	u32 id;
 	GuiElement *parent;
 	rect inner_bounds;
 	rect outer_bounds;
@@ -64,6 +65,9 @@ struct GuiElement {
 	u32 selected_tab_id;
 	r32 next_tab_pos;
 	u32 properties_id;
+
+	u32 grid_n_rows;
+	u32 grid_n_cols;
 };
 
 struct GuiElementProperties {
@@ -108,9 +112,12 @@ void GuiReset(GuiManager *gui)
 	}
 }
 
+// Container
 inline void GuiBeginContainer(GuiManager *gui, GuiObject obj,
 							  GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
 inline void GuiEndContainer(GuiManager *gui);
+
+// Tabs
 inline void _GuiBeginTabs(GuiManager *gui, u32 id, GuiObject obj,
 							  GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
 #define GuiBeginTabs(gui, obj, ...) _GuiBeginTabs(gui, GET_UNIQUE_ID(), obj, __VA_ARGS__)
@@ -118,7 +125,15 @@ inline void GuiEndTabs(GuiManager *gui);
 inline bool _GuiTab(GuiManager *gui, u32 id, sf::String label,
 					GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
 #define GuiTab(gui, label, ...) _GuiTab(gui, GET_UNIQUE_ID(), label, __VA_ARGS__)
+
+// Grids
+inline void GuiBeginGrid(GuiManager *gui, u32 n_rows, u32 n_cols, GuiObject obj);
+inline void GuiEndGrid(GuiManager *gui);
+inline void GuiSelectGridCell(GuiManager *gui, u32 row, u32 col);
+
+// Button
 inline bool _GuiButton(GuiManager *gui, u32 id, sf::String label);
 #define GuiButton(gui, label) _GuiButton(gui, GET_UNIQUE_ID(), label)
 
+// Debug
 void GuiDebug(GuiManager *gui);

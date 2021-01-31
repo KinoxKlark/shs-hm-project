@@ -102,6 +102,7 @@ u32 GuiAddElementToContainer(GuiManager *gui, GuiObject obj, GuiElementAlignment
 	v2 outer_pos = offset_pos + rect_pos(container_region);
 	v2 inner_pos = outer_pos + v2(obj.margin.left*gui->margin_unit, obj.margin.top*gui->margin_unit);
 
+	gui->elements[idx].id = idx;
 	gui->elements[idx].parent = parent_container;
 	gui->elements[idx].inner_bounds = rect(inner_pos, inner_size);
 	gui->elements[idx].outer_bounds = rect(outer_pos, outer_size);
@@ -282,6 +283,80 @@ bool _GuiTab(GuiManager *gui, u32 id, sf::String label, GuiElementAlignment alig
 	}
 	
 	return selected;
+}
+
+inline
+void GuiBeginGrid(GuiManager *gui, u32 n_rows, u32 n_cols, GuiObject obj)
+{
+	assert(("Grid must contain at least one cell", n_rows*n_cols > 0));
+
+	GuiObject grid_obj = obj;
+	grid_obj.padding = {};
+	
+	GuiBeginContainer(gui, grid_obj, GuiElementAlignment::HORIZONTAL);
+	u32 idx = gui->most_recent_container->id;
+	gui->most_recent_container->grid_n_rows = n_rows;
+	gui->most_recent_container->grid_n_cols = n_cols;
+
+	GuiObject cell_obj;
+	cell_obj.size = { 1.f/(r32)n_cols, 1.f/(r32)n_rows };
+	cell_obj.margin = {};
+	cell_obj.padding = {};
+	cell_obj.bg_color = sf::Color(0,0,0,0);
+
+	cell_obj.bg_color = sf::Color(100, 100, 150);
+
+	u32 last_id = idx;
+	for(u32 y = 0; y < n_rows; ++y)
+	for(u32 x = 0; x < n_cols; ++x)
+	{
+		cell_obj.margin.top = .5*(obj.padding.top+obj.padding.bottom);
+		cell_obj.margin.bottom = 0;
+		if(y == 0)
+		{
+			cell_obj.margin.top = obj.padding.top;
+		}
+		if(y == n_rows-1)
+		{
+			cell_obj.margin.bottom = obj.padding.bottom;
+		}
+
+		cell_obj.margin.left = .5*(obj.padding.left + obj.padding.right);
+		cell_obj.margin.right = 0;
+		if(x == 0)
+		{
+			cell_obj.margin.left = obj.padding.left;
+		}
+		if(x == n_cols-1)
+		{
+			cell_obj.margin.right = obj.padding.right;
+		}
+		
+		GuiBeginContainer(gui, cell_obj);
+		u32 idx = gui->most_recent_container->id;
+		assert(idx == last_id + 1);
+		last_id = idx;
+		GuiEndContainer(gui);
+	}
+
+	gui->most_recent_container = &gui->elements[idx+1];
+}
+
+inline
+void GuiEndGrid(GuiManager *gui)
+{
+	gui->most_recent_container = gui->most_recent_container->parent;
+	GuiEndContainer(gui);
+}
+
+inline
+void GuiSelectGridCell(GuiManager *gui, u32 row, u32 col)
+{
+	GuiElement *container = gui->most_recent_container->parent;
+
+	assert(("Out of bound grid cell", row < container->grid_n_rows && col < container->grid_n_cols));
+	
+	gui->most_recent_container = &gui->elements[container->id + 1 + row * container->grid_n_cols + col];
 }
 
 inline

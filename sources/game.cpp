@@ -52,12 +52,34 @@ void update(Application *app, sf::Time dt)
 	obj3.margin = {};
 	obj3.padding = {};
 	obj3.bg_color = sf::Color(150, 255, 150);
+
+	GuiObject obj4 = obj1;
+	obj4.padding = {1,1,1,1};
 	
-	GuiBeginContainer(global_gui_manager, obj1, GuiElementAlignment::HORIZONTAL);
+	GuiBeginGrid(global_gui_manager, 2, 3, obj4);
 	{
-		
+		GuiSelectGridCell(global_gui_manager, 0,0);
+		GuiBeginContainer(global_gui_manager, obj2);
+		GuiEndContainer(global_gui_manager);
+		GuiBeginContainer(global_gui_manager, obj2);
+		GuiEndContainer(global_gui_manager);
+
+		GuiSelectGridCell(global_gui_manager, 0,1);
+		GuiBeginContainer(global_gui_manager, obj3);
+		GuiEndContainer(global_gui_manager);
+
+		GuiSelectGridCell(global_gui_manager, 1,2);
+		GuiBeginContainer(global_gui_manager, obj3);
+		{
+			GuiBeginContainer(global_gui_manager, obj2);
+			GuiEndContainer(global_gui_manager);
+			GuiBeginContainer(global_gui_manager, obj2);
+			GuiEndContainer(global_gui_manager);
+		}
+		GuiEndContainer(global_gui_manager);
+			
 	}
-	GuiEndContainer(global_gui_manager);
+	GuiEndGrid(global_gui_manager);
 
 	GuiBeginTabs(global_gui_manager, obj1);
 	{
