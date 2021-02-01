@@ -53,14 +53,14 @@ inline void gui_post_treatment()
 			u32 drop_id = -1;
 			r32 max_cover = 0;
 
-			//global_renderer->debug_rects.push_back({payload_rect, sf::Color::Blue});
+			global_renderer->debug_rects.push_back({payload_rect, sf::Color::Blue});
 
 			for(u32 id = 0; id < gui->payload_targets.size(); ++id)
 			{
 				GuiElementPayloadTarget *target = &gui->payload_targets[id];
 				rect target_rect = target->element->inner_bounds;
 
-				//global_renderer->debug_rects.push_back({target_rect, sf::Color::Green});
+				global_renderer->debug_rects.push_back({target_rect, sf::Color::Green});
 
 				rect intersection;
 				if(payload_rect.intersects(target_rect, intersection))
@@ -75,7 +75,7 @@ inline void gui_post_treatment()
 						target_any = true;
 					}
 
-					//global_renderer->debug_rects.push_back({intersection, sf::Color::Red});
+					global_renderer->debug_rects.push_back({intersection, sf::Color::Red});
 				}
 			}
 
@@ -601,9 +601,9 @@ bool _GuiButton(u32 id, sf::String label)
 			props->timer = 1.f;
 			props->timer_active = false;
 		}
-		if(global_app->inputs.mouse_released)
-			props->timer_active = true;
 	}
+	if(global_app->inputs.mouse_released)
+		props->timer_active = true;
 	
 	
 	return pressed;
