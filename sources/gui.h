@@ -71,6 +71,13 @@ struct GuiElement {
 	u32 grid_n_cols;
 };
 
+typedef bool (*DropCallback)(void *user_data);
+struct GuiElementPayloadTarget {
+	GuiElement *element;
+	DropCallback callback;
+	void *user_data;
+};
+
 struct GuiElementProperties {
 	bool touched;
 	r32 timer;
@@ -78,25 +85,32 @@ struct GuiElementProperties {
 
 	u32 selected_tab_id;
 
-	bool dragged;
+	bool dragged, dropped;
 	v2 drag_grab_offset;
 	v2 drag_pos;
 	v2 drag_target_pos;
+	GuiElementPayloadTarget drag_target;
 };
 
 struct GuiManager {
+	// Note: We need an array for pointer consistency
 	std::array<GuiElement,1024> elements;
 	u32 elements_count;
 	GuiElement *most_recent_container;
 	r32 margin_unit;
 
 	bool push_to_dragging_payload;
+	u32 dragging_payload_id;
 	u32 dragging_payload;
 	u32 dragging_payload_size;
-
+	std::vector<GuiElementPayloadTarget> payload_targets;
+	
 	std::unordered_map<u32, GuiElementProperties> properties;
-
+	
 	sf::Font font;
+
+	// Debug:
+	u32 intersect_count;
 };
 
 GuiManager *global_gui_manager = nullptr;
@@ -123,6 +137,8 @@ inline GuiManager* gui_init()
 	gui->push_to_dragging_payload = false;
 	gui->dragging_payload = -1;
 	gui->dragging_payload_size = 0;
+
+	gui->intersect_count = 0;
 	
 	global_gui_manager = gui;
 	return gui;
@@ -136,7 +152,8 @@ inline void gui_shutdown()
 	delete gui;
 }
 
-inline void gui_update(GuiManager *gui, sf::Time dt);
+inline void gui_update(sf::Time dt);
+inline void gui_post_treatment();
 
 inline
 void GuiReset()
@@ -150,6 +167,7 @@ void GuiReset()
 	gui->dragging_payload = -1;
 	gui->dragging_payload_size = 0;
 
+	gui->payload_targets.clear();
 	
 	for(auto it = gui->properties.begin(); it != gui->properties.end();)
 	{
@@ -164,6 +182,8 @@ void GuiReset()
 			it = gui->properties.erase(it);
 		}	
 	}
+
+	gui->intersect_count = 0;
 }
 
 #define EXPAND(x) x
@@ -191,13 +211,14 @@ inline void GuiBeginGrid(u32 n_rows, u32 n_cols, GuiObject obj);
 inline void GuiEndGrid();
 inline void GuiSelectGridCell(u32 row, u32 col);
 
-// Draggable
+// Drag & Drop
 inline void _GuiBeginDraggableContainer(u32 id, GuiObject obj, GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
 #define _GuiBeginDraggableContainer_1ARGS(obj) _GuiBeginDraggableContainer(GET_UNIQUE_ID(), obj)
 #define _GuiBeginDraggableContainer_2ARGS(obj, alignment) _GuiBeginDraggableContainer(GET_UNIQUE_ID(), obj, (GuiElementAlignment)(alignment))
 #define _GuiBeginDraggableContainer_MACRO(...) EXPAND(GET_3TH_ARG(__VA_ARGS__, _GuiBeginDraggableContainer_2ARGS, _GuiBeginDraggableContainer_1ARGS))
 #define GuiBeginDraggableContainer(...) EXPAND(_GuiBeginDraggableContainer_MACRO(__VA_ARGS__)(__VA_ARGS__))
 inline void GuiEndDraggableContainer();
+inline void GuiDroppableArea(DropCallback callback, void *user_data = nullptr);
 
 // Button
 inline bool _GuiButton(u32 id, sf::String label);

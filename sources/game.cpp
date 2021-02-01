@@ -1,4 +1,10 @@
 
+bool drag_drop_accept_payload(void* user_data)
+{
+	++global_app->data->drop_counter;
+	return true;
+}
+
 void update(Application *app, sf::Time dt)
 {
 #ifdef DEBUG
@@ -65,16 +71,14 @@ void update(Application *app, sf::Time dt)
 	GuiBeginGrid(2, 3, obj4);
 	{
 		GuiSelectGridCell(0,0);
+		GuiDroppableArea(drag_drop_accept_payload);
 		GuiBeginContainer(obj2);
 		GuiEndContainer();
 		GuiBeginContainer(obj2);
 		GuiEndContainer();
 
 		GuiSelectGridCell(0,1);
-		GuiBeginContainer(obj3);
-		GuiEndContainer();
-
-		GuiSelectGridCell(1,2);
+		GuiDroppableArea(drag_drop_accept_payload);
 		GuiBeginContainer(obj3);
 		{
 			GuiBeginContainer(obj2);
@@ -83,7 +87,27 @@ void update(Application *app, sf::Time dt)
 			GuiEndContainer();
 		}
 		GuiEndContainer();
-			
+
+		GuiSelectGridCell(0,2);
+		GuiDroppableArea(drag_drop_accept_payload);
+
+		GuiSelectGridCell(1,0);
+		GuiDroppableArea(drag_drop_accept_payload);
+
+		GuiSelectGridCell(1,1);
+		GuiDroppableArea(drag_drop_accept_payload);
+
+		GuiSelectGridCell(1,2);
+		GuiDroppableArea(drag_drop_accept_payload);
+		GuiBeginContainer(obj3);
+		{
+			GuiBeginContainer(obj2);
+			GuiEndContainer();
+			GuiBeginContainer(obj2);
+			GuiEndContainer();
+		}
+		GuiEndContainer();
+				
 	}
 	GuiEndGrid();
 
@@ -171,12 +195,15 @@ void update(Application *app, sf::Time dt)
 	}
 	GuiEndTabs();
 
+	gui_post_treatment();
+
 #ifdef DEBUG
 	GuiDebug();
 #endif
 
 	ImGui::Begin("Click");
 	ImGui::Text("Clicked %u times!", data->click_counter);
+	ImGui::Text("Dropped %u times!", data->drop_counter);
 	ImGui::End();
 	
 	ImGui::Begin("Users");
@@ -221,6 +248,7 @@ GameData* game_data_init()
 	data->next_user_duration = get_random_number_between(2000, 5000);
 
 	data->click_counter = 0;
+	data->drop_counter = 0;
 	
 	return data;
 }

@@ -19,11 +19,76 @@ inline void gui_update(sf::Time dt)
 			props->drag_pos += speed*dt.asSeconds();
 			v2 delta_after = props->drag_target_pos - props->drag_pos;
 			if(dot(delta_before, delta_after) <= 0.f)
+			{
 				props->drag_pos = props->drag_target_pos;
+
+				if(!props->dragged && !props->dropped && props->drag_target.callback)
+				{
+					props->drag_target.callback(props->drag_target.user_data);
+					props->dropped = true;
+				}
+			}
 		}
 	}
 }
 
+inline void gui_post_treatment()
+{
+	GuiManager *gui = global_gui_manager;
+	
+	if(gui->dragging_payload != -1)
+	{
+		GuiElementProperties *payload_props = &gui->properties[gui->dragging_payload_id];
+
+		if(payload_props->dragged)
+		{
+			GuiElement *payload = &gui->elements[gui->dragging_payload];
+			rect payload_rect = payload->inner_bounds;
+
+			bool target_any = false;
+			u32 drop_id = -1;
+			r32 max_cover = 0;
+
+			//global_renderer->debug_rects.push_back({payload_rect, sf::Color::Blue});
+
+			for(u32 id = 0; id < gui->payload_targets.size(); ++id)
+			{
+				GuiElementPayloadTarget *target = &gui->payload_targets[id];
+				rect target_rect = target->element->inner_bounds;
+
+				//global_renderer->debug_rects.push_back({target_rect, sf::Color::Green});
+
+				rect intersection;
+				if(payload_rect.intersects(target_rect, intersection))
+				{
+					++gui->intersect_count;
+				
+					r32 cover = intersection.width*intersection.height;
+					if(cover > max_cover)
+					{
+						max_cover = cover;
+						drop_id = id;
+						target_any = true;
+					}
+
+					//global_renderer->debug_rects.push_back({intersection, sf::Color::Red});
+				}
+			}
+
+			if(target_any)
+			{
+				payload_props->drag_target_pos = rect_pos(gui->payload_targets[drop_id].element->inner_bounds);
+				payload_props->drag_target = gui->payload_targets[drop_id];
+			}
+			else
+			{
+				GuiElement *origin = &gui->elements[gui->dragging_payload-1];
+				payload_props->drag_target_pos = rect_pos(origin->inner_bounds);
+				payload_props->drag_target = {};
+			}
+		}
+	}
+}
 
 inline
 u32 GuiAddElementToContainer(GuiObject obj, GuiElementAlignment alignment)
@@ -382,6 +447,8 @@ void _GuiBeginDraggableContainer(u32 id, GuiObject obj, GuiElementAlignment alig
 		props = &gui->properties[id];
 		props->dragged = false;
 		props->drag_grab_offset = {0,0};
+		props->drag_target = {};
+		props->dropped = false;
 	}
 	else
 	{
@@ -405,6 +472,7 @@ void _GuiBeginDraggableContainer(u32 id, GuiObject obj, GuiElementAlignment alig
 				if(global_app->inputs.mouse_pressed)
 				{
 					props->dragged = true;
+					props->dropped = false;
 					props->drag_grab_offset = global_app->inputs.mouse_pos - rect_pos(drag_source->inner_bounds);
 				}
 			}
@@ -414,7 +482,6 @@ void _GuiBeginDraggableContainer(u32 id, GuiObject obj, GuiElementAlignment alig
 			if(global_app->inputs.mouse_released)
 			{
 				props->dragged = false;
-				props->drag_target_pos = rect_pos(drag_source->inner_bounds);
 			}
 		}
 	}
@@ -445,6 +512,7 @@ void _GuiBeginDraggableContainer(u32 id, GuiObject obj, GuiElementAlignment alig
 		}
 		
 		gui->push_to_dragging_payload = true;
+		gui->dragging_payload_id = id;
 		gui->dragging_payload = idx;
 		gui->dragging_payload_size = 1;
 
@@ -459,6 +527,16 @@ void GuiEndDraggableContainer()
 	
 	GuiEndContainer();
 	gui->push_to_dragging_payload = false;
+}
+
+inline
+void GuiDroppableArea(DropCallback callback, void *user_data)
+{
+	GuiManager *gui = global_gui_manager;
+
+	GuiElement *container = gui->most_recent_container;
+
+	gui->payload_targets.push_back({ container, callback, user_data });
 }
 
 inline
@@ -524,6 +602,8 @@ void GuiDebug()
 	ImGui::Begin("GUI Debug");
 
 	ImGui::Text("Payload: %u (size: %u)", gui->dragging_payload, gui->dragging_payload_size);
+	ImGui::Text(" - dropped: %s", gui->properties[gui->dragging_payload_id].dropped ? "True" : "False");
+	ImGui::Text(" - intersections: %u", gui->intersect_count);
 
 	if(ImGui::BeginTable("Properties", 2))
 	{

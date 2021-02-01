@@ -55,6 +55,19 @@ void render(Renderer *renderer)
 		}
 	}
 
+	// Debug
+#ifdef DEBUG
+	for(u32 idx = 0; idx < renderer->debug_rects.size(); ++idx)
+	{
+		DebugRect *rect = &renderer->debug_rects[idx];
+		rect_shape.setSize(rect_size(rect->bounds));
+		rect_shape.setPosition(rect_pos(rect->bounds));
+		rect_shape.setFillColor(rect->color);
+		renderer->window->draw(rect_shape);
+	}
+	renderer->debug_rects.clear();
+#endif
+
 #ifdef DEBUG
 	ImGui::SFML::Render(*renderer->window);
 #endif
