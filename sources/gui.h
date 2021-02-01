@@ -1,5 +1,14 @@
 #include <array>
 #include <unordered_map>
+#include <stack>
+
+#define ID_BANDWIDTH 1000
+std::stack<u32> gui_global_container_id;
+inline u32 create_id()
+{
+	local_persist u32 id = 1;
+	return id++;
+}
 
 // HASHING
 
@@ -7,7 +16,7 @@
 #define STRINGIFY2(x) #x
 #define FILE_AND_LINE __FILE__ " " STRINGIFY(__LINE__)
 #define GET_UNIQUE_ID_OLD() hash(FILE_AND_LINE)
-#define GET_UNIQUE_ID() (__COUNTER__+1)
+#define GET_UNIQUE_ID() ((gui_global_container_id.size() > 0 ? gui_global_container_id.top()*ID_BANDWIDTH : 0) + __COUNTER__+1)
 
 #include <iostream>
 template<size_t N, size_t I=0>
@@ -53,6 +62,7 @@ enum class GuiElementAlignment {
 
 struct GuiElement {
 	u32 id;
+	u32 container_id;
 	bool render;
 	GuiElement *parent;
 	rect inner_bounds;
@@ -69,9 +79,11 @@ struct GuiElement {
 
 	u32 grid_n_rows;
 	u32 grid_n_cols;
+
+	bool draggable;
 };
 
-typedef bool (*DropCallback)(void *user_data);
+typedef bool (*DropCallback)(void *payload, void* user_data);
 struct GuiElementPayloadTarget {
 	GuiElement *element;
 	DropCallback callback;
@@ -89,7 +101,9 @@ struct GuiElementProperties {
 	v2 drag_grab_offset;
 	v2 drag_pos;
 	v2 drag_target_pos;
+	v2 drag_source_pos;
 	GuiElementPayloadTarget drag_target;
+	void *payload;
 };
 
 struct GuiManager {
@@ -188,9 +202,14 @@ void GuiReset()
 
 #define EXPAND(x) x
 #define GET_3TH_ARG(arg1, arg2, arg3, ...) arg3
+#define GET_4TH_ARG(arg1, arg2, arg3, arg4, ...) arg4
 
 // Container
-inline void GuiBeginContainer(GuiObject obj, GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
+inline void GuiBeginContainer(u32 container_id, GuiObject obj, GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
+inline void GuiBeginContainer(GuiObject obj, GuiElementAlignment alignment = GuiElementAlignment::VERTICAL)
+{
+	GuiBeginContainer(0, obj, alignment);
+}
 inline void GuiEndContainer();
 
 // Tabs
@@ -212,12 +231,8 @@ inline void GuiEndGrid();
 inline void GuiSelectGridCell(u32 row, u32 col);
 
 // Drag & Drop
-inline void _GuiBeginDraggableContainer(u32 id, GuiObject obj, GuiElementAlignment alignment = GuiElementAlignment::VERTICAL);
-#define _GuiBeginDraggableContainer_1ARGS(obj) _GuiBeginDraggableContainer(GET_UNIQUE_ID(), obj)
-#define _GuiBeginDraggableContainer_2ARGS(obj, alignment) _GuiBeginDraggableContainer(GET_UNIQUE_ID(), obj, (GuiElementAlignment)(alignment))
-#define _GuiBeginDraggableContainer_MACRO(...) EXPAND(GET_3TH_ARG(__VA_ARGS__, _GuiBeginDraggableContainer_2ARGS, _GuiBeginDraggableContainer_1ARGS))
-#define GuiBeginDraggableContainer(...) EXPAND(_GuiBeginDraggableContainer_MACRO(__VA_ARGS__)(__VA_ARGS__))
-inline void GuiEndDraggableContainer();
+inline void _GuiDefineContainerAsDraggable(u32 id, void *payload);
+#define GuiDefineContainerAsDraggable(payload) _GuiDefineContainerAsDraggable(GET_UNIQUE_ID(), payload)
 inline void GuiDroppableArea(DropCallback callback, void *user_data = nullptr);
 
 // Button

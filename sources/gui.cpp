@@ -24,8 +24,12 @@ inline void gui_update(sf::Time dt)
 
 				if(!props->dragged && !props->dropped && props->drag_target.callback)
 				{
-					props->drag_target.callback(props->drag_target.user_data);
-					props->dropped = true;
+					bool accepted = props->drag_target.callback(props->payload, props->drag_target.user_data);
+					if(accepted) props->dropped = true;
+					else
+					{
+						props->drag_target_pos = props->drag_source_pos;
+					}
 				}
 			}
 		}
@@ -164,6 +168,7 @@ u32 GuiAddElementToContainer(GuiObject obj, GuiElementAlignment alignment)
 	gui->elements[idx].line_width = 0.f;
 	gui->elements[idx].alignment = alignment;
 	gui->elements[idx].obj = obj;
+	gui->elements[idx].draggable = false;
 
 	if(parent_container)
 	{
@@ -214,13 +219,15 @@ void GuiCreateRootContainer()
 	gui->elements[0].alignment = GuiElementAlignment::HORIZONTAL;
 
 	gui->elements[0].obj.bg_color = sf::Color::White;
+	gui->elements[0].draggable = false;
+		
 
 	gui->most_recent_container = &gui->elements[0];
 		
 }
 
 inline
-void GuiBeginContainer(GuiObject obj, GuiElementAlignment alignment)
+void GuiBeginContainer(u32 container_id, GuiObject obj, GuiElementAlignment alignment)
 {
 	GuiManager *gui = global_gui_manager;
 	
@@ -230,7 +237,11 @@ void GuiBeginContainer(GuiObject obj, GuiElementAlignment alignment)
 		GuiCreateRootContainer();
 	
 	u32 idx = GuiAddElementToContainer(obj, alignment);
+	gui->elements[idx].container_id = container_id;
 
+	if(container_id != 0)
+		gui_global_container_id.push(container_id);
+	
 	gui->most_recent_container = &gui->elements[idx];
 }
 
@@ -238,7 +249,13 @@ inline
 void GuiEndContainer()
 {
 	GuiManager *gui = global_gui_manager;
-	
+
+	if(gui->most_recent_container->container_id != 0)
+		gui_global_container_id.pop();
+
+	if(gui->most_recent_container->draggable)
+		gui->push_to_dragging_payload = false;
+
 	assert(("GuiEndContainer() must be called once per GuiBeginContainer() call!", gui->most_recent_container));
 	gui->most_recent_container = gui->most_recent_container->parent;
 }
@@ -340,6 +357,7 @@ bool _GuiTab(u32 id, sf::String label, GuiElementAlignment alignment)
 	gui->elements[idx].line_width = 0.f;
 	gui->elements[idx].alignment = GuiElementAlignment::NONE;
 	gui->elements[idx].obj = obj;
+	gui->elements[idx].draggable = false;
 
 	container->next_tab_pos += outer_size.x;
 
@@ -437,7 +455,7 @@ void GuiSelectGridCell(u32 row, u32 col)
 }
 
 inline
-void _GuiBeginDraggableContainer(u32 id, GuiObject obj, GuiElementAlignment alignment)
+void _GuiDefineContainerAsDraggable(u32 id, void* payload)
 {
 	GuiManager *gui = global_gui_manager;
 	
@@ -454,14 +472,20 @@ void _GuiBeginDraggableContainer(u32 id, GuiObject obj, GuiElementAlignment alig
 	{
 		props = &gui->properties[id];
 	}
+	props->payload = payload;
 	props->touched = true;
 
+	GuiElement *drag_source = gui->most_recent_container;
+
+	GuiObject obj = drag_source->obj;
+	
 	GuiObject drag_source_obj = obj;
 	if(props->dragged || props->drag_pos != props->drag_target_pos)
 		drag_source_obj.bg_color = sf::Color(255,255,255,50);
-	GuiBeginContainer(drag_source_obj, alignment);
+	drag_source->obj = drag_source_obj;
+	drag_source->draggable = true;
 
-	GuiElement *drag_source = gui->most_recent_container;
+	props->drag_source_pos = rect_pos(drag_source->inner_bounds);
 
 	if(gui->dragging_payload == -1)
 	{
@@ -518,15 +542,6 @@ void _GuiBeginDraggableContainer(u32 id, GuiObject obj, GuiElementAlignment alig
 
 		gui->most_recent_container = payload;
 	}
-}
-
-inline
-void GuiEndDraggableContainer()
-{
-	GuiManager *gui = global_gui_manager;
-	
-	GuiEndContainer();
-	gui->push_to_dragging_payload = false;
 }
 
 inline

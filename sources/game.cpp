@@ -1,8 +1,42 @@
 
-bool drag_drop_accept_payload(void* user_data)
+struct post_payload {
+	u32 id;
+};
+
+bool drag_drop_accept_payload(void *payload, void* user_data)
 {
+	GameData *data = global_app->data;
+	SocialPost *post = (SocialPost*)payload;
+	SocialFeed *feed = (SocialFeed*)user_data;
+
+	feed->posts.push_back(*post);
+
+	for(auto it = data->available_posts.begin(); it != data->available_posts.end(); ++it)
+	{
+		if(it->id == post->id)
+		{
+			data->available_posts.erase(it);
+			break;
+		}
+	}
+
 	++global_app->data->drop_counter;
+	
 	return true;
+}
+
+void social_post_gui(SocialPost *post, bool draggable = false)
+{
+	GuiObject obj;
+	obj.size = { draggable ? 1.f/3.f : -1, .25 };
+	obj.margin = {1,1,1,1};
+	obj.padding = {};
+	obj.bg_color = post->color;
+
+	GuiBeginContainer(post->id, obj);
+	if(draggable) GuiDefineContainerAsDraggable(post);
+	GuiButton("Test");
+	GuiEndContainer();
 }
 
 void update(Application *app, sf::Time dt)
@@ -70,43 +104,16 @@ void update(Application *app, sf::Time dt)
 	
 	GuiBeginGrid(2, 3, obj4);
 	{
-		GuiSelectGridCell(0,0);
-		GuiDroppableArea(drag_drop_accept_payload);
-		GuiBeginContainer(obj2);
-		GuiEndContainer();
-		GuiBeginContainer(obj2);
-		GuiEndContainer();
-
-		GuiSelectGridCell(0,1);
-		GuiDroppableArea(drag_drop_accept_payload);
-		GuiBeginContainer(obj3);
+		for(u32 idx = 0; idx < data->social_feeds.size(); ++idx)
 		{
-			GuiBeginContainer(obj2);
-			GuiEndContainer();
-			GuiBeginContainer(obj2);
-			GuiEndContainer();
+			GuiSelectGridCell(idx/3, idx % 3);
+			GuiDroppableArea(drag_drop_accept_payload, &data->social_feeds[idx]);
+
+			for(u32 post_idx = 0; post_idx < data->social_feeds[idx].posts.size(); ++post_idx)
+			{
+				social_post_gui(&(data->social_feeds[idx].posts[post_idx]));
+			}
 		}
-		GuiEndContainer();
-
-		GuiSelectGridCell(0,2);
-		GuiDroppableArea(drag_drop_accept_payload);
-
-		GuiSelectGridCell(1,0);
-		GuiDroppableArea(drag_drop_accept_payload);
-
-		GuiSelectGridCell(1,1);
-		GuiDroppableArea(drag_drop_accept_payload);
-
-		GuiSelectGridCell(1,2);
-		GuiDroppableArea(drag_drop_accept_payload);
-		GuiBeginContainer(obj3);
-		{
-			GuiBeginContainer(obj2);
-			GuiEndContainer();
-			GuiBeginContainer(obj2);
-			GuiEndContainer();
-		}
-		GuiEndContainer();
 				
 	}
 	GuiEndGrid();
@@ -115,28 +122,10 @@ void update(Application *app, sf::Time dt)
 	{
 		if(GuiTab("Tab1"))
 		{
-			GuiBeginDraggableContainer(obj5);
-			GuiButton("Test");
-			GuiEndDraggableContainer();
-	
-			GuiBeginDraggableContainer(obj5);
-			GuiEndDraggableContainer();
-			
-			GuiBeginDraggableContainer(obj5);
+			for(u32 idx = 0; idx < data->available_posts.size(); ++idx)
 			{
-				GuiBeginContainer(obj3);
-				GuiEndContainer();
-			}
-			GuiEndDraggableContainer();
-			
-			GuiBeginDraggableContainer(obj5);
-			GuiEndDraggableContainer();
-			
-			GuiBeginDraggableContainer(obj5);
-			GuiEndDraggableContainer();
-			
-			GuiBeginDraggableContainer(obj5);
-			GuiEndDraggableContainer();
+				social_post_gui(&(data->available_posts[idx]), true);
+			}			
 		}
 
 		if(GuiTab("Tab2"))
@@ -249,6 +238,18 @@ GameData* game_data_init()
 
 	data->click_counter = 0;
 	data->drop_counter = 0;
+
+	for(u32 idx = 0; idx < 6; ++idx)
+		data->social_feeds.push_back({});
+
+	for(u32 idx = 0; idx < 12; ++idx)
+	{
+		sf::Color color( 0, 0, 0, 255);
+		color.r = get_random_number_between(100,200);
+		color.g = get_random_number_between(100,200);
+		color.b = get_random_number_between(100,200);
+		data->available_posts.push_back({create_id(), color});
+	}
 	
 	return data;
 }
