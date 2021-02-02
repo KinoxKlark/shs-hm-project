@@ -12,6 +12,10 @@ Copy `config.bat.model` to `config.bat` and edit it to specify SFML 5.1 location
 
 To compile, simply run `build.bat` script. 
 
+### SFML Customization
+
+Headers of SFML has been changed and new versions are in `modified_headers/`. Thoses new headers has to be copied in SFML `include/` directory in order to be able to compile the software.
+
 ### Recup script
 
 The script `recup.bat` does a `git pull` followed by a `call build.bat` and can be use for quickly get and compile the project. It should be use once the configuration has been done.
