@@ -165,6 +165,8 @@ u32 GuiAddElementToContainer(GuiObject obj, GuiElementAlignment alignment)
 	v2 pos = outer_pos + v2(obj.margin.left*gui->margin_unit, obj.margin.top*gui->margin_unit);
 	v2 inner_pos = pos + v2(obj.padding.left*gui->margin_unit, obj.padding.top*gui->margin_unit);
 
+	gui->elements[idx].set_viewport = false;
+	gui->elements[idx].container_one_past_last = idx+1;
 	gui->elements[idx].id = idx;
 	gui->elements[idx].render = parent_container->render;
 	gui->elements[idx].parent = parent_container;
@@ -215,6 +217,9 @@ void GuiCreateRootContainer()
 	assert(("Root container already exist", !parent_container));
 	assert(("Problem with root container", gui->elements_count == 0));
 	++gui->elements_count;
+	gui->elements[0].set_viewport = false;
+	gui->elements[0].always_show = false;
+	gui->elements[0].container_one_past_last = 1;
 	gui->elements[0].render = true;
 	gui->elements[0].parent = nullptr;
 	gui->elements[0].inner_bounds = {0., 0.,
@@ -246,6 +251,9 @@ void GuiBeginContainer(u32 container_id, GuiObject obj, GuiElementAlignment alig
 	
 	u32 idx = GuiAddElementToContainer(obj, alignment);
 	gui->elements[idx].container_id = container_id;
+	
+	gui->elements[idx].set_viewport = true;
+	gui->elements[idx].container_one_past_last = idx+1;
 
 	if(container_id != 0)
 		gui_global_container_id.push(container_id);
@@ -261,8 +269,12 @@ void GuiEndContainer()
 	if(gui->most_recent_container->container_id != 0)
 		gui_global_container_id.pop();
 
+	gui->most_recent_container->container_one_past_last = gui->elements_count;
+	
 	if(gui->most_recent_container->draggable)
+	{
 		gui->push_to_dragging_payload = false;
+	}
 
 	assert(("GuiEndContainer() must be called once per GuiBeginContainer() call!", gui->most_recent_container));
 	gui->most_recent_container = gui->most_recent_container->parent;
@@ -360,6 +372,9 @@ bool _GuiTab(u32 id, sf::String label, GuiElementAlignment alignment)
 	
 	assert(gui->elements_count < gui->elements.size());
 	u32 idx = gui->elements_count++;
+	gui->elements[idx].set_viewport = false;
+	gui->elements[idx].always_show = true;
+	gui->elements[idx].container_one_past_last = idx+1;
 	gui->elements[idx].render = container->render;
 	gui->elements[idx].parent = container;
 	gui->elements[idx].inner_bounds = rect(inner_pos, inner_size);
@@ -496,7 +511,7 @@ void _GuiDefineContainerAsDraggable(u32 id, void* payload)
 		drag_source_obj.bg_color = sf::Color(255,255,255,50);
 	drag_source->obj = drag_source_obj;
 	drag_source->draggable = true;
-
+	
 	props->drag_source_pos = rect_pos(drag_source->bounds);
 
 	if(gui->dragging_payload == -1)
@@ -533,6 +548,9 @@ void _GuiDefineContainerAsDraggable(u32 id, void* payload)
 		payload->id = id;
 		payload->render = false;
 		payload->obj = obj;
+
+		drag_source->container_one_past_last = idx;
+		
 
 		if(props->dragged)
 		{

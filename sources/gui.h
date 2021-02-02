@@ -63,6 +63,11 @@ enum class GuiElementAlignment {
 };
 
 struct GuiElement {
+
+	bool set_viewport;
+	bool always_show;
+	u32 container_one_past_last;
+	
 	u32 id;
 	u32 container_id;
 	bool render;

@@ -108,18 +108,26 @@ void update(Application *app, sf::Time dt)
 	obj6.margin = {1,1,1,1};
 	obj6.padding = {1,1,1,1};
 	obj6.bg_color = sf::Color(150,150,255);
+
+	GuiObject obj_full;
+	obj_full.size = {1,1};
+	obj_full.margin = {};
+	obj_full.padding = {};
+	obj_full.bg_color = sf::Color(0,0,0,0);
 	
 	GuiBeginGrid(2, 3, obj4);
 	{
 		for(u32 idx = 0; idx < data->social_feeds.size(); ++idx)
 		{
 			GuiSelectGridCell(idx/3, idx % 3);
+			GuiBeginContainer(obj_full);
 			GuiDroppableArea(drag_drop_accept_payload, &data->social_feeds[idx]);
 
 			for(u32 post_idx = 0; post_idx < data->social_feeds[idx].posts.size(); ++post_idx)
 			{
 				social_post_gui(&(data->social_feeds[idx].posts[post_idx]));
 			}
+			GuiEndContainer();
 		}
 				
 	}
