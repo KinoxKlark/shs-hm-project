@@ -16,8 +16,8 @@ void render(Renderer *renderer)
 		GuiElement *element = &gui->elements[idx];
 		if(!element->render) continue;
 
-		rect_shape.setSize(rect_size(element->inner_bounds));
-		rect_shape.setPosition(rect_pos(element->inner_bounds));
+		rect_shape.setSize(rect_size(element->bounds));
+		rect_shape.setPosition(rect_pos(element->bounds));
 		rect_shape.setFillColor(element->obj.bg_color);
 		renderer->window->draw(rect_shape);
 
@@ -25,11 +25,18 @@ void render(Renderer *renderer)
 		{
 			rect ref_bounds = global_gui_manager
 				->font.getGlyph(L'A', element->obj.text.getCharacterSize(), false).bounds;
-			v2 offset = v2(0, .5*ref_bounds.top) + v2(
-				element->obj.padding.left*gui->margin_unit,
-				element->obj.padding.top*gui->margin_unit);
+			v2 offset = v2(0, .5*ref_bounds.top);
 			element->obj.text.setPosition(rect_pos(element->inner_bounds) + offset);
 			renderer->window->draw(element->obj.text);
+		}
+
+		if(element->obj.htmltext.getString().getSize() > 0)
+		{
+			rect ref_bounds = global_gui_manager
+				->font.getGlyph(L'A', element->obj.htmltext.getCharacterSize(), false).bounds;
+			v2 offset = v2(0, .5*ref_bounds.top);
+			element->obj.htmltext.setPosition(rect_pos(element->inner_bounds) + offset);
+			renderer->window->draw(element->obj.htmltext);
 		}
 	}
 
@@ -38,8 +45,8 @@ void render(Renderer *renderer)
 	{
 		GuiElement *element = &gui->elements[gui->dragging_payload + idx];
 
-		rect_shape.setSize(rect_size(element->inner_bounds));
-		rect_shape.setPosition(rect_pos(element->inner_bounds));
+		rect_shape.setSize(rect_size(element->bounds));
+		rect_shape.setPosition(rect_pos(element->bounds));
 		rect_shape.setFillColor(element->obj.bg_color);
 		renderer->window->draw(rect_shape);
 
@@ -47,11 +54,18 @@ void render(Renderer *renderer)
 		{
 			rect ref_bounds = global_gui_manager
 				->font.getGlyph(L'A', element->obj.text.getCharacterSize(), false).bounds;
-			v2 offset = v2(0, .5*ref_bounds.top) + v2(
-				element->obj.padding.left*gui->margin_unit,
-				element->obj.padding.top*gui->margin_unit);
+			v2 offset = v2(0, .5*ref_bounds.top);
 			element->obj.text.setPosition(rect_pos(element->inner_bounds) + offset);
 			renderer->window->draw(element->obj.text);
+		}
+
+		if(element->obj.htmltext.getString().getSize() > 0)
+		{
+			rect ref_bounds = global_gui_manager
+				->font.getGlyph(L'A', element->obj.htmltext.getCharacterSize(), false).bounds;
+			v2 offset = v2(0, .5*ref_bounds.top);
+			element->obj.htmltext.setPosition(rect_pos(element->inner_bounds) + offset);
+			renderer->window->draw(element->obj.htmltext);
 		}
 	}
 

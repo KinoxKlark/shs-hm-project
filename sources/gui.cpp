@@ -47,7 +47,7 @@ inline void gui_post_treatment()
 		if(payload_props->dragged)
 		{
 			GuiElement *payload = &gui->elements[gui->dragging_payload];
-			rect payload_rect = payload->inner_bounds;
+			rect payload_rect = payload->bounds;
 
 			bool target_any = false;
 			u32 drop_id = -1;
@@ -58,7 +58,7 @@ inline void gui_post_treatment()
 			for(u32 id = 0; id < gui->payload_targets.size(); ++id)
 			{
 				GuiElementPayloadTarget *target = &gui->payload_targets[id];
-				rect target_rect = target->element->inner_bounds;
+				rect target_rect = target->element->bounds;
 
 				//global_renderer->debug_rects.push_back({target_rect, sf::Color::Green});
 
@@ -81,13 +81,13 @@ inline void gui_post_treatment()
 
 			if(target_any)
 			{
-				payload_props->drag_target_pos = rect_pos(gui->payload_targets[drop_id].element->inner_bounds);
+				payload_props->drag_target_pos = rect_pos(gui->payload_targets[drop_id].element->bounds);
 				payload_props->drag_target = gui->payload_targets[drop_id];
 			}
 			else
 			{
 				GuiElement *origin = &gui->elements[gui->dragging_payload-1];
-				payload_props->drag_target_pos = rect_pos(origin->inner_bounds);
+				payload_props->drag_target_pos = rect_pos(origin->bounds);
 				payload_props->drag_target = {};
 			}
 		}
@@ -115,18 +115,23 @@ u32 GuiAddElementToContainer(GuiObject obj, GuiElementAlignment alignment)
 		obj.size.y < 0 ? 1.f : obj.size.y
 	};
 	v2 outer_size = hadamar(rect_size(container_region), relative_size);
-	v2 inner_size = { outer_size.x - (obj.margin.left+obj.margin.right)*gui->margin_unit,
-					  outer_size.y - (obj.margin.top+obj.margin.bottom)*gui->margin_unit };
+	v2 size = { outer_size.x - (obj.margin.left+obj.margin.right)*gui->margin_unit,
+				outer_size.y - (obj.margin.top+obj.margin.bottom)*gui->margin_unit };
+	v2 inner_size = { size.x - (obj.padding.left+obj.padding.right)*gui->margin_unit,
+					  size.y - (obj.padding.top+obj.padding.bottom)*gui->margin_unit };
+
 
 	if(inner_size.x < gui->margin_unit)
 	{
 		inner_size.x = gui->margin_unit;
-		outer_size.x = (1+obj.margin.left+obj.margin.right)*gui->margin_unit;
+		size.x = (1+obj.padding.left+obj.padding.right)*gui->margin_unit;
+		outer_size.x = (1+obj.margin.left+obj.margin.right+obj.padding.left+obj.padding.right)*gui->margin_unit;
 	}
 	if(inner_size.y < gui->margin_unit)
 	{
 		inner_size.y = gui->margin_unit;
-		outer_size.y = (1+obj.margin.top+obj.margin.bottom)*gui->margin_unit;
+		size.y = (1+obj.padding.top+obj.padding.bottom)*gui->margin_unit;
+		outer_size.y = (1+obj.margin.top+obj.margin.bottom+obj.padding.top+obj.padding.bottom)*gui->margin_unit;
 	}
 
 	v2 offset_pos = next_valid_block_pos;
@@ -157,12 +162,14 @@ u32 GuiAddElementToContainer(GuiObject obj, GuiElementAlignment alignment)
 	}
 	
 	v2 outer_pos = offset_pos + rect_pos(container_region);
-	v2 inner_pos = outer_pos + v2(obj.margin.left*gui->margin_unit, obj.margin.top*gui->margin_unit);
+	v2 pos = outer_pos + v2(obj.margin.left*gui->margin_unit, obj.margin.top*gui->margin_unit);
+	v2 inner_pos = pos + v2(obj.padding.left*gui->margin_unit, obj.padding.top*gui->margin_unit);
 
 	gui->elements[idx].id = idx;
 	gui->elements[idx].render = parent_container->render;
 	gui->elements[idx].parent = parent_container;
 	gui->elements[idx].inner_bounds = rect(inner_pos, inner_size);
+	gui->elements[idx].bounds = rect(pos, size);
 	gui->elements[idx].outer_bounds = rect(outer_pos, outer_size);
 	gui->elements[idx].next_valid_block_pos = {0,0};
 	gui->elements[idx].line_width = 0.f;
@@ -213,6 +220,7 @@ void GuiCreateRootContainer()
 	gui->elements[0].inner_bounds = {0., 0.,
 									 (r32)global_renderer->window->getSize().x,
 									 (r32)global_renderer->window->getSize().y};
+	gui->elements[0].bounds = gui->elements[0].inner_bounds;
 	gui->elements[0].outer_bounds = gui->elements[0].inner_bounds;
 	gui->elements[0].next_valid_block_pos = {0,0};
 	gui->elements[0].line_width = 0.f;
@@ -339,19 +347,23 @@ bool _GuiTab(u32 id, sf::String label, GuiElementAlignment alignment)
 		obj.size.y < 0 ? 1.f : obj.size.y
 	};
 	v2 outer_size = hadamar(rect_size(region), relative_size);
-	v2 inner_size = { outer_size.x - (obj.margin.left+obj.margin.right)*gui->margin_unit,
-					  outer_size.y - (obj.margin.top+obj.margin.bottom)*gui->margin_unit };
+	v2 size = { outer_size.x - (obj.margin.left+obj.margin.right)*gui->margin_unit,
+				outer_size.y - (obj.margin.top+obj.margin.bottom)*gui->margin_unit };
+	v2 inner_size = { size.x - (obj.padding.left+obj.padding.right)*gui->margin_unit,
+					  size.y - (obj.padding.top+obj.padding.bottom)*gui->margin_unit };
 
 	v2 offset_pos = v2(container->next_tab_pos,0);
 	
 	v2 outer_pos = offset_pos + rect_pos(region);
-	v2 inner_pos = outer_pos + v2(obj.margin.left*gui->margin_unit, obj.margin.top*gui->margin_unit);
+	v2 pos = outer_pos + v2(obj.margin.left*gui->margin_unit, obj.margin.top*gui->margin_unit);
+	v2 inner_pos = pos + v2(obj.padding.left*gui->margin_unit, obj.padding.top*gui->margin_unit);
 	
 	assert(gui->elements_count < gui->elements.size());
 	u32 idx = gui->elements_count++;
 	gui->elements[idx].render = container->render;
 	gui->elements[idx].parent = container;
 	gui->elements[idx].inner_bounds = rect(inner_pos, inner_size);
+	gui->elements[idx].bounds = rect(pos, size);
 	gui->elements[idx].outer_bounds = rect(outer_pos, outer_size);
 	gui->elements[idx].next_valid_block_pos = {0,0};
 	gui->elements[idx].line_width = 0.f;
@@ -362,7 +374,7 @@ bool _GuiTab(u32 id, sf::String label, GuiElementAlignment alignment)
 	container->next_tab_pos += outer_size.x;
 
 	bool selected = container->selected_tab_id == id;
-	if(gui->elements[idx].inner_bounds.contains(global_app->inputs.mouse_pos))
+	if(gui->elements[idx].bounds.contains(global_app->inputs.mouse_pos))
 	{
 		if(global_app->inputs.mouse_pressed)
 		{
@@ -485,7 +497,7 @@ void _GuiDefineContainerAsDraggable(u32 id, void* payload)
 	drag_source->obj = drag_source_obj;
 	drag_source->draggable = true;
 
-	props->drag_source_pos = rect_pos(drag_source->inner_bounds);
+	props->drag_source_pos = rect_pos(drag_source->bounds);
 
 	if(gui->dragging_payload == -1)
 	{
@@ -497,7 +509,7 @@ void _GuiDefineContainerAsDraggable(u32 id, void* payload)
 				{
 					props->dragged = true;
 					props->dropped = false;
-					props->drag_grab_offset = global_app->inputs.mouse_pos - rect_pos(drag_source->inner_bounds);
+					props->drag_grab_offset = global_app->inputs.mouse_pos - rect_pos(drag_source->bounds);
 				}
 			}
 		}
@@ -524,16 +536,19 @@ void _GuiDefineContainerAsDraggable(u32 id, void* payload)
 
 		if(props->dragged)
 		{
-			payload->inner_bounds.left = global_app->inputs.mouse_pos.x - props->drag_grab_offset.x;
-			payload->inner_bounds.top = global_app->inputs.mouse_pos.y - props->drag_grab_offset.y;
-		
-			props->drag_pos = rect_pos(payload->inner_bounds);
+			payload->bounds.left = global_app->inputs.mouse_pos.x - props->drag_grab_offset.x;
+			payload->bounds.top = global_app->inputs.mouse_pos.y - props->drag_grab_offset.y;
+
+			props->drag_pos = rect_pos(payload->bounds);
 		}
 		else
 		{
-			payload->inner_bounds.left = props->drag_pos.x;
-			payload->inner_bounds.top = props->drag_pos.y;
+			payload->bounds.left = props->drag_pos.x;
+			payload->bounds.top = props->drag_pos.y;
 		}
+
+		payload->inner_bounds.left = payload->bounds.left + payload->obj.padding.left*gui->margin_unit;
+		payload->inner_bounds.top = payload->bounds.top + payload->obj.padding.top*gui->margin_unit;
 		
 		gui->push_to_dragging_payload = true;
 		gui->dragging_payload_id = id;
@@ -574,6 +589,7 @@ bool _GuiButton(u32 id, sf::String label)
 	obj.text.setFont(gui->font);
 	obj.text.setCharacterSize(18);
 	obj.text.setFillColor(sf::Color::White);
+	
 
 	assert(("Buttons can only be puts in container", gui->most_recent_container));
 
@@ -591,7 +607,7 @@ bool _GuiButton(u32 id, sf::String label)
 
     // Button Behavior
 	bool pressed = false;
-	if(gui->elements[idx].inner_bounds.contains(global_app->inputs.mouse_pos))
+	if(gui->elements[idx].bounds.contains(global_app->inputs.mouse_pos))
 	{
 		if(props->timer <= 0.f)
 			gui->elements[idx].obj.bg_color = sf::Color(150,100,150);
@@ -607,6 +623,74 @@ bool _GuiButton(u32 id, sf::String label)
 	
 	
 	return pressed;
+}
+
+
+inline
+void GuiTitle(sf::String title)
+{
+	GuiManager *gui = global_gui_manager;
+
+	GuiObject obj;
+	
+	obj.margin = {0,0,0,.5};
+	obj.padding = {};
+	obj.bg_color = sf::Color(0,0,0,0);
+	obj.text.setString(title);
+	obj.text.setFont(gui->font);
+	obj.text.setCharacterSize(18);
+	obj.text.setFillColor(sf::Color(50,50,50));
+	
+	assert(("Title can only be puts in container", gui->most_recent_container));
+
+	v2 region = rect_size(gui->most_recent_container->inner_bounds);
+	v2 text_size = rect_size(obj.text.getLocalBounds());
+
+	obj.size = {
+		(text_size.x + (obj.margin.left + obj.margin.right
+						+ obj.padding.left + obj.padding.right)*gui->margin_unit)/region.x,
+		(text_size.y + (obj.margin.top + obj.margin.bottom
+						+ obj.padding.top + obj.padding.bottom)*gui->margin_unit)/region.y
+	};
+
+	u32 idx = GuiAddElementToContainer(obj, GuiElementAlignment::NONE);
+	
+}
+
+inline
+void GuiText(sf::String text)
+{
+	GuiManager *gui = global_gui_manager;
+
+	GuiObject obj;
+	
+	//obj.margin = {1,1,1,1};
+	//obj.padding = {.5,.5,.5,.5};
+
+	obj.margin = {};
+	obj.padding = {};
+	
+	obj.bg_color = sf::Color(0,0,0,0);
+	obj.htmltext.setString(text);
+	obj.htmltext.setFont(gui->font);
+	obj.htmltext.setCharacterSize(12);
+	obj.htmltext.setFillColor(sf::Color(50,50,50));
+	obj.htmltext.setTextWidth(rect_size(gui->most_recent_container->inner_bounds).x);
+
+	assert(("Text can only be puts in container", gui->most_recent_container));
+
+	v2 region = rect_size(gui->most_recent_container->inner_bounds);
+	v2 text_size = rect_size(obj.htmltext.getLocalBounds());
+
+	obj.size = {
+		1.f,
+		(text_size.y + (obj.margin.top + obj.margin.bottom
+						+ obj.padding.top + obj.padding.bottom)*gui->margin_unit)/region.y
+	};
+
+	u32 idx = GuiAddElementToContainer(obj, GuiElementAlignment::NONE);
+	
+
 }
 
 #ifdef DEBUG

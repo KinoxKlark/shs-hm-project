@@ -30,12 +30,13 @@ void social_post_gui(SocialPost *post, bool draggable = false)
 	GuiObject obj;
 	obj.size = { draggable ? 1.f/3.f : -1, .25 };
 	obj.margin = {1,1,1,1};
-	obj.padding = {};
+	obj.padding = {1,1,1,1};
 	obj.bg_color = post->color;
 
-	GuiBeginContainer(post->id, obj);
+	GuiBeginContainer(post->id, obj, GuiElementAlignment::HORIZONTAL);
 	if(draggable) GuiDefineContainerAsDraggable(post);
-	GuiButton("Test");
+	GuiTitle("Test");
+	GuiText("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id arcu at diam interdum fringilla. Quisque euismod in augue imperdiet aliquet. In ornare fermentum nisl, ut cursus orci commodo eget. In hac habitasse platea dictumst. Ut finibus venenatis tincidunt. Nulla commodo aliquam tellus vel gravida. Aliquam semper elementum lacus, vitae bibendum ante volutpat sagittis. Ut libero velit, vulputate eget suscipit et, hendrerit vehicula tellus. Aliquam erat volutpat. Ut mattis et odio in fringilla. Phasellus pretium aliquet eros, mollis tempor odio. Aliquam auctor ante in turpis lacinia lobortis. Quisque mauris nunc, pulvinar sed euismod et, lacinia sit amet sapien. Fusce tristique mi sed volutpat molestie. Aliquam congue sagittis tellus, vitae pretium tellus rhoncus posuere.");
 	GuiEndContainer();
 }
 
@@ -101,6 +102,12 @@ void update(Application *app, sf::Time dt)
 	obj5.margin = {1,1,1,1};
 	obj5.padding = {};
 	obj5.bg_color = sf::Color(255,150,150);
+
+	GuiObject obj6;
+	obj6.size = {.33,.5};
+	obj6.margin = {1,1,1,1};
+	obj6.padding = {1,1,1,1};
+	obj6.bg_color = sf::Color(150,150,255);
 	
 	GuiBeginGrid(2, 3, obj4);
 	{
@@ -149,11 +156,12 @@ void update(Application *app, sf::Time dt)
 			}
 			GuiEndContainer();
 
-			GuiBeginContainer(obj3);
+			GuiBeginContainer(obj6, GuiElementAlignment::HORIZONTAL);
 			{
-				GuiBeginContainer(obj2);
-				GuiEndContainer();
-				GuiBeginContainer(obj2);
+				GuiButton("Click");
+				GuiTitle("Test");
+				GuiText("Lorem ipsum dolor sit amet, consectetur adipiscing elit. \n\nDonec id arcu at diam interdum fringilla. Quisque euismod in augue imperdiet aliquet. In ornare fermentum nisl, ut cursus orci commodo eget. In hac habitasse platea dictumst. Ut finibus venenatis tincidunt. Nulla commodo aliquam tellus vel gravida. Aliquam semper elementum lacus, vitae bibendum ante volutpat sagittis. Ut libero velit, vulputate eget suscipit et, hendrerit vehicula tellus. Aliquam erat volutpat. Ut mattis et odio in fringilla. Phasellus pretium aliquet eros, mollis tempor odio. Aliquam auctor ante in turpis lacinia lobortis. Quisque mauris nunc, pulvinar sed euismod et, lacinia sit amet sapien. Fusce tristique mi sed volutpat molestie. Aliquam congue sagittis tellus, vitae pretium tellus rhoncus posuere.");
+				GuiBeginContainer(obj3);
 				GuiEndContainer();
 			}
 			GuiEndContainer();

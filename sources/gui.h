@@ -2,6 +2,8 @@
 #include <unordered_map>
 #include <stack>
 
+#include "HTMLText.h"
+
 #define ID_BANDWIDTH 1000
 std::stack<u32> gui_global_container_id;
 inline u32 create_id()
@@ -43,8 +45,7 @@ constexpr size_t hash ( const char (&s)[N] ) {
 
 #define GUI_STRETCH -1
 
-struct GuiObject
-{
+struct GuiObject {
 	v2 size;
 	v4 margin;
 	v4 padding;
@@ -52,6 +53,7 @@ struct GuiObject
 
 	// TODO(Sam): Proper text management
 	sf::Text text;
+	sf::HTMLText htmltext;
 };
 
 enum class GuiElementAlignment {
@@ -66,6 +68,7 @@ struct GuiElement {
 	bool render;
 	GuiElement *parent;
 	rect inner_bounds;
+	rect bounds;
 	rect outer_bounds;
 	v2 next_valid_block_pos;
 	r32 line_width;
@@ -238,6 +241,10 @@ inline void GuiDroppableArea(DropCallback callback, void *user_data = nullptr);
 // Button
 inline bool _GuiButton(u32 id, sf::String label);
 #define GuiButton(label) _GuiButton(GET_UNIQUE_ID(), label)
+
+// Texts
+inline void GuiTitle(sf::String title);
+inline void GuiText(sf::String text);
 
 // Debug
 void GuiDebug();
