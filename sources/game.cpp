@@ -52,28 +52,6 @@ void update(Application *app, sf::Time dt)
 
 	// TODO(Sam): Update...
 
-	for(u32 idx(0); idx < data->users_duration.size(); ++idx)
-	{
-		data->users_duration[idx] -= dt.asMilliseconds();
-		if(data->users_duration[idx] <= 0)
-		{
-			data->users.erase(data->users.begin() + idx);
-			data->users_duration.erase(data->users_duration.begin() + idx);
-			--idx;
-		}
-	}
-
-	data->next_user_duration -= dt.asMilliseconds();
-	if(data->next_user_duration <= 0)
-	{
-		for(u32 idx(0); idx < get_random_number_between(1,10); ++idx)
-		{
-			data->next_user_duration = get_random_number_between(2000, 5000);
-			data->users.push_back(get_random_number_between(0,100));
-			data->users_duration.push_back(get_random_number_between(2000, 5000));
-		}
-	}
-
 	
 	// TODO(Sam): Put this in the right place
 	GuiObject obj1;
@@ -212,22 +190,92 @@ void update(Application *app, sf::Time dt)
 	ImGui::End();
 	
 	ImGui::Begin("Users");
-	if(ImGui::BeginTable("Users", 2))
+
+	if(ImGui::BeginTable("Personalities", 2))
 	{
 		ImGui::TableSetupColumn("ID");
-		ImGui::TableSetupColumn("Duration");
+		ImGui::TableSetupColumn("Label");
 		ImGui::TableHeadersRow();
-		for(size_t idx(0); idx < data->users.size(); ++idx)
+		for(size_t idx(0); idx < data->personalities.size(); ++idx)
 		{
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
-			ImGui::Text("%i", data->users[idx]);
+			ImGui::Text("%i", data->personalities[idx].id);
 
 			ImGui::TableSetColumnIndex(1);
-			ImGui::Text("%.2fs", (float)data->users_duration[idx]/1e3);
+			ImGui::Text("%s", data->personalities[idx].name.c_str());
 		}
 
 		ImGui::EndTable();
+	}
+
+	if(ImGui::BeginTable("Interests", 2))
+	{
+		ImGui::TableSetupColumn("ID");
+		ImGui::TableSetupColumn("Label");
+		ImGui::TableHeadersRow();
+		for(size_t idx(0); idx < data->interests.size(); ++idx)
+		{
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::Text("%i", data->interests[idx].id);
+
+			ImGui::TableSetColumnIndex(1);
+			ImGui::Text("%s", data->interests[idx].name.c_str());
+		}
+
+		ImGui::EndTable();
+	}
+	
+	for(u32 idx_user = 0; idx_user < data->users.size(); ++idx_user)
+	{
+		User *user = &data->users[idx_user];
+
+		ImGui::Text("User %u", user->id);
+
+		if(ImGui::BeginTable("User Personality", 3))
+		{
+			ImGui::TableSetupColumn("ID");
+			ImGui::TableSetupColumn("Label");
+			ImGui::TableSetupColumn("Amount");
+			ImGui::TableHeadersRow();
+			for(size_t idx(0); idx < user->identity.personalities.size(); ++idx)
+			{
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("%i", user->identity.personalities[idx].id);
+				
+				ImGui::TableSetColumnIndex(1);
+				ImGui::Text("%s", data->personalities[user->identity.personalities[idx].id].name.c_str());
+				
+				ImGui::TableSetColumnIndex(2);
+				ImGui::Text("%.2f", user->identity.personalities[idx].amount);
+			}
+
+			ImGui::EndTable();
+		}
+
+		if(ImGui::BeginTable("User Interests", 3))
+		{
+			ImGui::TableSetupColumn("ID");
+			ImGui::TableSetupColumn("Label");
+			ImGui::TableSetupColumn("Amount");
+			ImGui::TableHeadersRow();
+			for(size_t idx(0); idx < user->identity.interests.size(); ++idx)
+			{
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("%i", user->identity.interests[idx].id);
+				
+				ImGui::TableSetColumnIndex(1);
+				ImGui::Text("%s", data->interests[user->identity.interests[idx].id].name.c_str());
+
+				ImGui::TableSetColumnIndex(2);
+				ImGui::Text("%.2f", user->identity.interests[idx].amount);
+			}
+
+			ImGui::EndTable();
+		}
 	}
 	ImGui::End();
 	
@@ -244,14 +292,17 @@ inline
 GameData* game_data_init()
 {
 	GameData* data = new GameData();
-	data->users = std::vector<int>({42, 21, 13});
-	data->users_duration = std::vector<int>({
-			get_random_number_between(2000, 5000),
-			get_random_number_between(2000, 5000),
-			get_random_number_between(2000, 5000)});
 
-	data->next_user_duration = get_random_number_between(2000, 5000);
+	data->personalities = importGauges("data/identities.txt");
+	data->interests = importGauges("data/interests.txt");
 
+	data->users.resize(6);
+	for(u32 idx = 0; idx < data->users.size(); ++idx)
+	{
+		data->users[idx].id = idx;
+		data->users[idx].identity = createUserIdentity(data);
+	}
+	
 	data->click_counter = 0;
 	data->drop_counter = 0;
 

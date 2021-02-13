@@ -20,6 +20,7 @@ Renderer *global_renderer = nullptr;
 #include "gui.cpp"
 #include "renderer.cpp"
 #include "inputs.cpp"
+#include "user.cpp"
 #include "game.cpp"
 #include "application.cpp"
 
