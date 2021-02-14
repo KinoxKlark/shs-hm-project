@@ -28,3 +28,10 @@ r32 get_random_number_between(r32 min, r32 max)
 	result = min + (max-min)*result;
 	return result;
 }
+
+template<typename T>
+inline T get_random_element(std::vector<T>& vec)
+{
+	u32 idx = get_random_number_between(0, vec.size()-1);
+	return vec[idx];
+}

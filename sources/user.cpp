@@ -1,5 +1,35 @@
 #include <fstream>
 
+std::vector<std::string> importNames(char *filename)
+{
+	std::ifstream file;
+	std::vector<std::string> names;
+	
+	file.open(filename, std::ios::in);
+	assert(("Identities file can't be open!", file.is_open()));
+
+	std::string line;
+	while(std::getline(file, line))
+	{
+		names.push_back(line);
+	}
+
+	file.close();
+
+	return names;
+}
+
+std::vector<std::string> importFirstNames(bool men)
+{
+	if(men) return importNames("data/firstnames_men.txt");
+	else return importNames("data/firstnames_women.txt");
+}
+
+std::vector<std::string> importLastNames()
+{
+	return importNames("data/lastnames.txt");
+}
+
 std::vector<GaugeInfo> importGauges(char *filename)
 {
 	std::ifstream file;

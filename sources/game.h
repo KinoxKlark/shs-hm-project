@@ -26,6 +26,8 @@ struct UserIdentity {
 struct User {
 	u32 id;
 	UserIdentity identity;
+	bool isMan;
+	std::string fullname;
 };
 
 struct GameData {

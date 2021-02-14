@@ -231,7 +231,7 @@ void update(Application *app, sf::Time dt)
 	{
 		User *user = &data->users[idx_user];
 
-		ImGui::Text("User %u", user->id);
+		ImGui::Text("[%u] %s", user->id, user->fullname.c_str());
 
 		if(ImGui::BeginTable("User Personality", 3))
 		{
@@ -293,14 +293,29 @@ GameData* game_data_init()
 {
 	GameData* data = new GameData();
 
+	std::vector<std::string> firstnames_men = importFirstNames(true);
+	std::vector<std::string> firstnames_women = importFirstNames(false);
+	std::vector<std::string> lastnames = importLastNames();
+
 	data->personalities = importGauges("data/identities.txt");
 	data->interests = importGauges("data/interests.txt");
-
+	
 	data->users.resize(6);
 	for(u32 idx = 0; idx < data->users.size(); ++idx)
 	{
 		data->users[idx].id = idx;
 		data->users[idx].identity = createUserIdentity(data);
+		data->users[idx].isMan = get_random_number_between(0,1) == 0;
+
+		if(data->users[idx].isMan)
+		{
+			data->users[idx].fullname = get_random_element(firstnames_men) + " " + get_random_element(lastnames);
+		}
+		else
+		{
+			data->users[idx].fullname = get_random_element(firstnames_women) + " " + get_random_element(lastnames);		
+		}
+	
 	}
 	
 	data->click_counter = 0;
