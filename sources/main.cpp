@@ -48,6 +48,8 @@ int main()
 			
 			render(renderer);
 			GuiReset();
+
+			if(app->should_quit) app->window->close();
 		}
 		
 	}

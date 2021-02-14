@@ -3,6 +3,7 @@ struct Application
 {
 	// Inputs
 	Inputs inputs;
+	bool should_quit;
 	
 	// Renderer
 	sf::RenderWindow *window;

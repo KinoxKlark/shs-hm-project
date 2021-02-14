@@ -49,7 +49,11 @@ void update(Application *app, sf::Time dt)
 	gui_update(dt);
 
 	GameData *data = app->data;
+	Inputs *inputs = &app->inputs;
 
+	if(inputs->quit)
+		app->should_quit = true;
+	
 	// TODO(Sam): Update...
 
 	
