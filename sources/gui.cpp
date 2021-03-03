@@ -417,7 +417,8 @@ void GuiBeginGrid(u32 n_rows, u32 n_cols, GuiObject obj)
 	gui->most_recent_container->grid_n_cols = n_cols;
 
 	GuiObject cell_obj;
-	cell_obj.size = { 1.f/(r32)n_cols, 1.f/(r32)n_rows };
+	r32 one_before_epsilon = 1.f - 1e-4;
+	cell_obj.size = { one_before_epsilon*1.f/(r32)n_cols, one_before_epsilon*1.f/(r32)n_rows };
 	cell_obj.margin = {};
 	cell_obj.padding = {};
 	cell_obj.bg_color = sf::Color(0,0,0,0);
