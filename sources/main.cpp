@@ -10,6 +10,7 @@ struct Application;
 #include "rng.h"
 #include "gui.h"
 #include "inputs.h"
+#include "events.h"
 #include "game.h"
 #include "application.h"
 #include "renderer.h"
@@ -17,6 +18,7 @@ struct Application;
 Application *global_app = nullptr;
 Renderer *global_renderer = nullptr;
 
+#include "events.cpp"
 #include "gui.cpp"
 #include "renderer.cpp"
 #include "inputs.cpp"
@@ -30,6 +32,9 @@ int main()
 	Application *app = application_init();
 	Renderer *renderer = renderer_init(app);
 	GuiManager *gui = gui_init();
+
+	init_event_system(&(app->data->event_system));
+	inference(app);
 	
 	while(app->window->isOpen())
 	{

@@ -1,4 +1,5 @@
 
+
 struct SocialPost {
 	u32 id;
 	sf::Color color;
@@ -31,6 +32,8 @@ struct User {
 };
 
 struct GameData {
+	EventSystem event_system;
+	
 	std::vector<User> users;
 	std::vector<GaugeInfo> personalities;
 	std::vector<GaugeInfo> interests;
