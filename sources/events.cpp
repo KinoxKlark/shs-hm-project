@@ -1,4 +1,85 @@
 
+bool merge_environement(Environement *environement, EnvironementAssociation association)
+{
+	for(size_t idx = 0; idx < environement->associations.size(); ++idx)
+	{
+		if(environement->associations[idx].variable_name == association.variable_name)
+			return *(environement->associations[idx].datum) == *(association.datum);
+	}
+
+	environement->associations.push_back(association);
+	return true;
+}
+
+void replace_with_environments(Pattern *pattern, Environement *environement)
+{
+	while(pattern != nullptr)
+	{
+		if(pattern->symbole && pattern->variable)
+		{
+			for(auto& association : environement->associations)
+			{
+				if(association.variable_name == pattern->name)
+				{
+					if(association.datum->symbole)
+					{
+						assert(!association.datum->variable);
+						pattern->id = association.datum->id;
+					}
+					else
+					{
+						// TODO(Sam): Est-ce qu'on a besoins d'une deep copie ?
+						pattern->symbole = false;
+						pattern->first = association.datum->fist;
+					}
+
+					break;
+				}
+			}
+		}
+		pattern = pattern->next;
+	}
+}
+
+bool filter(Pattern *pattern, Pattern *datum, Environement *environement_to_set)
+{
+	
+	if(pattern->symbole)
+	{
+		if(*pattern == *datum) return true;
+		if(pattern->variable) {
+			return merge_environement(environement_to_set, { pattern->name : datum });
+		}
+		return false;
+	}
+
+	if(datum->symbole) return false;
+
+	// Si les deux sont vide ok, si seulement un sur deux pas ok
+	if(pattern->first == nullptr && datum->first == nullptr)
+		return true;
+	if(pattern->first == nullptr || datum->first == nullptr)
+		return false;
+
+	
+	if(!filter(pattern->first, datum->first, environement_to_set))
+		return false;
+
+	Pattern rest1;
+	rest1.symbole = false;
+	rest1.first = pattern->first->next;
+	rest1.next = nullptr;
+
+	Pattern rest2;
+	rest2.symbole = false;
+	rest2.first = datum->first->next;
+	rest2.next = nullptr;
+	
+	replace_with_environments(rest1, environement_to_set);
+
+	return filter(&rest1, &rest2, environement_to_set);
+}
+
 bool filter(Condition *condition, Fact fact, Environement *environement_to_set)
 {
 	// TODO(Sam): mmmh délicieux ...
@@ -66,8 +147,14 @@ std::vector<Environement> rule_is_valid(std::unordered_set<Fact> *facts, Rule *r
 
 Fact instanciate_conclusion(Rule *rule, Environement *environement)
 {
-	// TODO(Sam): mmiam
 	Fact result;
+
+	// TODO(Sam): Va falloir organiser qui a la propriété de quoi dans cette histoire
+	Pattern *pattern = DEEP_COPY_OF_PATTERNS(rule->conclusion);
+	replace_with_environments(pattern, environement);
+
+	// TODO(Sam): Comment on passe de Pattern à Fact ?
+	
 	return result;
 }
 
