@@ -12,7 +12,7 @@
 	event(42)
  */
 
-#include <unordered_set>
+#include <unordered_map>
 #include <queue>
 #include <vector>
 #include <functional>
@@ -23,7 +23,8 @@
   - TODO Est-ce qu'on veux un "pattern manager" qui soit proprio
          des patterns ROOT ?
   
-  - Le Fact possède 1 pattern
+  - Un Fact possede est un pattern
+  - Une condition est un pattern
  */
 
 struct Pattern {
@@ -44,36 +45,99 @@ struct Pattern {
 	Pattern *next;
 	bool symbole;
 
+	Pattern() {
+		memset(this, 0, sizeof(Pattern));
+	}
+	
+	Pattern(Pattern const& p) {
+		memcpy(this, &p, sizeof(Pattern));
+		if(!symbole && first)
+			first = new Pattern(*first);
+		if(next)
+			next = new Pattern(*next);
+	}
+
 	~Pattern() {
 		if(!symbole) delete first;
 		delete next;
 	}
+
+	
 };
+
+bool operator!=(Pattern const& pat1, Pattern const& pat2);
 
 bool operator==(Pattern const& pat1, Pattern const& pat2)
 {
 	if(&pat1 == &pat2) return true;
 
-   // TODO(Sam): On veut pouvoir comparer 2 patterns qui ne sont pas
-   // au meme endroit en mémoire
-	
-	bool cmp = memcmp(&part1, &part2, sizeof(Pattern)) == 0;
+	if(pat1.symbole != pat2.symbole) return false;
+	if(pat1.symbole)
+	{
+		if(pat1.variable != pat2.variable) return false;
+		if(pat1.variable)
+		{
+			if(pat1.name != pat2.name) return false;
+		}
+		else
+		{
+			if(pat1.id != pat2.id) return false;
+		}
+	}
+	else
+	{
+		if(pat1.next && *(pat1.next) != *(pat2.next)) return false;
+	}
 
 	if(pat1.next == nullptr) return true;
-	return *(pat1->next) == *(pat1->next);
+	return *(pat1.next) == *(pat1.next);
 }
 
+inline
+bool operator!=(Pattern const& pat1, Pattern const& pat2)
+{
+	bool result = !(pat1 == pat2);
+	return result;
+}
+
+// DEBUG
+std::string convert_pattern_to_string(Pattern *pattern);
+
 struct Fact {
+
 	u32 id;
+	Pattern *pattern;
+	bool pattern_proprio;
 
-	// TODO(Sam): Attention aux copies de Fact !
-	Pattern pattern;
-
-	// Un fact est un pattern ?
-	
 	// Debug
 	std::string description;
+
+	Fact() : description() {
+		id = 0;
+		pattern = nullptr;
+		pattern_proprio = false;
+	}
+
+	Fact(Fact const& f) {
+		id = f.id;
+		pattern = f.pattern;
+		pattern_proprio = false;
+
+		description = f.description;
+	}
+	
+	~Fact() {
+		if(pattern_proprio)
+			delete pattern;
+	}
 };
+
+void fact_swap_property(Fact& f1, Fact& f2)
+{
+	bool tmp = f1.pattern_proprio;
+	f1.pattern_proprio = f2.pattern_proprio;
+	f2.pattern_proprio = tmp;
+}
 
 bool operator==(Fact f1, Fact f2)
 {
@@ -93,8 +157,8 @@ namespace std
 
 struct EnvironementAssociation {
 	char variable_name;
-	// TODO(Sam): Qui est propriétaire des Patterns ?
-	Pattern *datum
+	// NOTE(Sam): Le Fact est proprio du pattern
+	Pattern *datum;
 };
 
 struct Environement {
@@ -107,15 +171,9 @@ struct ConditionWithEnvironement {
 	Environement environement;
 };
 
-struct Condition {
-	// Possède un pattern ?
-	// TODO(Sam): Une condition est un pattern ? Donc on pourrait pas dire que
-	// le proprio du pattern c'est la règle ?
-};
-
 struct Rule {
-	std::vector<Fact> conditions;
-	Fact conclusion;
+	std::vector<Pattern> conditions;
+	Pattern conclusion;
 };
 
 struct Event {
@@ -127,5 +185,6 @@ struct Event {
 
 struct EventSystem {
 	std::vector<Rule> rules;
-	std::unordered_set<Fact> facts;
+	std::unordered_map<Fact, Fact> facts;
+	u32 fact_next_id;
 };
