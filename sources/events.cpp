@@ -29,7 +29,8 @@ void replace_with_environments(Pattern *pattern, Environement *environement)
 					if(association.datum->symbole)
 					{
 						assert(!association.datum->variable);
-						pattern->id = association.datum->id;
+						pattern->type = association.datum->type;
+						pattern->data = association.datum->data;
 						pattern->variable = false;
 					}
 					else
@@ -232,17 +233,6 @@ void inference(Application *app)
 	
 }
 
-enum class SymboleType {
-	NONE = 0, // Must not be used
-	PERE,
-	FRERE,
-	ONCLE,
-	Jacques,
-	Charles,
-	Francis,
-	Pierre
-};
-
 std::string convert_pattern_to_string(Pattern *pattern)
 {
 	std::string result = "";
@@ -255,7 +245,7 @@ std::string convert_pattern_to_string(Pattern *pattern)
 		if(pattern->variable)
 			result += std::string({'?',pattern->name});
 		else
-		switch(pattern->id)
+		switch(pattern->type)
 		{
 		case SymboleType::PERE:
 			result += "PERE";
@@ -266,17 +256,8 @@ std::string convert_pattern_to_string(Pattern *pattern)
 		case SymboleType::ONCLE:
 			result += "ONCLE";
 			break;
-		case SymboleType::Jacques:
-			result += "Jacques";
-			break;
-		case SymboleType::Charles:
-			result += "Charles";
-			break;
-		case SymboleType::Francis:
-			result += "Francis";
-			break;
-		case SymboleType::Pierre:
-			result += "Pierre";
+		case SymboleType::USER:
+			result += global_app->data->users[pattern->data].fullname;
 			break;
 		default:
 			result += "-";
@@ -296,29 +277,10 @@ std::string convert_pattern_to_string(Pattern *pattern)
 
 void init_event_system(EventSystem *event_system)
 {
+	GameData *data = global_app->data;
+	
 	u32 fact_id = 0;
-	/*
-	Fact fact1 = {fact_id++, "vin"}; 
-	Fact fact2 = {fact_id++, "< 2 litres"}; 
-	Fact fact3 = {fact_id++, "< 100 chf"}; 
-	Fact fact4 = {fact_id++, "adulte"}; 
-	Fact fact5 = {fact_id++, "hors-taxe"};
-	Fact fact6 = {fact_id++, "cognac"};
-	Fact fact7 = {fact_id++, "< 1 litre"};	
-	Fact fact8 = {fact_id++, "petite quantite"};
 	
-	event_system->facts.insert(fact6);
-	event_system->facts.insert(fact2);
-	event_system->facts.insert(fact7);
-	//event_system->facts.insert(fact3);
-	event_system->facts.insert(fact4);
-	
-	event_system->rules.push_back({{fact1, fact2}, fact8});
-	event_system->rules.push_back({{fact6, fact7}, fact8});
-	event_system->rules.push_back({{fact3}, fact8});
-	event_system->rules.push_back({{fact8, fact4}, fact5});
-	*/
-
 	Pattern p1 = {};
 	{
 		p1.symbole = false;
@@ -328,21 +290,23 @@ void init_event_system(EventSystem *event_system)
 		Pattern *tmp = new Pattern();
 		tmp->symbole = true;
 		tmp->variable = false;
-		tmp->id = (u32)SymboleType::PERE;
+		tmp->type = SymboleType::PERE;
 		p1.first = tmp;
 		trans = tmp;
 		
 		tmp = new Pattern();
 		tmp->symbole = true;
 		tmp->variable = false;
-		tmp->id = (u32)SymboleType::Jacques;
+		tmp->type = SymboleType::USER;
+		tmp->data = (u64)(data->users[0].id);
 		trans->next = tmp;
 		trans = tmp;
 		
 		tmp = new Pattern();
 		tmp->symbole = true;
 		tmp->variable = false;
-		tmp->id = (u32)SymboleType::Charles;
+		tmp->type = SymboleType::USER;
+		tmp->data = (u64)(data->users[1].id);
 		trans->next = tmp;
 		trans = tmp;
 		
@@ -360,21 +324,23 @@ void init_event_system(EventSystem *event_system)
 		Pattern *tmp = new Pattern();
 		tmp->symbole = true;
 		tmp->variable = false;
-		tmp->id = (u32)SymboleType::FRERE;
+		tmp->type = SymboleType::FRERE;
 		p2.first = tmp;
 		trans = tmp;
 		
 		tmp = new Pattern();
 		tmp->symbole = true;
 		tmp->variable = false;
-		tmp->id = (u32)SymboleType::Charles;
+		tmp->type = SymboleType::USER;
+		tmp->data = (u64)(data->users[1].id);
 		trans->next = tmp;
 		trans = tmp;
 		
 		tmp = new Pattern();
 		tmp->symbole = true;
 		tmp->variable = false;
-		tmp->id = (u32)SymboleType::Francis;
+		tmp->type = SymboleType::USER;
+		tmp->data = (u64)(data->users[3].id);
 		trans->next = tmp;
 		trans = tmp;
 		
@@ -392,21 +358,23 @@ void init_event_system(EventSystem *event_system)
 		Pattern *tmp = new Pattern();
 		tmp->symbole = true;
 		tmp->variable = false;
-		tmp->id = (u32)SymboleType::FRERE;
+		tmp->type = SymboleType::FRERE;
 		p3.first = tmp;
 		trans = tmp;
 		
 		tmp = new Pattern();
 		tmp->symbole = true;
 		tmp->variable = false;
-		tmp->id = (u32)SymboleType::Jacques;
+		tmp->type = SymboleType::USER;
+		tmp->data = (u64)(data->users[0].id);
 		trans->next = tmp;
 		trans = tmp;
 		
 		tmp = new Pattern();
 		tmp->symbole = true;
 		tmp->variable = false;
-		tmp->id = (u32)SymboleType::Pierre;
+		tmp->type = SymboleType::USER;
+		tmp->data = (u64)(data->users[2].id);
 		trans->next = tmp;
 		trans = tmp;
 		
@@ -436,7 +404,7 @@ void init_event_system(EventSystem *event_system)
 			Pattern *tmp = new Pattern();
 			tmp->symbole = true;
 			tmp->variable = false;
-			tmp->id = (u32)SymboleType::PERE;
+			tmp->type = SymboleType::PERE;
 			pr11.first = tmp;
 			trans = tmp;
 		
@@ -464,7 +432,7 @@ void init_event_system(EventSystem *event_system)
 			Pattern *tmp = new Pattern();
 			tmp->symbole = true;
 			tmp->variable = false;
-			tmp->id = (u32)SymboleType::FRERE;
+			tmp->type = SymboleType::FRERE;
 			pr12.first = tmp;
 			trans = tmp;
 		
@@ -491,7 +459,7 @@ void init_event_system(EventSystem *event_system)
 			Pattern *tmp = new Pattern();
 			tmp->symbole = true;
 			tmp->variable = false;
-			tmp->id = (u32)SymboleType::PERE;
+			tmp->type = SymboleType::PERE;
 			pr13.first = tmp;
 			trans = tmp;
 		
@@ -524,7 +492,7 @@ void init_event_system(EventSystem *event_system)
 			Pattern *tmp = new Pattern();
 			tmp->symbole = true;
 			tmp->variable = false;
-			tmp->id = (u32)SymboleType::PERE;
+			tmp->type = SymboleType::PERE;
 			pr11.first = tmp;
 			trans = tmp;
 		
@@ -552,7 +520,7 @@ void init_event_system(EventSystem *event_system)
 			Pattern *tmp = new Pattern();
 			tmp->symbole = true;
 			tmp->variable = false;
-			tmp->id = (u32)SymboleType::FRERE;
+			tmp->type = SymboleType::FRERE;
 			pr12.first = tmp;
 			trans = tmp;
 		
@@ -579,7 +547,7 @@ void init_event_system(EventSystem *event_system)
 			Pattern *tmp = new Pattern();
 			tmp->symbole = true;
 			tmp->variable = false;
-			tmp->id = (u32)SymboleType::ONCLE;
+			tmp->type = SymboleType::ONCLE;
 			pr13.first = tmp;
 			trans = tmp;
 		

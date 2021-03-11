@@ -19,22 +19,32 @@
 
 /*
   NOTE(Sam):
-  - Le Pattern est propriétaire de 'first' et 'next'
-  - TODO Est-ce qu'on veux un "pattern manager" qui soit proprio
-         des patterns ROOT ?
-  
-  - Un Fact possede est un pattern
+  - Le Pattern est propriétaire de 'first' et 'next'  
+  - Un Fact possede un pattern
   - Une condition est un pattern
+  - Une conclusion est un pattern (pour le moment)
  */
+
+enum class SymboleType {
+	NONE = 0, // Must not be used
+	PERE,
+	FRERE,
+	ONCLE,
+
+	NUMBER,
+	USER,
+	CMP_GREATER,
+};
 
 struct Pattern {
 	union {
 		struct {
 			// Symbole
 			union {
-				u32 id; // id de symbole !
+				SymboleType type; // id de symbole !
 				char name; // Nom de variable
 			};
+			u64 data;
 			bool variable;
 		};
 		struct {
@@ -51,6 +61,10 @@ struct Pattern {
 	
 	Pattern(Pattern const& p) {
 		memcpy(this, &p, sizeof(Pattern));
+		if(symbole)
+		{
+			//if(type == ???) data = new ???(*((*???)data));
+		}
 		if(!symbole && first)
 			first = new Pattern(*first);
 		if(next)
@@ -59,6 +73,10 @@ struct Pattern {
 
 	~Pattern() {
 		if(!symbole) delete first;
+		else
+		{
+			//if(type == ???) delete (*???)data;
+		}
 		delete next;
 	}
 
@@ -81,7 +99,10 @@ bool operator==(Pattern const& pat1, Pattern const& pat2)
 		}
 		else
 		{
-			if(pat1.id != pat2.id) return false;
+			if(pat1.type != pat2.type) return false;
+			if(pat1.data != pat2.data) return false;
+			// TODO(Sam): Special care must be taken if data is
+			// a pointer !
 		}
 	}
 	else
