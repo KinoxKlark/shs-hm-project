@@ -54,7 +54,7 @@ void replace_with_environments(Pattern *pattern, Environement *environement)
 
 
 // NOTE(Sam): Given pattern MUST be compilable to User*, no checking, only assert in debug mode!
-User* compile_pattern_to_user(Pattern *pattern, Environement *environement)
+User* compile_pattern_to_user(Pattern *pattern)
 {
 	if(pattern->symbole)
 	{
@@ -76,7 +76,7 @@ User* compile_pattern_to_user(Pattern *pattern, Environement *environement)
 }
 
 // NOTE(Sam): Given pattern MUST be compilable to number, no checking, only assert in debug mode!
-r32 compile_pattern_to_number(Pattern *pattern, Environement *environement)
+r32 compile_pattern_to_number(Pattern *pattern)
 {
 	if(pattern->symbole)
 	{
@@ -93,7 +93,7 @@ r32 compile_pattern_to_number(Pattern *pattern, Environement *environement)
 	{
 		Pattern *second = first->next;
 
-		User * user = compile_pattern_to_user(second, environement);
+		User * user = compile_pattern_to_user(second);
 		UserGauge* gauge =  get_personality_gauge(user, (u32)first->data);
 
 		assert(gauge);
@@ -103,7 +103,7 @@ r32 compile_pattern_to_number(Pattern *pattern, Environement *environement)
 	{
 		Pattern *second = first->next;
 
-		User * user = compile_pattern_to_user(second, environement);
+		User * user = compile_pattern_to_user(second);
 		UserGauge* gauge =  get_interest_gauge(user, (u32)first->data);
 
 		return gauge ? gauge->amount : 0.f;	
@@ -115,11 +115,13 @@ r32 compile_pattern_to_number(Pattern *pattern, Environement *environement)
 }
 
 // NOTE(Sam): Given pattern MUST be compilable to boolean, no checking, only assert in debug mode!
-bool compile_pattern_to_boolean(Pattern *pattern, Environement *environement)
+bool compile_pattern_to_boolean(Pattern *pattern)
 {
 	assert(!pattern->symbole);
 	
 	Pattern *first = pattern->first;
+
+	bool result = false;
 
 	switch(first->type)
 	{
@@ -128,14 +130,17 @@ bool compile_pattern_to_boolean(Pattern *pattern, Environement *environement)
 		Pattern *lhs = first->next;
 		Pattern *rhs = lhs->next;
 
-		r32 lhs_value = compile_pattern_to_number(lhs, environement);
-		r32 rhs_value = compile_pattern_to_number(rhs, environement); 
+		r32 lhs_value = compile_pattern_to_number(lhs);
+		r32 rhs_value = compile_pattern_to_number(rhs); 
 		
-		return lhs > rhs;
-	}
+		result = lhs_value > rhs_value;
+	} break;
 	default:
-		return false;
+		result =  false;
+		break;
 	}
+
+	return result;
 }
 
 /**
@@ -329,9 +334,13 @@ bool rule_is_valid(std::unordered_map<Fact, Fact> *facts, Rule *rule, Environeme
 	{
 		Pattern *condition = &rule->conditions[cond_id];
 		bool condition_should_compile = environement->conditions_to_compile.count(cond_id) > 0;
-		if(condition_should_compile || !compile_pattern_to_boolean(condition, environement))
+		if(condition_should_compile)
 		{
-			return false;
+			Pattern modified_condition(*condition);
+			replace_with_environments(&modified_condition, environement);
+			bool value = compile_pattern_to_boolean(&modified_condition);
+			if(!value)
+				return false;
 		}
 	}
 
@@ -416,6 +425,8 @@ void inference(Application *app)
 	
 }
 
+#include <sstream>
+
 std::string convert_pattern_to_string(Pattern *pattern)
 {
 	std::string result = "";
@@ -439,14 +450,23 @@ std::string convert_pattern_to_string(Pattern *pattern)
 		case SymboleType::ONCLE:
 			result += "ONCLE";
 			break;
+		case SymboleType::NUMBER:
+		{
+			std::stringstream ss;
+			ss << *((r32*)(&pattern->data));
+			result += ss.str();
+		} break;
+		case SymboleType::CMP_GREATER:
+			result += ">";
+			break;
 		case SymboleType::USER:
 			result += global_app->data->users[pattern->data].fullname;
 			break;
 		case SymboleType::PERSONALITY_GAUGE:
-			result += global_app->data->personalities[pattern->data].name;
+			result += "PERSONALITY " + global_app->data->personalities[pattern->data].name;
 			break;
 		case SymboleType::INTEREST_GAUGE:
-			result += global_app->data->personalities[pattern->data].name;
+			result += "INTEREST " + global_app->data->personalities[pattern->data].name;
 			break;
 		default:
 			result += "-";
@@ -774,6 +794,80 @@ void init_event_system(EventSystem *event_system)
 		}
 
 		event_system->rules.push_back({{pr11, pr12}, pr13});
+	}
+
+	{
+		Pattern pr11 = {};
+		{
+			pr11.symbole = false;
+			pr11.next = nullptr;
+
+			Pattern *trans = &pr11;
+			Pattern *tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = false;
+			tmp->type = SymboleType::CMP_GREATER;
+			pr11.first = tmp;
+			trans = tmp;
+
+			tmp = new Pattern();
+			tmp->symbole = false;
+			trans->next = tmp;
+			trans = tmp;
+			{
+				Pattern *trans2 = tmp;
+				Pattern* tmp2 = new Pattern();
+				tmp2->symbole = true;
+				tmp2->variable = false;
+				tmp2->type = SymboleType::PERSONALITY_GAUGE;
+				tmp2->data = 0;
+				trans2->first = tmp2;
+				trans2 = tmp2;
+			
+				tmp2 = new Pattern();
+				tmp2->symbole = true;
+				tmp2->variable = true;
+				tmp2->name = 'x';
+				trans2->next = tmp2;
+				trans2 = tmp2;
+			}
+		
+			tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = false;
+			tmp->type = SymboleType::NUMBER;
+			r32 tmpdata = .3f;
+			tmp->data = *((u64*)(&tmpdata));
+			trans->next = tmp;
+			trans = tmp;
+		
+		}
+		Pattern pr12 = {};
+		{
+			pr12.symbole = false;
+			pr12.next = nullptr;
+
+			Pattern *trans = &pr12;
+			Pattern *tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = false;
+			tmp->type = SymboleType::PERSONALITY_GAUGE;
+			tmp->data = 0;
+			pr12.first = tmp;
+			trans = tmp;
+		
+			tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = true;
+			tmp->name = 'x';
+			trans->next = tmp;
+			trans = tmp;		
+		}
+
+		std::cout << convert_pattern_to_string(&pr11) << std::endl;
+		std::cout << convert_pattern_to_string(&pr12) << std::endl;
+		
+		event_system->rules.push_back({{pr11}, pr12});
 	}
 
 }
