@@ -5,6 +5,10 @@ bool merge_environement(Environement *environement, EnvironementAssociation asso
 	{
 		if(environement->associations[idx].variable_name == association.variable_name)
 			return *(environement->associations[idx].datum) == *(association.datum);
+		if(environement->associations[idx].datum->symbole
+		   && environement->associations[idx].datum->type == SymboleType::USER
+		   && environement->associations[idx].datum->data == association.datum->data)
+			return false;
 	}
 
 	environement->associations.push_back(association);
@@ -48,10 +52,108 @@ void replace_with_environments(Pattern *pattern, Environement *environement)
 	}
 }
 
+
+// NOTE(Sam): Given pattern MUST be compilable to User*, no checking, only assert in debug mode!
+User* compile_pattern_to_user(Pattern *pattern, Environement *environement)
+{
+	if(pattern->symbole)
+	{
+		assert(!pattern->variable);
+		assert(pattern->type == SymboleType::USER);
+		return &global_app->data->users[pattern->data];
+	}
+
+	Pattern *first = pattern->first;
+
+	switch(first->type)
+	{
+		// NOTE(Sam): Nothing for now
+	default:
+		assert(false);
+	}
+
+	return nullptr;
+}
+
+// NOTE(Sam): Given pattern MUST be compilable to number, no checking, only assert in debug mode!
+r32 compile_pattern_to_number(Pattern *pattern, Environement *environement)
+{
+	if(pattern->symbole)
+	{
+		assert(!pattern->variable);
+		assert(pattern->type == SymboleType::NUMBER);
+		return *((r32*)(&pattern->data));
+	}
+
+	Pattern *first = pattern->first;
+
+	switch(first->type)
+	{
+	case SymboleType::PERSONALITY_GAUGE:
+	{
+		Pattern *second = first->next;
+
+		User * user = compile_pattern_to_user(second, environement);
+		UserGauge* gauge =  get_personality_gauge(user, (u32)first->data);
+
+		assert(gauge);
+		return gauge->amount;
+	}
+	case SymboleType::INTEREST_GAUGE:
+	{
+		Pattern *second = first->next;
+
+		User * user = compile_pattern_to_user(second, environement);
+		UserGauge* gauge =  get_interest_gauge(user, (u32)first->data);
+
+		return gauge ? gauge->amount : 0.f;	
+	} break;
+	default:
+		assert(false);
+	}
+	return 0.f;
+}
+
+// NOTE(Sam): Given pattern MUST be compilable to boolean, no checking, only assert in debug mode!
+bool compile_pattern_to_boolean(Pattern *pattern, Environement *environement)
+{
+	assert(!pattern->symbole);
+	
+	Pattern *first = pattern->first;
+
+	switch(first->type)
+	{
+	case SymboleType::CMP_GREATER:
+	{
+		Pattern *lhs = first->next;
+		Pattern *rhs = lhs->next;
+
+		r32 lhs_value = compile_pattern_to_number(lhs, environement);
+		r32 rhs_value = compile_pattern_to_number(rhs, environement); 
+		
+		return lhs > rhs;
+	}
+	default:
+		return false;
+	}
+}
+
+/**
+   A.creativite > 0.5
+   => ( > , ( creativite, ?A ), 0.5 )
+   A 
+
+   A.peche <= B.peche
+   => ( <= , (peche, ?A), (peche, ?B) )
+	   
+   A.cuisine > A.gourmandise
+   => ( > , (cuisine, ?A), (gourmandise, ?A) )
+
+*/
+
 // NOTE(Sam): pattern WILL be modified !
 bool filter_recurse(Pattern *pattern, Pattern *datum, Environement *environement_to_set)
 {
-	
 	if(pattern->symbole)
 	{
 		if(*pattern == *datum) return true;
@@ -82,7 +184,6 @@ bool filter_recurse(Pattern *pattern, Pattern *datum, Environement *environement
 	rest2.first = datum->first->next;
 	rest2.next = nullptr;
 
-	// NOTE(Sam): Modifies the pattern, thus we need to pass a copy
 	replace_with_environments(&rest1, environement_to_set);
 
 	bool result = filter_recurse(&rest1, &rest2, environement_to_set);
@@ -102,6 +203,31 @@ bool filter(Pattern *condition, Fact const& datum, Environement *environement_to
 	return filter_recurse( &modified_condition, datum.pattern, environement_to_set);
 }
 
+std::unordered_set<char> get_variables_in_pattern(Pattern *pattern)
+{
+	std::unordered_set<char> result;
+
+	while(pattern != nullptr)
+	{
+		if(!pattern->symbole)
+		{
+			std::unordered_set<char> subresult = get_variables_in_pattern(pattern->first);
+			for(auto& variable : subresult)
+			{
+				result.insert(variable);
+			}
+			
+		}
+		else if(pattern->variable)
+		{
+			result.insert(pattern->name);
+		}
+		
+		pattern = pattern->next;
+	}
+	
+	return result;
+}
 
 std::vector<ConditionWithEnvironement> rule_has_condition(Fact const& fact, Rule *rule)
 {
@@ -109,19 +235,34 @@ std::vector<ConditionWithEnvironement> rule_has_condition(Fact const& fact, Rule
 	
 	for(u32 idx = 0; idx < rule->conditions.size(); ++idx)
 	{
-		Environement environement = {};
-		if(filter(&rule->conditions[idx], fact, &environement))
+		if(fact.pattern->symbole
+		   && !fact.pattern->variable
+		   && fact.pattern->type == SymboleType::USER)
 		{
-			result.push_back({ idx, environement });
+			std::unordered_set<char> variables = get_variables_in_pattern(&rule->conditions[idx]);
+			for(auto& variable : variables)
+			{
+				Environement environement = {};
+				environement.conditions_to_compile.insert(idx);
+				environement.associations.push_back({ variable, fact.pattern });
+				result.push_back({ idx, environement });
+			}
+		}
+		else
+		{
+			Environement environement = {};
+			if(filter(&rule->conditions[idx], fact, &environement))
+			{
+				result.push_back({ idx, environement });
+			}
 		}
 	}
 	
 	return result;
 }
 
-
-std::vector<Environement> rule_is_valid(std::unordered_map<Fact, Fact> *facts, Rule *rule,
-										u32 condition_id, Environement *environement)
+std::vector<Environement> rule_may_be_valid(std::unordered_map<Fact, Fact> *facts, Rule *rule,
+											u32 condition_id, Environement *environement)
 {
 	std::vector<Environement> result({*environement});
 	
@@ -137,9 +278,31 @@ std::vector<Environement> rule_is_valid(std::unordered_map<Fact, Fact> *facts, R
 			for(u32 env_id = 0; env_id < result.size(); ++env_id)
 			{
 				Environement environement = result[env_id];
-				if(filter(condition, fact.second, &environement))
+
+				if(fact.second.pattern->symbole
+				   && !fact.second.pattern->variable
+				   && fact.second.pattern->type == SymboleType::USER)
 				{
-					environements.push_back(environement);
+					Pattern modified_condition(*condition);
+					replace_with_environments( &modified_condition, &environement);
+
+					std::unordered_set<char> variables = get_variables_in_pattern(condition);
+					for(auto& variable : variables)
+					{
+						Environement environement_fusion = environement;
+						if(merge_environement(&environement_fusion, { variable , fact.second.pattern }))
+						{
+							environement_fusion.conditions_to_compile.insert(cond_id);
+							environements.push_back(environement_fusion);
+						}
+					}
+				}
+				else
+				{
+					if(filter(condition, fact.second, &environement))
+					{
+						environements.push_back(environement);
+					}
 				}
 			}
 		}
@@ -155,6 +318,24 @@ std::vector<Environement> rule_is_valid(std::unordered_map<Fact, Fact> *facts, R
 	}
 	
 	return result;
+}
+
+// NOTE(Sam): Rule is supposed to be potentialy valide given knowed facts
+// this function only check if each conditions compiles to TRUE for a given
+// environement.
+bool rule_is_valid(std::unordered_map<Fact, Fact> *facts, Rule *rule, Environement *environement)
+{
+	for(u32 cond_id = 0; cond_id < rule->conditions.size(); ++cond_id)
+	{
+		Pattern *condition = &rule->conditions[cond_id];
+		bool condition_should_compile = environement->conditions_to_compile.count(cond_id) > 0;
+		if(condition_should_compile || !compile_pattern_to_boolean(condition, environement))
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 // TODO(Sam): Est ce qu'on peut pas faire ça avec des rvalue ref ?
@@ -215,9 +396,11 @@ void inference(Application *app)
 					u32 condition_id = conds_envs[condenv_id].condition;
 					Environement *environement = &(conds_envs[condenv_id].environement);
 
-					std::vector<Environement> envs = rule_is_valid(&deduced_facts, rule, condition_id, environement);
+					std::vector<Environement> envs = rule_may_be_valid(&deduced_facts, rule, condition_id, environement);
 					for(u32 env_id = 0; env_id < envs.size(); ++env_id)
 					{
+						if(!rule_is_valid(&deduced_facts, rule, &envs[env_id])) continue;
+						
 						// NOTE(Sam): Il doit y avoir transfert de propriété du pattern
 						Fact conclusion = instanciate_conclusion(rule, &envs[env_id], fact_id++);
 						working_queue.push(conclusion);
@@ -259,6 +442,12 @@ std::string convert_pattern_to_string(Pattern *pattern)
 		case SymboleType::USER:
 			result += global_app->data->users[pattern->data].fullname;
 			break;
+		case SymboleType::PERSONALITY_GAUGE:
+			result += global_app->data->personalities[pattern->data].name;
+			break;
+		case SymboleType::INTEREST_GAUGE:
+			result += global_app->data->personalities[pattern->data].name;
+			break;
 		default:
 			result += "-";
 			break;
@@ -273,6 +462,7 @@ std::string convert_pattern_to_string(Pattern *pattern)
 		result += ", " + convert_pattern_to_string(pattern->next);
 	
 	return result;
+
 }
 
 void init_event_system(EventSystem *event_system)
@@ -280,6 +470,22 @@ void init_event_system(EventSystem *event_system)
 	GameData *data = global_app->data;
 	
 	u32 fact_id = 0;
+
+	for(u32 i = 0; i < data->users.size(); ++i)
+	{
+		Pattern p0 = {};
+		p0.symbole = true;
+		p0.variable = false;
+		p0.type = SymboleType::USER;
+		p0.data = (u64)(data->users[i].id);
+		Fact f0 = {};
+		f0.id = fact_id++;
+		f0.pattern = new Pattern(p0);
+
+		event_system->facts.insert({f0,f0});
+		event_system->facts[f0].pattern_proprio = true;
+	
+	}
 	
 	Pattern p1 = {};
 	{
@@ -570,6 +776,4 @@ void init_event_system(EventSystem *event_system)
 		event_system->rules.push_back({{pr11, pr12}, pr13});
 	}
 
-	std::cout << "Hello Event System !" << std::endl;
-	
 }

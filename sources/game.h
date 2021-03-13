@@ -16,7 +16,7 @@ struct GaugeInfo {
 
 struct UserGauge {
 	u32 id;
-	float amount;
+	r32 amount;
 };
 
 struct UserIdentity {
@@ -30,6 +30,30 @@ struct User {
 	bool isMan;
 	std::string fullname;
 };
+
+inline
+UserGauge* get_personality_gauge(User *user, u32 gauge_id)
+{
+	for(auto& gauge : user->identity.personalities)
+	{
+		if(gauge.id == gauge_id)
+			return &gauge;
+	}
+
+	return nullptr;
+}
+
+inline
+UserGauge* get_interest_gauge(User *user, u32 gauge_id)
+{
+	for(auto& gauge : user->identity.interests)
+	{
+		if(gauge.id == gauge_id)
+			return &gauge;
+	}
+
+	return nullptr;
+}
 
 struct GameData {
 	EventSystem event_system;

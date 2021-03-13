@@ -13,6 +13,7 @@
  */
 
 #include <unordered_map>
+#include <unordered_set>
 #include <queue>
 #include <vector>
 #include <functional>
@@ -33,6 +34,8 @@ enum class SymboleType {
 
 	NUMBER,
 	USER,
+	PERSONALITY_GAUGE,
+	INTEREST_GAUGE,
 	CMP_GREATER,
 };
 
@@ -184,6 +187,7 @@ struct EnvironementAssociation {
 
 struct Environement {
 	std::vector<EnvironementAssociation> associations;
+	std::unordered_set<u32> conditions_to_compile;
 };
 
 struct ConditionWithEnvironement {
