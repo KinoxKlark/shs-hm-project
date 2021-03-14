@@ -143,18 +143,6 @@ bool compile_pattern_to_boolean(Pattern *pattern)
 	return result;
 }
 
-/**
-   A.creativite > 0.5
-   => ( > , ( creativite, ?A ), 0.5 )
-   A 
-
-   A.peche <= B.peche
-   => ( <= , (peche, ?A), (peche, ?B) )
-	   
-   A.cuisine > A.gourmandise
-   => ( > , (cuisine, ?A), (gourmandise, ?A) )
-
-*/
 
 // NOTE(Sam): pattern WILL be modified !
 bool filter_recurse(Pattern *pattern, Pattern *datum, Environement *environement_to_set)
@@ -273,7 +261,8 @@ std::vector<Environement> rule_may_be_valid(std::unordered_map<Fact, Fact> *fact
 	
 	for(u32 cond_id = 0; cond_id < rule->conditions.size(); ++cond_id)
 	{
-		if(cond_id == condition_id) continue;
+		if(cond_id == condition_id && environement->conditions_to_compile.count(cond_id) == 0)
+			continue;
 
 		Pattern *condition = &rule->conditions[cond_id];
 		std::vector<Environement> environements;
@@ -338,9 +327,10 @@ bool rule_is_valid(std::unordered_map<Fact, Fact> *facts, Rule *rule, Environeme
 		{
 			Pattern modified_condition(*condition);
 			replace_with_environments(&modified_condition, environement);
+			u32 nb_variables = get_variables_in_pattern(&modified_condition).size();
+			if(nb_variables > 0) return false;
 			bool value = compile_pattern_to_boolean(&modified_condition);
-			if(!value)
-				return false;
+			if(!value) return false;
 		}
 	}
 
@@ -433,7 +423,7 @@ std::string convert_pattern_to_string(Pattern *pattern)
 
 	if(!pattern)
 		return result;
-	
+
 	if(pattern->symbole)
 	{
 		if(pattern->variable)
@@ -464,9 +454,28 @@ std::string convert_pattern_to_string(Pattern *pattern)
 			break;
 		case SymboleType::PERSONALITY_GAUGE:
 			result += "PERSONALITY " + global_app->data->personalities[pattern->data].name;
+			if(pattern->next && pattern->next->symbole && pattern->next->type == SymboleType::USER)
+			{
+				std::stringstream ss;
+				User *user = &global_app->data->users[pattern->next->data];
+				UserGauge *gauge = get_personality_gauge(user, pattern->data);
+				ss << " [" << gauge->amount << "]";
+				result += ss.str();
+			}
 			break;
 		case SymboleType::INTEREST_GAUGE:
 			result += "INTEREST " + global_app->data->personalities[pattern->data].name;
+			if(pattern->next && pattern->next->symbole && pattern->next->type == SymboleType::USER)
+			{
+				std::stringstream ss;
+				User *user = &global_app->data->users[pattern->next->data];
+				UserGauge *gauge = get_interest_gauge(user, pattern->data);
+				if(gauge)
+					ss << " [" << gauge->amount << "]";
+				else
+					ss << " [-]";
+				result += ss.str();
+			}
 			break;
 		default:
 			result += "-";
@@ -796,6 +805,20 @@ void init_event_system(EventSystem *event_system)
 		event_system->rules.push_back({{pr11, pr12}, pr13});
 	}
 
+	/**
+	   A.creativite > 0.5
+	   => ( > , ( creativite, ?A ), 0.5 )
+	   A 
+
+	   A.peche <= B.peche
+	   => ( <= , (peche, ?A), (peche, ?B) )
+	   
+	   A.cuisine > A.gourmandise
+	   => ( > , (cuisine, ?A), (gourmandise, ?A) )
+
+	*/
+
+	
 	{
 		Pattern pr11 = {};
 		{
@@ -864,8 +887,208 @@ void init_event_system(EventSystem *event_system)
 			trans = tmp;		
 		}
 
-		std::cout << convert_pattern_to_string(&pr11) << std::endl;
-		std::cout << convert_pattern_to_string(&pr12) << std::endl;
+		std::cout << convert_pattern_to_string(&pr11) << " => "
+				  << convert_pattern_to_string(&pr12) << std::endl;
+		
+		event_system->rules.push_back({{pr11}, pr12});
+	}
+	{
+		Pattern pr11 = {};
+		{
+			pr11.symbole = false;
+			pr11.next = nullptr;
+
+			Pattern *trans = &pr11;
+			Pattern *tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = false;
+			tmp->type = SymboleType::CMP_GREATER;
+			pr11.first = tmp;
+			trans = tmp;
+
+			tmp = new Pattern();
+			tmp->symbole = false;
+			trans->next = tmp;
+			trans = tmp;
+			{
+				Pattern *trans2 = tmp;
+				Pattern* tmp2 = new Pattern();
+				tmp2->symbole = true;
+				tmp2->variable = false;
+				tmp2->type = SymboleType::PERSONALITY_GAUGE;
+				tmp2->data = 0;
+				trans2->first = tmp2;
+				trans2 = tmp2;
+			
+				tmp2 = new Pattern();
+				tmp2->symbole = true;
+				tmp2->variable = true;
+				tmp2->name = 'x';
+				trans2->next = tmp2;
+				trans2 = tmp2;
+			}
+		
+			tmp = new Pattern();
+			tmp->symbole = false;
+			trans->next = tmp;
+			trans = tmp;
+			{
+				Pattern *trans2 = tmp;
+				Pattern* tmp2 = new Pattern();
+				tmp2->symbole = true;
+				tmp2->variable = false;
+				tmp2->type = SymboleType::PERSONALITY_GAUGE;
+				tmp2->data = 0;
+				trans2->first = tmp2;
+				trans2 = tmp2;
+			
+				tmp2 = new Pattern();
+				tmp2->symbole = true;
+				tmp2->variable = true;
+				tmp2->name = 'y';
+				trans2->next = tmp2;
+				trans2 = tmp2;
+			}
+		}
+		Pattern pr12 = {};
+		{
+			pr12.symbole = false;
+			pr12.next = nullptr;
+
+			Pattern *trans = &pr12;
+			Pattern *tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = false;
+			tmp->type = SymboleType::PERSONALITY_GAUGE;
+			tmp->data = 0;
+			pr12.first = tmp;
+			trans = tmp;
+		
+			tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = true;
+			tmp->name = 'x';
+			trans->next = tmp;
+			trans = tmp;
+
+			tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = false;
+			tmp->type = SymboleType::PERSONALITY_GAUGE;
+			tmp->data = 0;
+			trans->next = tmp;
+			trans = tmp;
+		
+			tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = true;
+			tmp->name = 'y';
+			trans->next = tmp;
+			trans = tmp;
+		}
+
+		std::cout << convert_pattern_to_string(&pr11) << " => "
+				  << convert_pattern_to_string(&pr12) << std::endl;
+		
+		event_system->rules.push_back({{pr11}, pr12});
+	}
+	{
+		Pattern pr11 = {};
+		{
+			pr11.symbole = false;
+			pr11.next = nullptr;
+
+			Pattern *trans = &pr11;
+			Pattern *tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = false;
+			tmp->type = SymboleType::CMP_GREATER;
+			pr11.first = tmp;
+			trans = tmp;
+
+			tmp = new Pattern();
+			tmp->symbole = false;
+			trans->next = tmp;
+			trans = tmp;
+			{
+				Pattern *trans2 = tmp;
+				Pattern* tmp2 = new Pattern();
+				tmp2->symbole = true;
+				tmp2->variable = false;
+				tmp2->type = SymboleType::PERSONALITY_GAUGE;
+				tmp2->data = 1;
+				trans2->first = tmp2;
+				trans2 = tmp2;
+			
+				tmp2 = new Pattern();
+				tmp2->symbole = true;
+				tmp2->variable = true;
+				tmp2->name = 'x';
+				trans2->next = tmp2;
+				trans2 = tmp2;
+			}
+		
+			tmp = new Pattern();
+			tmp->symbole = false;
+			trans->next = tmp;
+			trans = tmp;
+			{
+				Pattern *trans2 = tmp;
+				Pattern* tmp2 = new Pattern();
+				tmp2->symbole = true;
+				tmp2->variable = false;
+				tmp2->type = SymboleType::PERSONALITY_GAUGE;
+				tmp2->data = 0;
+				trans2->first = tmp2;
+				trans2 = tmp2;
+			
+				tmp2 = new Pattern();
+				tmp2->symbole = true;
+				tmp2->variable = true;
+				tmp2->name = 'x';
+				trans2->next = tmp2;
+				trans2 = tmp2;
+			}
+		}
+		Pattern pr12 = {};
+		{
+			pr12.symbole = false;
+			pr12.next = nullptr;
+
+			Pattern *trans = &pr12;
+			Pattern *tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = false;
+			tmp->type = SymboleType::PERSONALITY_GAUGE;
+			tmp->data = 1;
+			pr12.first = tmp;
+			trans = tmp;
+		
+			tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = true;
+			tmp->name = 'x';
+			trans->next = tmp;
+			trans = tmp;
+
+			tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = false;
+			tmp->type = SymboleType::PERSONALITY_GAUGE;
+			tmp->data = 0;
+			trans->next = tmp;
+			trans = tmp;
+		
+			tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = true;
+			tmp->name = 'x';
+			trans->next = tmp;
+			trans = tmp;
+		}
+
+		std::cout << convert_pattern_to_string(&pr11) << " => "
+				  << convert_pattern_to_string(&pr12) << std::endl;
 		
 		event_system->rules.push_back({{pr11}, pr12});
 	}
