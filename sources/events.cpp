@@ -355,6 +355,41 @@ Fact instanciate_conclusion(Rule *rule, Environement *environement, u32 fact_id)
 	return result;
 }
 
+void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* queue, u32 *fact_id)
+{
+	if(rule->conclusion.symbole
+	   && !rule->conclusion.variable
+	   && rule->conclusion.type == SymboleType::_SELECT_EVENT)
+	{
+		// TODO(Sam): Gestion des events
+		std::cout << "New Event: [" << rule->conclusion.data << "] ";
+
+		if(environement->associations.size() > 0)
+		{
+			std::cout << "with: ";
+
+			for(u32 idx = 0; idx < environement->associations.size(); ++idx)
+			{
+				if(environement->associations[idx].datum->type == SymboleType::USER)
+				{
+					std::cout << global_app->data->users[environement->associations[idx].datum->data].fullname;
+					if( idx+1 < environement->associations.size())
+						std::cout << ", ";
+				}
+			}
+		}
+
+		std::cout << std::endl;
+	}
+	else
+	{
+		// NOTE(Sam): Il doit y avoir transfert de propriété du pattern
+		Fact conclusion = instanciate_conclusion(rule, environement, (*fact_id)++);
+		queue->push(conclusion);
+		queue->back().pattern_proprio = true;
+	}
+}
+
 
 void inference(Application *app)
 {
@@ -399,11 +434,9 @@ void inference(Application *app)
 					for(u32 env_id = 0; env_id < envs.size(); ++env_id)
 					{
 						if(!rule_is_valid(&deduced_facts, rule, &envs[env_id])) continue;
+
+						apply_conclusion(rule, &envs[env_id], &working_queue, &fact_id);
 						
-						// NOTE(Sam): Il doit y avoir transfert de propriété du pattern
-						Fact conclusion = instanciate_conclusion(rule, &envs[env_id], fact_id++);
-						working_queue.push(conclusion);
-						working_queue.back().pattern_proprio = true;
 					}
 				}
 
@@ -477,6 +510,12 @@ std::string convert_pattern_to_string(Pattern *pattern)
 				result += ss.str();
 			}
 			break;
+		case SymboleType::_SELECT_EVENT:
+		{
+			std::stringstream ss;
+			ss << "SELECT EVENT " << pattern->data;
+			result += ss.str();
+		} break;
 		default:
 			result += "-";
 			break;
@@ -804,20 +843,6 @@ void init_event_system(EventSystem *event_system)
 
 		event_system->rules.push_back({{pr11, pr12}, pr13});
 	}
-
-	/**
-	   A.creativite > 0.5
-	   => ( > , ( creativite, ?A ), 0.5 )
-	   A 
-
-	   A.peche <= B.peche
-	   => ( <= , (peche, ?A), (peche, ?B) )
-	   
-	   A.cuisine > A.gourmandise
-	   => ( > , (cuisine, ?A), (gourmandise, ?A) )
-
-	*/
-
 	
 	{
 		Pattern pr11 = {};
@@ -867,6 +892,13 @@ void init_event_system(EventSystem *event_system)
 		}
 		Pattern pr12 = {};
 		{
+			pr12.symbole = true;
+			pr12.variable = false;
+			pr12.type = SymboleType::_SELECT_EVENT;
+			pr12.data = 01;
+
+			/*
+			
 			pr12.symbole = false;
 			pr12.next = nullptr;
 
@@ -884,7 +916,8 @@ void init_event_system(EventSystem *event_system)
 			tmp->variable = true;
 			tmp->name = 'x';
 			trans->next = tmp;
-			trans = tmp;		
+			trans = tmp;
+			*/
 		}
 
 		std::cout << convert_pattern_to_string(&pr11) << " => "
@@ -952,6 +985,13 @@ void init_event_system(EventSystem *event_system)
 		}
 		Pattern pr12 = {};
 		{
+			pr12.symbole = true;
+			pr12.variable = false;
+			pr12.type = SymboleType::_SELECT_EVENT;
+			pr12.data = 42;
+
+			/*
+			
 			pr12.symbole = false;
 			pr12.next = nullptr;
 
@@ -985,6 +1025,7 @@ void init_event_system(EventSystem *event_system)
 			tmp->name = 'y';
 			trans->next = tmp;
 			trans = tmp;
+			*/
 		}
 
 		std::cout << convert_pattern_to_string(&pr11) << " => "
@@ -1052,10 +1093,16 @@ void init_event_system(EventSystem *event_system)
 		}
 		Pattern pr12 = {};
 		{
+			pr12.symbole = true;
+			pr12.variable = false;
+			pr12.type = SymboleType::_SELECT_EVENT;
+			pr12.data = 12;
+
+			/*
 			pr12.symbole = false;
 			pr12.next = nullptr;
-
-			Pattern *trans = &pr12;
+			
+            Pattern *trans = &pr12;
 			Pattern *tmp = new Pattern();
 			tmp->symbole = true;
 			tmp->variable = false;
@@ -1085,6 +1132,7 @@ void init_event_system(EventSystem *event_system)
 			tmp->name = 'x';
 			trans->next = tmp;
 			trans = tmp;
+			*/
 		}
 
 		std::cout << convert_pattern_to_string(&pr11) << " => "

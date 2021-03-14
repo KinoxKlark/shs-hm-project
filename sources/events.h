@@ -27,16 +27,23 @@
  */
 
 enum class SymboleType {
-	NONE = 0, // Must not be used
+    // Must not be used
+	NONE = 0, 
+
+	// Inferrences
 	PERE,
 	FRERE,
 	ONCLE,
 
+	// Compilables
 	NUMBER,
 	USER,
 	PERSONALITY_GAUGE,
 	INTEREST_GAUGE,
 	CMP_GREATER,
+
+	// Special Action
+	_SELECT_EVENT,
 };
 
 struct Pattern {
