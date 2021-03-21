@@ -355,29 +355,46 @@ Fact instanciate_conclusion(Rule *rule, Environement *environement, u32 fact_id)
 	return result;
 }
 
-void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* queue, u32 *fact_id)
+void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* queue, u32 *fact_id, EventSystem *event_system)
 {
 	if(rule->conclusion.symbole
 	   && !rule->conclusion.variable
 	   && rule->conclusion.type == SymboleType::_SELECT_EVENT)
 	{
-		// TODO(Sam): Gestion des events
+		
 		std::cout << "New Event: [" << rule->conclusion.data << "] ";
 
+		Event event = event_system->all_events[rule->conclusion.data];
+		event.timestamp = 0;
+		event.users.reserve(environement->associations.size());
+
+		// TODO(Sam): On va vouloir récupérer seulement un subset des users pour une
+		// règle afin de ne pas avoir une répartition exponeneitel des dépendences en
+		// user lors de la rédaction du contenu
+		
 		if(environement->associations.size() > 0)
 		{
 			std::cout << "with: ";
 
 			for(u32 idx = 0; idx < environement->associations.size(); ++idx)
 			{
-				if(environement->associations[idx].datum->type == SymboleType::USER)
+				Pattern *pattern = environement->associations[idx].datum;
+				if(pattern->type == SymboleType::USER)
 				{
-					std::cout << global_app->data->users[environement->associations[idx].datum->data].fullname;
+					event.users.push_back(global_app->data->users[pattern->data].id);
+					std::cout << global_app->data->users[pattern->data].fullname;
 					if( idx+1 < environement->associations.size())
 						std::cout << ", ";
 				}
+				else
+				{
+					User *user = compile_pattern_to_user(pattern);
+					event.users.push_back(user->id);
+				}
 			}
 		}
+
+		event_system->selected_events.push_back(event);
 
 		std::cout << std::endl;
 	}
@@ -435,7 +452,7 @@ void inference(Application *app)
 					{
 						if(!rule_is_valid(&deduced_facts, rule, &envs[env_id])) continue;
 
-						apply_conclusion(rule, &envs[env_id], &working_queue, &fact_id);
+						apply_conclusion(rule, &envs[env_id], &working_queue, &fact_id, event_system);
 						
 					}
 				}
@@ -890,12 +907,18 @@ void init_event_system(EventSystem *event_system)
 			trans = tmp;
 		
 		}
+
+		Event event = {};
+		event.id = event_system->all_events.size();
+		event.description = "Event A créatif";
+		event_system->all_events.push_back(event);
+		
 		Pattern pr12 = {};
 		{
 			pr12.symbole = true;
 			pr12.variable = false;
 			pr12.type = SymboleType::_SELECT_EVENT;
-			pr12.data = 01;
+			pr12.data = event.id;
 
 			/*
 			
@@ -983,12 +1006,18 @@ void init_event_system(EventSystem *event_system)
 				trans2 = tmp2;
 			}
 		}
+
+		Event event = {};
+		event.id = event_system->all_events.size();
+		event.description = "Event A plus créatif que B";
+		event_system->all_events.push_back(event);
+		
 		Pattern pr12 = {};
 		{
 			pr12.symbole = true;
 			pr12.variable = false;
 			pr12.type = SymboleType::_SELECT_EVENT;
-			pr12.data = 42;
+			pr12.data = event.id;
 
 			/*
 			
@@ -1091,12 +1120,18 @@ void init_event_system(EventSystem *event_system)
 				trans2 = tmp2;
 			}
 		}
+
+		Event event = {};
+		event.id = event_system->all_events.size();
+		event.description = "Event Curieux et créatif!";
+		event_system->all_events.push_back(event);
+		
 		Pattern pr12 = {};
 		{
 			pr12.symbole = true;
 			pr12.variable = false;
 			pr12.type = SymboleType::_SELECT_EVENT;
-			pr12.data = 12;
+			pr12.data = event.id;
 
 			/*
 			pr12.symbole = false;

@@ -19,6 +19,7 @@ Application *global_app = nullptr;
 Renderer *global_renderer = nullptr;
 
 #include "events.cpp"
+#include "events_parser.cpp"
 #include "gui.cpp"
 #include "renderer.cpp"
 #include "inputs.cpp"
@@ -35,6 +36,8 @@ int main()
 
 	init_event_system(&(app->data->event_system));
 	inference(app);
+
+	importEvents(&(app->data->event_system));
 	
 	while(app->window->isOpen())
 	{

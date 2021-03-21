@@ -210,13 +210,19 @@ struct Rule {
 
 struct Event {
 	u32 id;
-
+	std::vector<u32> users;
+	u64 timestamp;
+	
 	// Debug
 	std::string description;
 };
+
 
 struct EventSystem {
 	std::vector<Rule> rules;
 	std::unordered_map<Fact, Fact> facts;
 	u32 fact_next_id;
+
+	std::vector<Event> all_events;
+	std::vector<Event> selected_events;
 };

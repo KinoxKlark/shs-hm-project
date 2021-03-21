@@ -50,6 +50,7 @@ void update(Application *app, sf::Time dt)
 
 	GameData *data = app->data;
 	Inputs *inputs = &app->inputs;
+	EventSystem *event_system = &data->event_system;
 
 	if(inputs->quit)
 		app->should_quit = true;
@@ -279,6 +280,17 @@ void update(Application *app, sf::Time dt)
 			}
 
 			ImGui::EndTable();
+		}
+	}
+	ImGui::End();
+
+	ImGui::Begin("Event System");
+	for(auto& event : event_system->selected_events)
+	{
+		ImGui::Text("[%i] %s", event.id, event.description.c_str());
+		for(auto& user_id : event.users)
+		{
+			ImGui::Text("  - %s", data->users[user_id].fullname.c_str());
 		}
 	}
 	ImGui::End();
