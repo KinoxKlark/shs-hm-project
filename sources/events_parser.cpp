@@ -222,6 +222,7 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 				{
 					event_system->all_events.push_back(constructed_event);
 					constructed_event.id = 0;
+					constructed_event.description = "";
 					major_variables.clear();
 					current_variables.clear();
 					variable_id = 'A';
