@@ -1,3 +1,5 @@
+**Warning to the adventurous reader:** This project is in a prototyping phase, and code is neither optimized nor respects any 'good practice'. Refactoring and quality pass are necessary but not a priority.
+
 # SHS Hommes/Machines Project
 
 This project is carried out within the framework of the SHS Men/Machines course.
