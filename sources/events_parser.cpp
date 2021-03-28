@@ -19,6 +19,39 @@ enum class EventTokenParserState {
 				
 };
 
+enum class ItemType{
+	NONE,
+
+	VARIABLE,
+	USER_FIELD,
+	NUMBER,
+	EVENT_ID,
+
+	ACCESSOR,
+	BINARY_OPERATOR,
+
+	UNARY_OPERATOR,
+
+	FUNCTION,
+
+	_INVALID,
+};
+
+struct Item {
+	ItemType type;
+	std::string str;
+};
+
+struct Node {
+	Item item;
+	std::vector<Node> children;
+};
+
+#define break_with_error(msg) std::cout << "ERROR: " << (msg) << "\n"; assert(false);
+#define stop_with_error(msg) std::cout << "ERROR: " << (msg) << "\n"; return false;
+#define breaking_error(expr, msg) if((expr)) { break_with_error(msg) }
+#define stoping_error(expr, msg) if((expr)) { stop_with_error(msg) }
+
 const std::unordered_set<char> white_chars = {' ', '\t', '\r', '\b'};
 const std::unordered_set<char> special_chars = {
 	'{', '}', '[', ']', ':', '=', '(', ')', '"', '.',';','+','-',
@@ -26,9 +59,14 @@ const std::unordered_set<char> special_chars = {
 };
 
 
-
 bool parseString(std::vector<std::string> const& tokens, u32& idx, std::string& str, char terminator = '"');
-bool parseVariableName(std::vector<std::string> const& tokens, u32& idx, std::string& str);
+bool parseVariableName(std::vector<std::string> const& tokens, u32& idx, std::string& str,
+					   std::unordered_map<std::string, char>& current_variables, char& variable_id);
+bool parseStringNumber(std::vector<std::string> const& tokens, u32& idx, std::string &str);
+bool parseNumber(std::string const& str, r32 &number);
+
+Node convertExpressionToTree(std::vector<Item> const& expression, u32 idstart, u32 idend);
+void displayTree(Node const& node, std::string const& prefix = "");
 
 bool importEventsFile(EventSystem *event_system, std::string const& filename)
 {
@@ -85,6 +123,14 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 	}
 
 	{
+		u32 next_event_id = event_system->all_events.size()+1;
+		std::unordered_map<std::string, u32> event_ids;
+
+		char variable_id = 'A';
+		Event constructed_event = {};
+		std::vector<char> major_variables;
+		std::unordered_map<std::string, char> current_variables;
+		
 		std::stack<EventTokenParserState> states;
 		states.push(EventTokenParserState::Default);
 		for(u32 idx = 0; idx < tokens.size(); ++idx)
@@ -149,8 +195,17 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 				}
 				--idx;
 
-				// TODO(Sam): Que faire de l'event id
+				// TODO(Sam): Log system pour debug
 				std::cout << "EVENT ID: " << event_id << "\n";
+				if(event_ids.count(event_id) > 0)
+				{
+					std::cout << "ERROR:" << "This event id is already used: '" << event_id << "'." << "\n";
+					return false;
+				}
+				u32 id = next_event_id++;
+				event_ids[event_id] = id;
+				constructed_event.id = id;
+				constructed_event.timestamp = 0;
 		
 				while(white_chars.count(tokens[++idx][0]) > 0) continue;
 				--idx;
@@ -165,6 +220,12 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 
 				if(token == "}")
 				{
+					event_system->all_events.push_back(constructed_event);
+					constructed_event.id = 0;
+					major_variables.clear();
+					current_variables.clear();
+					variable_id = 'A';
+					
 					states.pop();
 					break;
 				}
@@ -206,11 +267,11 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 			case EventTokenParserState::EventFieldPerso:
 			{
 				std::string variable;
-				if(!parseVariableName(tokens, idx, variable))
+				if(!parseVariableName(tokens, idx, variable, current_variables, variable_id))
 					return false;
 
-				// TODO(Sam): Faire qqch avec 'variable'
 				std::cout << "- VARIABLE: " << variable << "\n";
+				major_variables.push_back(current_variables[variable]);
 
 				while(white_chars.count(tokens[++idx][0]) > 0)
 					continue;
@@ -245,8 +306,8 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 				if(!parseString(tokens, idx, str, terminator))
 					return false;
 
-				// TODO(Sam): Faire qqch avec 'str'
 				std::cout << "- DESCRIPTION: \"" << str << "\"\n";
+				constructed_event.description = str;
 
 				if(terminator == '\n') --idx;
 				while(white_chars.count(tokens[++idx][0]) > 0)
@@ -269,16 +330,191 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 
 				bool array = tokens[idx] == "[";
 
-				// TODO(Sam): Les conds...
-				while(tokens[++idx] != "]" && (array || tokens[idx] != "\n")) continue;
-				// TODO(Sam): tmp code, remove it!
+				if(array) ++idx;
+				
+				Rule rule = {};
+				while(tokens[idx] != "]" && (array || tokens[idx] != "\n"))
+				{
+					--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
+					if(array && (tokens[idx] == "\n" || tokens[idx] == ","))
+					{
+						++idx;
+						continue;
+					}
+					
+					Pattern condition = {};
+					condition.symbole = false;
+					condition.next = nullptr;
+
+					std::vector<Item> expression;
+					i32 parenthesis_depth = 0;
+					
+					while((parenthesis_depth > 0 || tokens[idx] != ",")
+						  && tokens[idx] != "\n")
+					{
+						--idx; while(white_chars.count(tokens[++idx][0]) > 0) continue;
+
+						if(tokens[idx][0] == '?') // Variable
+						{
+							Item item;
+							item.type = ItemType::VARIABLE;
+							if(!parseVariableName(tokens, idx, item.str, current_variables, variable_id))
+								return false;
+							expression.push_back(item);
+
+							if(tokens[++idx] == ".")
+							{
+								expression.push_back({ItemType::ACCESSOR, "."});
+								item.type = ItemType::USER_FIELD;
+								if(tokens[++idx][0] == '"')
+								{
+									++idx;
+									item.str = "";
+									if(!parseString(tokens, idx, item.str, '"'))
+										return false;
+									
+								}
+								else
+								{
+									item.str = tokens[idx];
+								}
+								expression.push_back(item);
+							}
+							else --idx;
+						}
+						else if((tokens[idx][0] >= '0' && tokens[idx][0] <= '9') || tokens[idx][0] == '.') // Number
+						{
+							Item item;
+							item.type = ItemType::NUMBER;
+							if(!parseStringNumber(tokens, idx, item.str))
+								return false;
+							expression.push_back(item);
+						}
+						else if(tokens[idx] == "event") // Event
+						{
+							Item item;
+							item.type = ItemType::FUNCTION;
+							item.str = tokens[idx];
+							expression.push_back(item);
+
+							if(tokens[++idx] != "(")
+							{
+								std::cout << "ERROR:" << "Expected openning parenthesis.\n";
+								return false;
+							}
+							expression.push_back({ItemType::NONE, "("});
+
+							item.type = ItemType::EVENT_ID;
+							item.str = "";
+							while((tokens[++idx] != "," && tokens[idx] != ")")
+								  && white_chars.count(tokens[idx][0]) == 0)
+							{
+								item.str += tokens[idx];
+							}
+							expression.push_back(item);
+							--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
+							if(tokens[idx] != "," && tokens[idx] != ")")
+							{
+								std::cout << "ERROR:" << "Expected a comma ',' or closing parenthesis ')'.\n";
+								return false;
+							}
+
+							while(tokens[idx] == ",")
+							{
+								expression.push_back({ItemType::NONE, ","});
+								while(white_chars.count(tokens[++idx][0])>0) continue;
+							
+								item.type = ItemType::VARIABLE;
+								item.str = "";
+								if(!parseVariableName(tokens, idx, item.str, current_variables, variable_id))
+									return false;
+								expression.push_back(item);
+								
+								while(white_chars.count(tokens[++idx][0])>0) continue;
+							}
+							
+							--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
+							if(tokens[idx] != ")")
+							{
+								std::cout << "ERROR:" << "Expected closing parenthesis.\n";
+								return false;
+							}
+							expression.push_back({ItemType::NONE, ")"});
+						}
+						else if(tokens[idx] == ">") // Operateur
+						{
+							Item item;
+							item.type = ItemType::BINARY_OPERATOR;
+							item.str = tokens[idx];
+							expression.push_back(item);
+						}
+						else if(tokens[idx] == "!")
+						{
+							expression.push_back({ItemType::UNARY_OPERATOR, "!"});
+						}
+						// Various simple tokens
+						else if(tokens[idx] == "("
+								|| tokens[idx] == ")")
+						{
+							if(tokens[idx] == "(") ++parenthesis_depth;
+							if(tokens[idx] == ")") --parenthesis_depth;
+
+							if(parenthesis_depth < 0)
+							{
+								std::cout << "ERROR: " << "Unexpected closing parenthesis.\n";
+								return false;
+							}
+							
+							Item item;
+							item.type = ItemType::NONE;
+							item.str = tokens[idx];
+							expression.push_back(item);
+						}
+						else if((array && (tokens[idx] == "," || tokens[idx] == "]")) || tokens[idx] == "\n")
+						{
+							if(parenthesis_depth > 0)
+							{
+								std::cout << "ERROR: " << "Unexpected end of condition (missing parenthesis).\n";
+								return false;
+							}
+							
+							break;
+						}
+						else
+						{
+							std::cout << "ERROR: " << "Unexpected token in condition: '" << tokens[idx] << "'." << "\n";
+							return false;
+						}
+
+						++idx;
+					}
+					
+					// TODO(Sam): Tmp test code
+					std::cout << "- Cond: ";
+					for(Item& i : expression)
+					{
+						std::cout << "\"" << i.str << "\" ";
+						if(i.type == ItemType::NUMBER)
+						{
+							r32 nb = 0;
+							parseNumber(i.str, nb);
+							std::cout << "[" << nb << "] ";
+						}
+					}
+					std::cout << "\n";
+
+					Node expression_tree = convertExpressionToTree(expression, 0, expression.size()-1);
+
+					// TODO(Sam): Tmp debug
+					displayTree(expression_tree, "        ");
+				} 
 				
 				if(array && tokens[idx] != "]")
 				{
 					std::cout << "ERROR:" << "Expected end of array ']', got '" << tokens[idx] << "'." << "\n";
 					return false;
 				}
-				
+
 				while(white_chars.count(tokens[++idx][0]) > 0) continue;
 				--idx;
 
@@ -340,7 +576,8 @@ bool parseString(std::vector<std::string> const& tokens, u32& idx, std::string& 
 	return true;
 }
 
-bool parseVariableName(std::vector<std::string> const& tokens, u32& idx, std::string& str)
+bool parseVariableName(std::vector<std::string> const& tokens, u32& idx, std::string& str,
+					   std::unordered_map<std::string, char>& current_variables, char& variable_id)
 {
 	--idx;
 	while(white_chars.count(tokens[++idx][0]) > 0) continue;
@@ -360,7 +597,294 @@ bool parseVariableName(std::vector<std::string> const& tokens, u32& idx, std::st
 
 	str = "?"+tokens[idx];
 
+	if(current_variables.count(str) == 0)
+	{
+		current_variables[str] = variable_id++;
+	}
+
 	return true;
+}
+
+bool parseStringNumber(std::vector<std::string> const& tokens, u32& idx, std::string &str)
+{
+	--idx;
+	while(white_chars.count(tokens[++idx][0]) > 0) continue;
+
+	std::string digits = "";
+	std::string decimals = "";
+
+	if(tokens[idx][0] != '.')
+	{
+		for(char c : tokens[idx])
+		{
+			if(!(c>='0' && c <= '9'))
+			{
+				std::cout << "ERROR:" << "Unexpected caracter in number parsing: '" << c << "'.\n";
+				return false;
+			}
+
+			digits += c;
+		}
+		++idx;
+	}
+
+	if(tokens[idx][0] == '.')
+	{
+		char c = tokens[++idx][0];
+		if(!(c>='0' && c <= '9'))
+		{
+			--idx;
+		}
+		else
+		for(char c : tokens[idx])
+		{
+			if(!(c>='0' && c <= '9'))
+			{
+				
+				std::cout << "ERROR:" << "Unexpected caracter in number parsing: '" << c << "'.\n";
+				return false;
+			}
+
+			decimals += c;
+		}
+	}
+
+
+	str = digits + "." + decimals;
+
+	return true;
+}
+
+u32 fromStringToNumber(std::string str)
+{
+	u32 pow = 1;
+	u32 number = 0;
+
+	for(char c : str)
+	{
+		pow *= 10;
+	}
+	pow /= 10;
+
+	for(char c : str)
+	{
+		number += pow*(c-'0');
+		pow /= 10;
+	}
+
+	return number;
+}
+
+bool parseNumber(std::string const& str, r32 &number)
+{
+	std::string digits = "";
+	std::string decimals = "";
+
+	bool do_decimals = false;
+	for(char c : str)
+	{
+		if(c == '.')
+		{
+			do_decimals = true;
+			continue;
+		}
+
+		if(!(c>='0' && c <= '9'))
+		{
+			std::cout << "ERROR:" << "Expected digits, got '" << c << "'." << "\n";
+			return false;
+		}
+		
+		if(do_decimals)
+			decimals += c;
+		else
+			digits += c;
+	}
+	
+	number = (r32)(fromStringToNumber(digits));
+	if(decimals.size() > 0)
+	{
+		r32 pow = 1;
+		for(u32 i = 0; i < decimals.size(); ++i) pow *= 10;
+		number += (r32)(fromStringToNumber(decimals))/pow;
+	}
+	
+	return true;
+}
+
+u32 getItemPrecedence(Item const& item)
+{
+	// Operator precedence:
+	// >, <, >=, <=    0
+	// !               1
+	// func(...)       2
+	// .               3
+	// other...        4
+	
+	static std::unordered_map<std::string, u32> str_precedence = {
+		{ ">", 0 }, { "<", 0 }, { ">=", 0 }, { "<=", 0 }, { "==", 0 }, { "!=", 0 },
+		{ "!", 1 },
+		//{ FUNCTION , 2 },
+		{ ".", 3 },
+	};
+
+	u32 precedence = 4;
+	if(item.type == ItemType::FUNCTION)
+		precedence = 2;
+	else if(str_precedence.count(item.str) > 0)
+		precedence = str_precedence[item.str];
+
+	return precedence;
+}
+
+u32 getIdOfNextTokenBeforeGreaterPrecedence(std::vector<Item> const& expression, Item const& ref_item,
+											u32 idstart, u32 idend)
+{
+
+	u32 ref_precedence = getItemPrecedence(ref_item);
+	
+	i32 parenthesis_depth = 0;
+	u32 result = idend;
+
+	for(u32 i = idstart; i <= idend; ++i)
+	{
+		if(expression[i].str == "(") ++parenthesis_depth;
+		if(expression[i].str == ")") --parenthesis_depth;
+		if(parenthesis_depth == 0)
+		{		
+			u32 precedence = getItemPrecedence(expression[i]);
+		
+			if(precedence <= ref_precedence)
+			{
+				result = i-1;
+				break;
+			}
+		}
+	}
+	
+	return result;
+}
+
+Node convertExpressionToTree(std::vector<Item> const& expression, u32 idstart, u32 idend)
+{
+	
+	Node root = {};
+	root.item.type = ItemType::_INVALID;
+	
+	for(u32 i = idstart; i < idend+1; ++i)
+	{
+		switch(expression[i].type)
+		{
+		case ItemType::NONE:
+		{
+			if(expression[i].str == "(")
+			{
+				breaking_error(root.item.type != ItemType::_INVALID, "Invalid expression tree");
+				u32 id_end_parenthesis = i;
+				i32 parenthesis_depth = 1;
+				for(u32 j = i+1; j <= idend; ++j)
+				{
+					if(expression[j].str == "(") ++parenthesis_depth;
+					if(expression[j].str == ")") --parenthesis_depth;
+					if(parenthesis_depth == 0)
+					{
+						id_end_parenthesis = j;
+						break;
+					}
+				}
+				if(id_end_parenthesis <= i)
+				{
+					std::cout << "EXPR ERROR: " << "Missing closing parenthesis" << "\n";
+					assert(false);
+				}
+			
+				root = convertExpressionToTree(expression, i+1, id_end_parenthesis-1);
+				i = id_end_parenthesis;
+			}
+			else if(expression[i].str == ",")
+			{	break_with_error("Unexpected comma"); }
+			else
+			{	break_with_error("Unexpected token"); }
+		} break;
+		case ItemType::VARIABLE:
+		case ItemType::USER_FIELD:
+		case ItemType::NUMBER:
+		case ItemType::EVENT_ID:
+		{
+			breaking_error(root.item.type != ItemType::_INVALID, "Invalid expression tree!");
+			root.item = expression[i];
+		} break;
+		case ItemType::ACCESSOR:
+		case ItemType::BINARY_OPERATOR:
+		{
+			u32 end_rhs = getIdOfNextTokenBeforeGreaterPrecedence(expression, expression[i], i+1,idend);
+			
+			Node lhs = root;
+			Node rhs = convertExpressionToTree(expression, i+1, end_rhs);
+
+			breaking_error(lhs.item.type == ItemType::_INVALID, "Invalid expression tree: binary operators expects a left hand side");
+			breaking_error(rhs.item.type == ItemType::_INVALID, "Invalid expression tree: binary operators expects a right hand side");
+
+			root.item = expression[i];
+			root.children.clear();
+			root.children.push_back(lhs);
+			root.children.push_back(rhs);
+
+			i = end_rhs;
+		} break;
+		case ItemType::UNARY_OPERATOR:
+		{
+			breaking_error(root.item.type != ItemType::_INVALID, "Invalid expression tree");
+
+			u32 end_rhs = getIdOfNextTokenBeforeGreaterPrecedence(expression, expression[i], i+1,idend);
+			Node rhs = convertExpressionToTree(expression, i+1, end_rhs);
+
+			breaking_error(rhs.item.type == ItemType::_INVALID, "Invalid expression tree: binary operators expects a right hand side");
+
+			root.item = expression[i];
+			root.children.push_back(rhs);
+
+			i = end_rhs;
+		} break;
+		case ItemType::FUNCTION:
+		{
+			breaking_error(root.item.type != ItemType::_INVALID, "Invalid expression tree");
+
+			root.item = expression[i];
+			breaking_error(expression[i+1].str != "(", "Functions must be followed by an opening parenthesis");
+
+			i32 parenthesis_depth = 1;
+			u32 subexpr_start_id = i+2;
+			u32 subexpr_end_id = i;
+			for(u32 j = subexpr_start_id; j <= idend; ++j)
+			{
+				if(expression[j].str == "(") ++parenthesis_depth;
+				if(expression[j].str == ")") --parenthesis_depth;
+				if((parenthesis_depth == 0) || (parenthesis_depth == 1 && expression[j].str == ","))
+				{
+					subexpr_end_id = j;
+					Node child = convertExpressionToTree(expression, subexpr_start_id, subexpr_end_id-1);
+					root.children.push_back(child);
+					subexpr_start_id = j+1;
+				}				
+			}
+			breaking_error(parenthesis_depth > 0, "Invalid expression tree, missing closing parenthesis.");
+
+			i = subexpr_end_id;
+
+		} break;
+		}
+	}
+
+	return root;
+}
+
+void displayTree(Node const& node, std::string const& prefix)
+{
+	std::cout << prefix << "- " << node.item.str << "\n";
+	std::string next_prefix = prefix + "  ";
+	for(auto const& child : node.children)
+		displayTree(child, next_prefix);
 }
 
 void importEvents(EventSystem *event_system)

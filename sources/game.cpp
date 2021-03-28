@@ -285,12 +285,26 @@ void update(Application *app, sf::Time dt)
 	ImGui::End();
 
 	ImGui::Begin("Event System");
-	for(auto& event : event_system->selected_events)
+	if(ImGui::CollapsingHeader("All Events"))
 	{
-		ImGui::Text("[%i] %s", event.id, event.description.c_str());
-		for(auto& user_id : event.users)
+		for(auto& event : event_system->all_events)
 		{
-			ImGui::Text("  - %s", data->users[user_id].fullname.c_str());
+			ImGui::Text("[%i] %s", event.id, event.description.c_str());
+			for(auto& user_id : event.users)
+			{
+				ImGui::Text("  - %s", data->users[user_id].fullname.c_str());
+			}
+		}
+	}
+	if(ImGui::CollapsingHeader("Selected Events"))
+	{
+		for(auto& event : event_system->selected_events)
+		{
+			ImGui::Text("[%i] %s", event.id, event.description.c_str());
+			for(auto& user_id : event.users)
+			{
+				ImGui::Text("  - %s", data->users[user_id].fullname.c_str());
+			}
 		}
 	}
 	ImGui::End();
