@@ -2,6 +2,12 @@
 # Ceci est un commentaire
 # - c'est utile pour indiquer des truc sans faire crasher le parser
 
+event : creatif_test {
+  perso = ?a
+  descr = ?a est creatif
+  cond = ?a.creatif > 0.3
+}
+
 event : my_event_id_01 {
 	  perso = ?A
 	  descr = ?A mange au fast food local
@@ -32,7 +38,7 @@ event:story2
 	#Autre test
   perso=?A1
   descr = ?A1 va/est à l'hopital
-conds =[event(my_event_02, ?A1), !event(my_event_02.1),?A1.créatif>12.]
+conds =[event(my_event_02, ?A1), !event(my_event_02.1),?A1.creatif>12.]
 	   modifs=[?A1.nature-,?A1."fast food"--]
 }
 
@@ -54,5 +60,5 @@ event: test2{
 event: test3
 {
 	perso = ?a
-	cond = ?a."fast food" > event(test2, ?a, ?a)
+	cond = ?a."theories du complot" > event(test2, ?a, ?a)
 }

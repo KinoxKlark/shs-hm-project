@@ -67,6 +67,10 @@ bool parseNumber(std::string const& str, r32 &number);
 
 Node convertExpressionToTree(std::vector<Item> const& expression, u32 idstart, u32 idend);
 void displayTree(Node const& node, std::string const& prefix = "");
+Pattern* convertTreeToPattern(Node const& node,
+							  std::unordered_map<std::string, char>& current_variables,
+							  std::unordered_map<std::string, u32>& event_ids);
+
 
 bool importEventsFile(EventSystem *event_system, std::string const& filename)
 {
@@ -489,8 +493,11 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 
 						++idx;
 					}
+
+					if(expression.size() == 0)
+						continue;
 					
-					// TODO(Sam): Tmp test code
+#if 1
 					std::cout << "- Cond: ";
 					for(Item& i : expression)
 					{
@@ -503,12 +510,25 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 						}
 					}
 					std::cout << "\n";
-
+#endif
+					
 					Node expression_tree = convertExpressionToTree(expression, 0, expression.size()-1);
-
-					// TODO(Sam): Tmp debug
+					
+#if 1
 					displayTree(expression_tree, "        ");
-				} 
+#endif
+
+					Pattern *condition_pattern =  convertTreeToPattern(expression_tree, current_variables, event_ids);
+					rule.conditions.push_back(*condition_pattern);
+					delete condition_pattern;
+				}
+					
+				rule.conclusion.symbole = true;
+				rule.conclusion.variable = false;
+				rule.conclusion.type = SymboleType::_SELECT_EVENT;
+				rule.conclusion.data = constructed_event.id;
+
+				event_system->rules.push_back(rule);
 				
 				if(array && tokens[idx] != "]")
 				{
@@ -878,6 +898,172 @@ Node convertExpressionToTree(std::vector<Item> const& expression, u32 idstart, u
 	}
 
 	return root;
+}
+
+Pattern* convertTreeToPattern(Node const& node,
+							  std::unordered_map<std::string, char>& current_variables,
+							  std::unordered_map<std::string, u32>& event_ids)
+{
+	/*
+	  enum class SymboleType {
+	  // Must not be used
+	  NONE = 0, 
+
+	  // Inferrences
+	  PERE,
+	  FRERE,
+	  ONCLE,
+
+	  // Compilables
+	  NUMBER,
+	  USER,
+	  PERSONALITY_GAUGE,
+	  INTEREST_GAUGE,
+	  CMP_GREATER,
+
+	  // Special Action
+	  _SELECT_EVENT,
+	  }
+	*/
+	
+	Pattern *pattern = new Pattern();
+	pattern->next = nullptr;
+
+	switch(node.item.type)
+	{
+	case ItemType::VARIABLE:
+	{
+		breaking_error(current_variables.count(node.item.str)==0, "Variable does not exist"); // Memory leak
+		pattern->symbole = true;
+		pattern->variable = true;
+		pattern->name = current_variables[node.item.str];
+	} break;
+	case ItemType::USER_FIELD:
+	{
+		pattern->symbole = true;
+		pattern->variable = false;
+		for(u32 i = 0; i < global_app->data->personalities.size(); ++i)
+		{
+			GaugeInfo &gauge = global_app->data->personalities[i];
+			if(gauge.name == node.item.str)
+			{
+				pattern->type = SymboleType::PERSONALITY_GAUGE;
+				pattern->data = gauge.id;
+				goto correct_user_field;
+			}
+		}
+
+		for(u32 i = 0; i < global_app->data->interests.size(); ++i)
+		{
+			GaugeInfo &interest = global_app->data->interests[i];
+			if(interest.name == node.item.str)
+			{
+				pattern->type = SymboleType::INTEREST_GAUGE;
+				pattern->data = interest.id;
+				goto correct_user_field;
+			}
+		}
+
+		breaking_error(false, "User Field does not exist");
+	correct_user_field:
+		break;
+	} break;
+	case ItemType::NUMBER:
+	{
+		pattern->symbole = true;
+		pattern->variable = false;
+		pattern->type = SymboleType::NUMBER;
+
+		r32 nb = 0;
+		parseNumber(node.item.str, nb);
+		pattern->data = *((u64*)(&nb));
+	} break;
+	case ItemType::EVENT_ID:
+	{
+		breaking_error(event_ids.count(node.item.str)==0, "Event id does not exist"); // Memory leak
+		pattern->symbole = true;
+		pattern->variable = false;
+		pattern->type = SymboleType::EVENT;
+		pattern->data = (u64)(event_ids[node.item.str]);
+
+	} break;
+	case ItemType::ACCESSOR:
+	{
+		breaking_error(node.children.size() != 2, "Accessor operator is a binary operator"); // Memory leak
+		pattern->symbole = false;
+		pattern->first = convertTreeToPattern(node.children[1], current_variables, event_ids);
+		pattern->first->next = convertTreeToPattern(node.children[0], current_variables, event_ids);
+	} break;
+	case ItemType::BINARY_OPERATOR:
+	{
+		breaking_error(node.children.size() != 2, "Binary operator must have 2 children"); // Memory leak
+
+		Pattern *first = new Pattern();
+		first->next = nullptr;
+		
+		first->symbole = true;
+		first->variable = false;
+
+		if(node.item.str == ">")
+			first->type = SymboleType::CMP_GREATER;
+		else
+		{ break_with_error("Unknown binary operator"); }
+
+		first->next = convertTreeToPattern(node.children[0], current_variables, event_ids);
+		first->next->next = convertTreeToPattern(node.children[1], current_variables, event_ids);
+
+		pattern->symbole = false;
+		pattern->first = first;
+	} break;
+	case ItemType::UNARY_OPERATOR:
+	{
+		breaking_error(node.children.size() != 1, "Binary operator must have 1 child"); // Memory leak
+
+		Pattern *first = new Pattern();
+		first->next = nullptr;
+		
+		first->symbole = true;
+		first->variable = false;
+
+		if(node.item.str == "!")
+			first->type = SymboleType::OP_NOT;
+		else
+		{ break_with_error("Unknown unary operator"); }
+
+		first->next = convertTreeToPattern(node.children[0], current_variables, event_ids);
+
+		pattern->symbole = false;
+		pattern->first = first;
+		
+	} break;
+	case ItemType::FUNCTION:
+	{
+		Pattern *first = new Pattern();
+		first->next = nullptr;
+		
+		first->symbole = true;
+		first->variable = false;
+
+		if(node.item.str == "event")
+			first->type = SymboleType::EVENT_OCCURED;
+		else
+		{ break_with_error("Unknown function"); }
+
+		Pattern *list_elem = first;
+		for(u32 i = 0; i < node.children.size(); ++i)
+		{
+			Pattern *pat = convertTreeToPattern(node.children[i], current_variables, event_ids);
+			list_elem->next = pat;
+			list_elem = pat;
+		}
+
+		pattern->symbole = false;
+		pattern->first = first;
+	} break;
+	InvalidDefaultCase;
+	}
+	
+	return pattern;
 }
 
 void displayTree(Node const& node, std::string const& prefix)

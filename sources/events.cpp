@@ -490,6 +490,9 @@ std::string convert_pattern_to_string(Pattern *pattern)
 		case SymboleType::ONCLE:
 			result += "ONCLE";
 			break;
+		case SymboleType::EVENT_OCCURED:
+			result += "EVENT OCCURED";
+			break;
 		case SymboleType::NUMBER:
 		{
 			std::stringstream ss;
@@ -499,8 +502,20 @@ std::string convert_pattern_to_string(Pattern *pattern)
 		case SymboleType::CMP_GREATER:
 			result += ">";
 			break;
+		case SymboleType::OP_NOT:
+			result += "!";
+			break;
 		case SymboleType::USER:
 			result += global_app->data->users[pattern->data].fullname;
+			break;
+		case SymboleType::EVENT:
+			result += "Event";
+			{
+				std::stringstream ss;
+				ss << " [" << pattern->data << "]";
+				result += ss.str();
+			}
+			//result += global_app->data->event_system.all_events[pattern->data].description;
 			break;
 		case SymboleType::PERSONALITY_GAUGE:
 			result += "PERSONALITY " + global_app->data->personalities[pattern->data].name;
@@ -514,7 +529,7 @@ std::string convert_pattern_to_string(Pattern *pattern)
 			}
 			break;
 		case SymboleType::INTEREST_GAUGE:
-			result += "INTEREST " + global_app->data->personalities[pattern->data].name;
+			result += "INTEREST " + global_app->data->interests[pattern->data].name;
 			if(pattern->next && pattern->next->symbole && pattern->next->type == SymboleType::USER)
 			{
 				std::stringstream ss;
@@ -571,7 +586,8 @@ void init_event_system(EventSystem *event_system)
 		event_system->facts[f0].pattern_proprio = true;
 	
 	}
-	
+
+#if 0
 	Pattern p1 = {};
 	{
 		p1.symbole = false;
@@ -1175,5 +1191,5 @@ void init_event_system(EventSystem *event_system)
 		
 		event_system->rules.push_back({{pr11}, pr12});
 	}
-
+#endif
 }

@@ -34,13 +34,16 @@ enum class SymboleType {
 	PERE,
 	FRERE,
 	ONCLE,
+	EVENT_OCCURED,
 
 	// Compilables
 	NUMBER,
 	USER,
+	EVENT,
 	PERSONALITY_GAUGE,
 	INTEREST_GAUGE,
 	CMP_GREATER,
+	OP_NOT, // TODO(Sam): Implement this!
 
 	// Special Action
 	_SELECT_EVENT,

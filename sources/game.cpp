@@ -307,6 +307,20 @@ void update(Application *app, sf::Time dt)
 			}
 		}
 	}
+	if(ImGui::CollapsingHeader("Rules"))
+	{
+		u32 i = 0;
+		for(auto& rule : event_system->rules)
+		{
+			ImGui::Text("Rule [%i]:", i);
+			for(auto & condition : rule.conditions)
+			{
+				ImGui::Text("  + %s", convert_pattern_to_string(&condition).c_str());
+			}
+			ImGui::Text(" => %s", convert_pattern_to_string(&rule.conclusion).c_str());
+			++i;
+		}
+	}
 	ImGui::End();
 	
 #ifdef DEBUG
