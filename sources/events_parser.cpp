@@ -127,7 +127,7 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 	}
 
 	{
-		u32 next_event_id = event_system->all_events.size()+1;
+		u32 next_event_id = event_system->all_events.size();
 		std::unordered_map<std::string, u32> event_ids;
 
 		char variable_id = 'A';

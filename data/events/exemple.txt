@@ -54,11 +54,12 @@ conds=[
 event: test2{
 	   perso = ?A, ?B
 	   conds = [ ?A.creatif > ?B.creatif, ?C.creatif > ?A.creatif ]
-	   descr = "?A > ?B > ?C"
+	   descr = "?A > ?A > ?B"
 }
 
 event: test3
 {
+	descr = Ceci est un test
 	perso = ?a
-	cond = ?a."theories du complot" > event(test2, ?a, ?a)
+	#cond = ?a."theories du complot" > event(test2, ?a, ?a)
 }

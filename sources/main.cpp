@@ -35,9 +35,11 @@ int main()
 	GuiManager *gui = gui_init();
 
 	init_event_system(&(app->data->event_system));
-	inference(app);
 
 	importEvents(&(app->data->event_system));
+
+	inference(app);
+
 	
 	while(app->window->isOpen())
 	{
