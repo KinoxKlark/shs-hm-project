@@ -52,11 +52,28 @@ void update(Application *app, sf::Time dt)
 	Inputs *inputs = &app->inputs;
 	EventSystem *event_system = &data->event_system;
 
+	
+
 	if(inputs->quit)
 		app->should_quit = true;
 	
-	// TODO(Sam): Update...
+	// TODO(Sam): Debug counter...
+	static u32 counter = 0;
+	
+	const sf::Time EVENT_SYSTEM_INFERENCE_DT(sf::seconds(1.f));
+	event_system->time_since_last_inference += dt;
+	if(event_system->time_since_last_inference > EVENT_SYSTEM_INFERENCE_DT)
+	{
+		event_system->time_since_last_inference -= EVENT_SYSTEM_INFERENCE_DT;
+		main_simulation_update(app);
+		counter += 1;
+	}
 
+	// TODO(Sam): Debug counter...
+	ImGui::Begin("Debug");
+	ImGui::Text("%i inferences", counter);
+	ImGui::End();
+	
 	
 	// TODO(Sam): Put this in the right place
 	GuiObject obj1;
@@ -284,26 +301,43 @@ void update(Application *app, sf::Time dt)
 	}
 	ImGui::End();
 
+	ImGui::Begin("Known Facts");
+	for(auto& pair : event_system->facts)
+	{
+		ImGui::Text("- %s", convert_pattern_to_string(pair.second.pattern).c_str());
+
+		if(!pair.second.pattern->symbole && pair.second.pattern->first->symbole &&
+		   pair.second.pattern->first->type == SymboleType::EVENT_OCCURED)
+		{
+			Event *event = &event_system->all_events[pair.second.pattern->first->data];
+			if(event->description.size() > 0)
+				ImGui::Text("    %s", event->description.c_str());
+		}
+
+	}
+	ImGui::End();
+	
 	ImGui::Begin("Event System");
 	if(ImGui::CollapsingHeader("All Events"))
 	{
 		for(auto& event : event_system->all_events)
 		{
 			ImGui::Text("[%i] %s", event.id, event.description.c_str());
-			for(auto& user_id : event.users)
+			for(auto& pair : event.users)
 			{
-				ImGui::Text("  - %s", data->users[user_id].fullname.c_str());
+				ImGui::Text("  - ?%c = %s", pair.first, data->users[pair.second].fullname.c_str());
 			}
 		}
 	}
 	if(ImGui::CollapsingHeader("Selected Events"))
 	{
+		ImGui::Text("%i events", event_system->selected_events.size());
 		for(auto& event : event_system->selected_events)
 		{
 			ImGui::Text("[%i] %s", event.id, event.description.c_str());
-			for(auto& user_id : event.users)
+			for(auto& pair : event.users)
 			{
-				ImGui::Text("  - %s", data->users[user_id].fullname.c_str());
+				ImGui::Text("  - ?%c = %s", pair.first, data->users[pair.second].fullname.c_str());
 			}
 		}
 	}
@@ -319,6 +353,21 @@ void update(Application *app, sf::Time dt)
 			}
 			ImGui::Text(" => %s", convert_pattern_to_string(&rule.conclusion).c_str());
 			++i;
+		}
+	}
+	if(ImGui::CollapsingHeader("Instancied events"))
+	{
+		ImGui::Text("%i events", event_system->debut_instancied_events.size());
+		for(i32 i = event_system->debut_instancied_events.size() - 1;
+			i >= 0 && i >= (i32)(event_system->debut_instancied_events.size()) - 10;
+			--i)
+		{
+			Event& event = event_system->debut_instancied_events[i];
+			ImGui::Text("[%i] %s", event.id, event.description.c_str());
+			for(auto& pair : event.users)
+			{
+				ImGui::Text("  - ?%c = %s", pair.first, data->users[pair.second].fullname.c_str());
+			}
 		}
 	}
 	ImGui::End();

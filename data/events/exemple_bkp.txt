@@ -1,0 +1,65 @@
+
+# Ceci est un commentaire
+# - c'est utile pour indiquer des truc sans faire crasher le parser
+
+event : creatif_test {
+  perso = ?a
+  descr = ?a est creatif
+  cond = ?a.creatif > 0.3
+}
+
+event : my_event_id_01 {
+	  perso = ?A
+	  descr = ?A mange au fast food local
+}
+
+event : my_event_02
+{
+	perso = ?alfred
+	descr = ?alfred tombe malade après avoir mangé au fast food
+	cond = event(my_event_id_01, ?alfred)	 
+}
+
+event : my_event_02.1
+{
+	perso = ?A1, ?B1
+	descr = ?A1 guéri grace à ?B1
+	conds = [
+		  event(my_event_02, ?A1),
+		  ?B1.nature > 0.71234
+		  ]
+	modifs = [?A1.liens.?B1++, ?B1.liens.?A1++]
+}
+
+# Various stress tests for syntaxe check:
+
+event:story2
+{
+	#Autre test
+  perso=?A1
+  descr = ?A1 va/est à l'hopital
+conds =[event(my_event_02, ?A1), !event(my_event_02.1),?A1.creatif>12.]
+	   modifs=[?A1.nature-,?A1."fast food"--]
+}
+
+
+event: test1 {
+perso = ?A,?B
+descr = ?A et ?B parlent d'art
+conds=[
+	((?A.creatif) >  .2)
+	?B.creatif > (0.3)
+]}
+
+event: test2{
+	   perso = ?A, ?B
+	   conds = [ ?A.creatif > ?B.creatif, ?C.creatif > ?A.creatif ]
+	   descr = "?A > ?A > ?B"
+}
+
+event: test3
+{
+	descr = Ceci est un test
+	perso = ?a
+	#cond = ?a."theories du complot" > event(test2, ?a, ?a)
+}

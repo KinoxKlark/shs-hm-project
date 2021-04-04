@@ -254,7 +254,7 @@ std::vector<ConditionWithEnvironement> rule_has_condition(Fact const& fact, Rule
 	return result;
 }
 
-std::vector<Environement> rule_may_be_valid(std::unordered_map<Fact, Fact> *facts, Rule *rule,
+std::vector<Environement> rule_may_be_valid(std::unordered_map<u32, Fact> *facts, Rule *rule,
 											u32 condition_id, Environement *environement)
 {
 	std::vector<Environement> result({*environement});
@@ -317,7 +317,7 @@ std::vector<Environement> rule_may_be_valid(std::unordered_map<Fact, Fact> *fact
 // NOTE(Sam): Rule is supposed to be potentialy valide given knowed facts
 // this function only check if each conditions compiles to TRUE for a given
 // environement.
-bool rule_is_valid(std::unordered_map<Fact, Fact> *facts, Rule *rule, Environement *environement)
+bool rule_is_valid(std::unordered_map<u32, Fact> *facts, Rule *rule, Environement *environement)
 {
 	for(u32 cond_id = 0; cond_id < rule->conditions.size(); ++cond_id)
 	{
@@ -362,7 +362,7 @@ void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* 
 	   && rule->conclusion.type == SymboleType::_SELECT_EVENT)
 	{
 		
-		std::cout << "New Event: [" << rule->conclusion.data << "] ";
+		//std::cout << "New Event: [" << rule->conclusion.data << "] ";
 
 		Event event = event_system->all_events[rule->conclusion.data];
 		event.timestamp = 0;
@@ -374,29 +374,30 @@ void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* 
 		
 		if(environement->associations.size() > 0)
 		{
-			std::cout << "with: ";
+			//std::cout << "with: ";
 
 			for(u32 idx = 0; idx < environement->associations.size(); ++idx)
 			{
+				EnvironementAssociation *association = &environement->associations[idx];
 				Pattern *pattern = environement->associations[idx].datum;
 				if(pattern->type == SymboleType::USER)
 				{
-					event.users.push_back(global_app->data->users[pattern->data].id);
-					std::cout << global_app->data->users[pattern->data].fullname;
-					if( idx+1 < environement->associations.size())
-						std::cout << ", ";
+					event.users[association->variable_name] = global_app->data->users[pattern->data].id;
+					//std::cout << global_app->data->users[pattern->data].fullname;
+					//if( idx+1 < environement->associations.size())
+						//std::cout << ", ";
 				}
 				else
 				{
 					User *user = compile_pattern_to_user(pattern);
-					event.users.push_back(user->id);
+					event.users[association->variable_name] = user->id;
 				}
 			}
 		}
 
 		event_system->selected_events.push_back(event);
 
-		std::cout << std::endl;
+		//std::cout << std::endl;
 	}
 	else
 	{
@@ -412,15 +413,16 @@ void inference(Application *app)
 {
 	GameData *data = app->data;
 	EventSystem *event_system = &data->event_system;
+	event_system->selected_events.clear();
 
 	u32 fact_id = event_system->fact_next_id;
 	
 	std::queue<Fact> working_queue{};
-	std::unordered_map<Fact, Fact> deduced_facts{};
+	std::unordered_map<u32, Fact> deduced_facts{};
 	
 	for(auto it = event_system->facts.begin(); it != event_system->facts.end(); ++it)
 	{
-		working_queue.push(it->first);
+		working_queue.push(it->second);
 	}
 	
 	while(!working_queue.empty())
@@ -429,13 +431,13 @@ void inference(Application *app)
 		fact_swap_property(fact, working_queue.front());
 		working_queue.pop();
 
-		if(deduced_facts.count(fact) == 0)
+		if(deduced_facts.count(fact.id) == 0)
 		{
-			deduced_facts.insert({fact,fact});
-			fact_swap_property(deduced_facts[fact],fact);
+			deduced_facts.insert({fact.id,fact});
+			fact_swap_property(deduced_facts[fact.id],fact);
 
 			// TODO(Sam): On extrait si besoins...
-			std::cout << convert_pattern_to_string(fact.pattern) << std::endl;
+			//std::cout << convert_pattern_to_string(fact.pattern) << std::endl;
 
 			for(u32 rule_id = 0; rule_id < event_system->rules.size(); ++rule_id)
 			{
@@ -463,6 +465,55 @@ void inference(Application *app)
 			
 	}
 	
+}
+
+void main_simulation_update(Application *app)
+{
+	EventSystem *event_system = &app->data->event_system;
+	
+	// NOTE(Sam): This use the inference engine to select the list
+	// of intanciable events
+	inference(app);
+
+	//TODO(Sam): We probably will want more control over the probability distribution over events
+	Event event = get_random_element(event_system->selected_events);
+
+	Pattern p0 = {};
+	p0.symbole = false;
+	p0.next = nullptr;
+	{
+		Pattern *trans = &p0;
+		Pattern *tmp = new Pattern();
+		tmp->symbole = true;
+		tmp->variable = false;
+		tmp->type = SymboleType::EVENT_OCCURED;
+		tmp->data = (u64)(event.id);
+		p0.first = tmp;
+		trans = tmp;
+
+		for(auto const& variable : event.major_variables)
+		{
+			u32 user_id = event.users[variable];
+			tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = false;
+			tmp->type = SymboleType::USER;
+			tmp->data = (u64)(user_id);
+			trans->next = tmp;
+			trans = tmp;
+		}
+	}
+	
+	Fact f0 = {};
+	f0.id = event_system->fact_next_id++;
+	f0.pattern = new Pattern(p0);
+
+	event_system->facts.insert({f0.id,f0});
+	event_system->facts[f0.id].pattern_proprio = true;
+
+#ifdef DEBUG
+	event_system->debut_instancied_events.push_back(event);
+#endif
 }
 
 #include <sstream>
@@ -568,8 +619,9 @@ std::string convert_pattern_to_string(Pattern *pattern)
 void init_event_system(EventSystem *event_system)
 {
 	GameData *data = global_app->data;
+
 	
-	u32 fact_id = 0;
+	event_system->fact_next_id = 0;
 
 	for(u32 i = 0; i < data->users.size(); ++i)
 	{
@@ -579,11 +631,11 @@ void init_event_system(EventSystem *event_system)
 		p0.type = SymboleType::USER;
 		p0.data = (u64)(data->users[i].id);
 		Fact f0 = {};
-		f0.id = fact_id++;
+		f0.id = event_system->fact_next_id++;
 		f0.pattern = new Pattern(p0);
 
-		event_system->facts.insert({f0,f0});
-		event_system->facts[f0].pattern_proprio = true;
+		event_system->facts.insert({f0.id,f0});
+		event_system->facts[f0.id].pattern_proprio = true;
 	
 	}
 

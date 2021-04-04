@@ -178,17 +178,6 @@ bool operator==(Fact f1, Fact f2)
 	return f1.id == f2.id;
 }
 
-namespace std
-{
-	template<>
-	struct hash<Fact> {
-		std::size_t operator()(Fact const fact) const
-		{
-			return std::hash<u32>{}(fact.id);
-		}
-	};
-}
-
 struct EnvironementAssociation {
 	char variable_name;
 	// NOTE(Sam): Le Fact est proprio du pattern
@@ -213,7 +202,8 @@ struct Rule {
 
 struct Event {
 	u32 id;
-	std::vector<u32> users;
+	std::vector<char> major_variables;
+	std::unordered_map<char, u32> users;
 	u64 timestamp;
 	
 	// Debug
@@ -223,9 +213,12 @@ struct Event {
 
 struct EventSystem {
 	std::vector<Rule> rules;
-	std::unordered_map<Fact, Fact> facts;
+	std::unordered_map<u32, Fact> facts;
 	u32 fact_next_id;
 
+	sf::Time time_since_last_inference;
 	std::vector<Event> all_events;
 	std::vector<Event> selected_events;
+
+	std::vector<Event> debut_instancied_events;
 };

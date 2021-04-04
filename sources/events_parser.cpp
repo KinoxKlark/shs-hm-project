@@ -132,7 +132,6 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 
 		char variable_id = 'A';
 		Event constructed_event = {};
-		std::vector<char> major_variables;
 		std::unordered_map<std::string, char> current_variables;
 		
 		std::stack<EventTokenParserState> states;
@@ -227,7 +226,7 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 					event_system->all_events.push_back(constructed_event);
 					constructed_event.id = 0;
 					constructed_event.description = "";
-					major_variables.clear();
+					constructed_event.major_variables.clear();
 					current_variables.clear();
 					variable_id = 'A';
 					
@@ -276,7 +275,7 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 					return false;
 
 				std::cout << "- VARIABLE: " << variable << "\n";
-				major_variables.push_back(current_variables[variable]);
+				constructed_event.major_variables.push_back(current_variables[variable]);
 
 				while(white_chars.count(tokens[++idx][0]) > 0)
 					continue;

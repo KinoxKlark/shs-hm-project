@@ -38,9 +38,6 @@ int main()
 
 	importEvents(&(app->data->event_system));
 
-	inference(app);
-
-	
 	while(app->window->isOpen())
 	{
 		app->frame_duration += app->update_clock.restart();
