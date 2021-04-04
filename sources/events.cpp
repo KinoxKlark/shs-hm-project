@@ -487,10 +487,19 @@ void main_simulation_update(Application *app)
 		tmp->symbole = true;
 		tmp->variable = false;
 		tmp->type = SymboleType::EVENT_OCCURED;
-		tmp->data = (u64)(event.id);
+		tmp->data = 0;
 		p0.first = tmp;
 		trans = tmp;
 
+		tmp = new Pattern();
+		tmp->symbole = true;
+		tmp->variable = false;
+		tmp->type = SymboleType::EVENT;
+		tmp->data = (u64)(event.id);
+		trans->next = tmp;
+		trans = tmp;
+		
+		
 		for(auto const& variable : event.major_variables)
 		{
 			u32 user_id = event.users[variable];

@@ -927,6 +927,7 @@ Pattern* convertTreeToPattern(Node const& node,
 	
 	Pattern *pattern = new Pattern();
 	pattern->next = nullptr;
+	pattern->data = 0;
 
 	switch(node.item.type)
 	{
@@ -1002,6 +1003,7 @@ Pattern* convertTreeToPattern(Node const& node,
 		
 		first->symbole = true;
 		first->variable = false;
+		first->data = 0;
 
 		if(node.item.str == ">")
 			first->type = SymboleType::CMP_GREATER;
@@ -1023,6 +1025,7 @@ Pattern* convertTreeToPattern(Node const& node,
 		
 		first->symbole = true;
 		first->variable = false;
+		first->data = 0;
 
 		if(node.item.str == "!")
 			first->type = SymboleType::OP_NOT;
@@ -1042,6 +1045,7 @@ Pattern* convertTreeToPattern(Node const& node,
 		
 		first->symbole = true;
 		first->variable = false;
+		first->data = 0;
 
 		if(node.item.str == "event")
 			first->type = SymboleType::EVENT_OCCURED;
