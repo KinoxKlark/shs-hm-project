@@ -16,7 +16,13 @@ enum class EventTokenParserState {
 	EventFieldDescr,
 	EventFieldConds,
 	EventFieldModifs,
-				
+
+	PostHeader,
+	PostCore,
+	PostId,
+	PostFieldEvent,
+	PostFieldType,
+	PostFieldText,
 };
 
 enum class ItemType{
@@ -72,8 +78,11 @@ Pattern* convertTreeToPattern(Node const& node,
 							  std::unordered_map<std::string, u32>& event_ids);
 
 
-bool importEventsFile(EventSystem *event_system, std::string const& filename)
+bool importEventsFile(GameData *data, std::string const& filename)
 {
+	EventSystem *event_system = &data->event_system;
+	SocialPostSystem *social_post_system = &data->social_post_system;
+	
 	std::cout << "Importing " << filename << std::endl;
 
 	std::vector<std::string> tokens;
@@ -128,10 +137,13 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 
 	{
 		u32 next_event_id = event_system->all_events.size();
+		u32 next_post_id = social_post_system->all_posts.size();
 		std::unordered_map<std::string, u32> event_ids;
+		std::unordered_map<std::string, u32> post_ids;
 
 		char variable_id = 'A';
 		Event constructed_event = {};
+		SocialPost constructed_post = {};
 		std::unordered_map<std::string, char> current_variables;
 		
 		std::stack<EventTokenParserState> states;
@@ -152,7 +164,7 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 				}
 				else if(token == "post")
 				{
-					// TODO(Sam): Implements...
+					states.push(EventTokenParserState::PostHeader);
 					break;
 				}
 
@@ -179,6 +191,27 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 				}
 
 				std::cout << "ERROR:" << "Expected ':' followeb by 'event id' or '{', got '" << token << "'." << "\n";
+				return false;
+				
+			} break;
+			case EventTokenParserState::PostHeader:
+			{
+				if(white_chars.count(token[0]) > 0 || token == "\n") break;
+				if(token == ":")
+				{
+					while(white_chars.count(tokens[++idx][0]) > 0) continue;
+					--idx;
+					states.push(EventTokenParserState::PostId);
+					break;	
+				}
+				else if(token == "{")
+				{
+					states.pop();
+					states.push(EventTokenParserState::PostCore);
+					break;
+				}
+
+				std::cout << "ERROR:" << "Expected ':' followeb by 'post id' or '{', got '" << token << "'." << "\n";
 				return false;
 				
 			} break;
@@ -209,6 +242,42 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 				event_ids[event_id] = id;
 				constructed_event.id = id;
 				constructed_event.timestamp = 0;
+		
+				while(white_chars.count(tokens[++idx][0]) > 0) continue;
+				--idx;
+
+				states.pop();
+				break;
+				
+			} break;
+			case EventTokenParserState::PostId:
+			{
+				if(special_chars.count(token[0]) > 0)
+				{
+					std::cout << "ERROR:" << "Expected an 'post id', got '" << tokens[idx][0] << "'." << "\n";
+					return false;
+				}
+					
+				std::string post_id = "";
+				--idx;
+				while(white_chars.count(tokens[++idx][0]) == 0 && tokens[idx] != "{" && tokens[idx] != "\n")
+				{
+					post_id += tokens[idx];
+				}
+				--idx;
+
+				// TODO(Sam): Log system pour debug
+				std::cout << "POST ID: " << post_id << "\n";
+				if(post_ids.count(post_id) > 0)
+				{
+					std::cout << "ERROR:" << "This post id is already used: '" << post_id << "'." << "\n";
+					return false;
+				}
+				u32 id = next_post_id++;
+				post_ids[post_id] = id;
+				constructed_post.id = id;
+				constructed_post.event_id = -1;
+									
 		
 				while(white_chars.count(tokens[++idx][0]) > 0) continue;
 				--idx;
@@ -268,6 +337,61 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 				--idx;
 				
 			} break;
+
+			case EventTokenParserState::PostCore:
+			{
+				if(white_chars.count(token[0]) > 0 || token == "\n") break;
+
+				if(token == "}")
+				{
+					if(constructed_post.event_id == -1)
+					{
+						std::cout << "ERROR:" << "Post without linked event: '" << constructed_post.id << "'." << "\n";
+						return false;
+					}
+					
+					social_post_system->all_posts.push_back(constructed_post);
+					constructed_post.id = 0;
+					constructed_post.event_id = -1;
+
+					current_variables.clear();
+					variable_id = 'A';
+					
+					states.pop();
+					break;
+				}
+
+				if(token == "event")
+				{
+					states.push(EventTokenParserState::PostFieldEvent);
+				}
+				else if(token == "type")
+				{
+					states.push(EventTokenParserState::PostFieldType);
+				}
+				else if(token == "text")
+				{
+					states.push(EventTokenParserState::PostFieldText);
+				}
+				else
+				{
+					std::cout << "ERROR:" << "Expected on of: ('event','type','text') or '}', got '" << token << "'." << "\n";
+					return false;
+				}
+
+				while(white_chars.count(tokens[++idx][0]) > 0) continue;
+
+				if(tokens[idx] != "=")
+				{
+					std::cout << "ERROR:" << "Expected '=', got '" << tokens[idx] << "'." << "\n";
+					return false;
+				}
+
+				while(white_chars.count(tokens[++idx][0]) > 0) continue;
+				--idx;
+				
+			} break;
+			
 			case EventTokenParserState::EventFieldPerso:
 			{
 				std::string variable;
@@ -574,6 +698,120 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 				--idx;
 
 				states.pop();
+			} break;
+			
+			case EventTokenParserState::PostFieldEvent:
+			{
+				--idx;
+				while(white_chars.count(tokens[++idx][0]) > 0) continue;
+
+				std::string event_id = "";
+				--idx;
+				while(white_chars.count(tokens[++idx][0]) == 0 && tokens[idx] != "(" && tokens[idx] != "\n")
+				{
+					event_id += tokens[idx];
+				}
+
+				if(tokens[idx] == "(")
+				{
+					// Il y a donc des variables
+					while(++idx) 
+					{
+						--idx;
+						while(white_chars.count(tokens[++idx][0]) > 0)
+							continue;
+
+						std::string variable;
+						if(!parseVariableName(tokens, idx, variable, current_variables, variable_id))
+							return false;
+
+						// TODO(Sam): On en fait qqch de cette variable ?
+						
+						while(white_chars.count(tokens[++idx][0]) > 0)
+							continue;
+						
+						if(tokens[idx] == ")")
+							break;
+
+						if(tokens[idx] != ",")
+						{
+							std::cout << "ERROR: Expected ',' and got '" << tokens[idx] << "'\n";
+							return false;
+						}
+						
+					} 
+
+					++idx;
+				}
+
+				--idx;
+				while(white_chars.count(tokens[++idx][0]) > 0)
+					continue;
+				
+				
+				std::cout << "- EVENT: \"" << event_id << "\"\n";
+				constructed_post.event_id = event_ids[event_id];
+
+				if(tokens[idx] != "\n")
+				{
+					std::cout << "ERROR:" << "Expected end of line, got '" << tokens[idx] << "'." << "\n";
+					return false;
+				}
+
+				states.pop();
+				break;
+				
+			} break;
+
+			case EventTokenParserState::PostFieldType:
+			{
+				--idx;
+				while(white_chars.count(tokens[++idx][0]) > 0) continue;
+
+				// TODO(Sam): Implement this...
+				std::string tmp_string;
+				--idx;
+				while(tokens[++idx] != "\n")
+					tmp_string += tokens[idx];
+				constructed_post.type = tmp_string;
+
+				states.pop();
+				break;
+				
+			} break;
+			
+			case EventTokenParserState::PostFieldText:
+			{
+				--idx;
+				while(white_chars.count(tokens[++idx][0]) > 0) continue;
+
+				char terminator = '\n';
+				if(tokens[idx] == "\"")
+				{
+					terminator = '"';
+					++idx;
+				}
+
+				std::string str;
+				if(!parseString(tokens, idx, str, terminator))
+					return false;
+
+				std::cout << "- TEXT: \"" << str << "\"\n";
+				constructed_post.text = str;
+
+				if(terminator == '\n') --idx;
+				while(white_chars.count(tokens[++idx][0]) > 0)
+					continue;
+
+				if(tokens[idx] != "\n")
+				{
+					std::cout << "ERROR:" << "Expected end of line, got '" << tokens[idx] << "'." << "\n";
+					return false;
+				}
+
+				states.pop();
+				break;
+				
 			} break;
 
 			InvalidDefaultCase;
@@ -1077,9 +1315,9 @@ void displayTree(Node const& node, std::string const& prefix)
 		displayTree(child, next_prefix);
 }
 
-void importEvents(EventSystem *event_system)
+void importEvents(GameData *data)
 {
 	// TODO(Sam): Get all .txt files
-	if(!importEventsFile(event_system, "data/events/exemple.txt"))
+	if(!importEventsFile(data, "data/events/exemple.txt"))
 		std::cout << "Error";
 }

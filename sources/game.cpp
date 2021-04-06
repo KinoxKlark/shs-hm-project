@@ -11,11 +11,12 @@ bool drag_drop_accept_payload(void *payload, void* user_data)
 
 	feed->posts.push_back(*post);
 
-	for(auto it = data->available_posts.begin(); it != data->available_posts.end(); ++it)
+	for(auto it = data->social_post_system.available_posts.begin();
+		it != data->social_post_system.available_posts.end(); ++it)
 	{
 		if(it->id == post->id)
 		{
-			data->available_posts.erase(it);
+			data->social_post_system.available_posts.erase(it);
 			break;
 		}
 	}
@@ -35,8 +36,8 @@ void social_post_gui(SocialPost *post, bool draggable = false)
 
 	GuiBeginContainer(post->id, obj, GuiElementAlignment::HORIZONTAL);
 	if(draggable) GuiDefineContainerAsDraggable(post);
-	GuiTitle("Test");
-	GuiText("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id arcu at diam interdum fringilla. Quisque euismod in augue imperdiet aliquet. In ornare fermentum nisl, ut cursus orci commodo eget. In hac habitasse platea dictumst. Ut finibus venenatis tincidunt. Nulla commodo aliquam tellus vel gravida. Aliquam semper elementum lacus, vitae bibendum ante volutpat sagittis. Ut libero velit, vulputate eget suscipit et, hendrerit vehicula tellus. Aliquam erat volutpat. Ut mattis et odio in fringilla. Phasellus pretium aliquet eros, mollis tempor odio. Aliquam auctor ante in turpis lacinia lobortis. Quisque mauris nunc, pulvinar sed euismod et, lacinia sit amet sapien. Fusce tristique mi sed volutpat molestie. Aliquam congue sagittis tellus, vitae pretium tellus rhoncus posuere.");
+	GuiTitle(post->type);
+	GuiText(post->text);
 	GuiEndContainer();
 }
 
@@ -117,15 +118,15 @@ void update(Application *app, sf::Time dt)
 	
 	GuiBeginGrid(2, 3, obj4);
 	{
-		for(u32 idx = 0; idx < data->social_feeds.size(); ++idx)
+		for(u32 idx = 0; idx < data->social_post_system.social_feeds.size(); ++idx)
 		{
 			GuiSelectGridCell(idx/3, idx % 3);
 			GuiBeginContainer(obj_full);
-			GuiDroppableArea(drag_drop_accept_payload, &data->social_feeds[idx]);
+			GuiDroppableArea(drag_drop_accept_payload, &data->social_post_system.social_feeds[idx]);
 
-			for(u32 post_idx = 0; post_idx < data->social_feeds[idx].posts.size(); ++post_idx)
+			for(u32 post_idx = 0; post_idx < data->social_post_system.social_feeds[idx].posts.size(); ++post_idx)
 			{
-				social_post_gui(&(data->social_feeds[idx].posts[post_idx]));
+				social_post_gui(&(data->social_post_system.social_feeds[idx].posts[post_idx]));
 			}
 			GuiEndContainer();
 		}
@@ -137,9 +138,9 @@ void update(Application *app, sf::Time dt)
 	{
 		if(GuiTab("Tab1"))
 		{
-			for(u32 idx = 0; idx < data->available_posts.size(); ++idx)
+			for(u32 idx = 0; idx < data->social_post_system.available_posts.size(); ++idx)
 			{
-				social_post_gui(&(data->available_posts[idx]), true);
+				social_post_gui(&(data->social_post_system.available_posts[idx]), true);
 			}			
 		}
 
@@ -415,15 +416,15 @@ GameData* game_data_init()
 	data->drop_counter = 0;
 
 	for(u32 idx = 0; idx < 6; ++idx)
-		data->social_feeds.push_back({});
+		data->social_post_system.social_feeds.push_back({});
 
-	for(u32 idx = 0; idx < 12; ++idx)
+	for(u32 idx = 0; idx < 3; ++idx)
 	{
 		sf::Color color( 0, 0, 0, 255);
 		color.r = get_random_number_between(100,200);
 		color.g = get_random_number_between(100,200);
 		color.b = get_random_number_between(100,200);
-		data->available_posts.push_back({create_id(), color});
+		data->social_post_system.available_posts.push_back({create_id(), (u32)(-1), "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id arcu at diam interdum fringilla. Quisque euismod in augue imperdiet aliquet. In ornare fermentum nisl, ut cursus orci commodo eget. In hac habitasse platea dictumst. Ut finibus venenatis tincidunt. Nulla commodo aliquam tellus vel gravida. Aliquam semper elementum lacus, vitae bibendum ante volutpat sagittis. Ut libero velit, vulputate eget suscipit et, hendrerit vehicula tellus. Aliquam erat volutpat. Ut mattis et odio in fringilla. Phasellus pretium aliquet eros, mollis tempor odio. Aliquam auctor ante in turpis lacinia lobortis. Quisque mauris nunc, pulvinar sed euismod et, lacinia sit amet sapien. Fusce tristique mi sed volutpat molestie. Aliquam congue sagittis tellus, vitae pretium tellus rhoncus posuere.", "DEFAULT", color});
 	}
 	
 	return data;

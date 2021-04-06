@@ -1,14 +1,4 @@
 
-
-struct SocialPost {
-	u32 id;
-	sf::Color color;
-};
-
-struct SocialFeed {
-	std::vector<SocialPost> posts;
-};
-
 struct GaugeInfo {
 	u32 id;
 	std::string name;
@@ -57,6 +47,7 @@ UserGauge* get_interest_gauge(User *user, u32 gauge_id)
 
 struct GameData {
 	EventSystem event_system;
+	SocialPostSystem social_post_system;
 	
 	std::vector<User> users;
 	std::vector<GaugeInfo> personalities;
@@ -65,8 +56,6 @@ struct GameData {
 	u32 click_counter;
 	u32 drop_counter;
 
-	std::vector<SocialPost> available_posts;
-	std::vector<SocialFeed> social_feeds;
 };
 
 inline GameData* game_data_init();

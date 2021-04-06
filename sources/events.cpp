@@ -591,6 +591,9 @@ void main_simulation_update(Application *app)
 #ifdef DEBUG
 		event_system->debut_instancied_events.push_back(event);
 #endif
+
+		instanciate_social_post_for_event(app, &event);
+		
 	}
 }
 

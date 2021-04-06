@@ -8,6 +8,12 @@ event : creatif_test {
   cond = ?a.creatif > 0.7
 }
 
+post : reaction_1 {
+  event = creatif_test(?a)
+  type = publication
+  text = "Je suis quelqu'un de créatif!"
+}
+
 event : creatif_succession {
   perso = ?a
   descr = ?a etait creatif mais pas ?b
@@ -18,4 +24,23 @@ event: creatif_not_succ {
   perso = ?a
   descr = ?a eu ete creatif
   cond = event(creatif_succession, ?a)
+}
+
+event: cours_de_respect {
+  perso = ?a, ?b
+  descr = ?a donne un cours de respect a ?b
+  cond = [ ?a.respectueux > 0.9, ?a.respectueux > ?b.respectueux,
+  	       ?b.respectueux < 0.4]
+}
+
+post : reaction_cours_1 {
+  event = cours_de_respect(?a,?b)
+  type = partage(?b => ?a)
+  text = "C'etait vraiment super ce cours! Merci ?a!!!"
+}
+
+post : reaction_cours_2 {
+  event = cours_de_respect(?a,?b)
+  type = partage(?a => ?b)
+  text = "Alors ?b, tu as aimer ce cours de respect ?"
 }

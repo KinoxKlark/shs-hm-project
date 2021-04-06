@@ -11,6 +11,7 @@ struct Application;
 #include "gui.h"
 #include "inputs.h"
 #include "events.h"
+#include "social_posts.h"
 #include "game.h"
 #include "application.h"
 #include "renderer.h"
@@ -19,6 +20,7 @@ Application *global_app = nullptr;
 Renderer *global_renderer = nullptr;
 
 #include "events.cpp"
+#include "social_posts.cpp"
 #include "events_parser.cpp"
 #include "gui.cpp"
 #include "renderer.cpp"
@@ -36,7 +38,7 @@ int main()
 
 	init_event_system(&(app->data->event_system));
 
-	importEvents(&(app->data->event_system));
+	importEvents(app->data);
 
 	while(app->window->isOpen())
 	{
