@@ -411,20 +411,41 @@ void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* 
 	   && !rule->conclusion.variable
 	   && rule->conclusion.type == SymboleType::_SELECT_EVENT)
 	{
-		
-		//std::cout << "New Event: [" << rule->conclusion.data << "] ";
-
 		Event event = event_system->all_events[rule->conclusion.data];
+
+		for(auto const& pair : event_system->facts)
+		{
+			Pattern *pattern = pair.second.pattern;
+			if(pattern->symbole) continue;
+			if(!pattern->first->symbole) continue;
+			if(pattern->first->type != SymboleType::EVENT_OCCURED) continue;
+
+			// NOTE(Sam): At this stage every pattern should be correclty constructed
+			pattern = pattern->first->next;
+			if(pattern->data != event.id) continue;
+
+			for(auto const& major_variable : event.major_variables)
+			{
+				pattern = pattern->next;
+				for(auto const& association : environement->associations)
+				{
+					if(association.variable_name == major_variable
+					   && pattern->data != association.datum->data)
+						goto event_check_next_iteration;
+				}
+			}
+
+			return;
+			
+			event_check_next_iteration:
+					int dummy = 0;
+		}
+
 		event.timestamp = 0;
 		event.users.reserve(environement->associations.size());
 
-		// TODO(Sam): On va vouloir récupérer seulement un subset des users pour une
-		// règle afin de ne pas avoir une répartition exponeneitel des dépendences en
-		// user lors de la rédaction du contenu
-		
 		if(environement->associations.size() > 0)
 		{
-			//std::cout << "with: ";
 
 			for(u32 idx = 0; idx < environement->associations.size(); ++idx)
 			{
@@ -433,9 +454,6 @@ void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* 
 				if(pattern->type == SymboleType::USER)
 				{
 					event.users[association->variable_name] = global_app->data->users[pattern->data].id;
-					//std::cout << global_app->data->users[pattern->data].fullname;
-					//if( idx+1 < environement->associations.size())
-						//std::cout << ", ";
 				}
 				else
 				{
@@ -446,8 +464,6 @@ void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* 
 		}
 
 		event_system->selected_events.push_back(event);
-
-		//std::cout << std::endl;
 	}
 	else
 	{
@@ -525,53 +541,57 @@ void main_simulation_update(Application *app)
 	// of intanciable events
 	inference(app);
 
-	//TODO(Sam): We probably will want more control over the probability distribution over events
-	Event event = get_random_element(event_system->selected_events);
-
-	Pattern p0 = {};
-	p0.symbole = false;
-	p0.next = nullptr;
+	if(event_system->selected_events.size() > 0)
 	{
-		Pattern *trans = &p0;
-		Pattern *tmp = new Pattern();
-		tmp->symbole = true;
-		tmp->variable = false;
-		tmp->type = SymboleType::EVENT_OCCURED;
-		tmp->data = 0;
-		p0.first = tmp;
-		trans = tmp;
+	
+		//TODO(Sam): We probably will want more control over the probability distribution over events
+		Event event = get_random_element(event_system->selected_events);
 
-		tmp = new Pattern();
-		tmp->symbole = true;
-		tmp->variable = false;
-		tmp->type = SymboleType::EVENT;
-		tmp->data = (u64)(event.id);
-		trans->next = tmp;
-		trans = tmp;
-		
-		for(auto const& variable : event.major_variables)
+		Pattern p0 = {};
+		p0.symbole = false;
+		p0.next = nullptr;
 		{
-			u32 user_id = event.users[variable];
+			Pattern *trans = &p0;
+			Pattern *tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = false;
+			tmp->type = SymboleType::EVENT_OCCURED;
+			tmp->data = 0;
+			p0.first = tmp;
+			trans = tmp;
+
 			tmp = new Pattern();
 			tmp->symbole = true;
 			tmp->variable = false;
-			tmp->type = SymboleType::USER;
-			tmp->data = (u64)(user_id);
+			tmp->type = SymboleType::EVENT;
+			tmp->data = (u64)(event.id);
 			trans->next = tmp;
 			trans = tmp;
+		
+			for(auto const& variable : event.major_variables)
+			{
+				u32 user_id = event.users[variable];
+				tmp = new Pattern();
+				tmp->symbole = true;
+				tmp->variable = false;
+				tmp->type = SymboleType::USER;
+				tmp->data = (u64)(user_id);
+				trans->next = tmp;
+				trans = tmp;
+			}
 		}
-	}
 	
-	Fact f0 = {};
-	f0.id = event_system->fact_next_id++;
-	f0.pattern = new Pattern(p0);
+		Fact f0 = {};
+		f0.id = event_system->fact_next_id++;
+		f0.pattern = new Pattern(p0);
 
-	event_system->facts.insert({f0.id,f0});
-	event_system->facts[f0.id].pattern_proprio = true;
+		event_system->facts.insert({f0.id,f0});
+		event_system->facts[f0.id].pattern_proprio = true;
 
 #ifdef DEBUG
-	event_system->debut_instancied_events.push_back(event);
+		event_system->debut_instancied_events.push_back(event);
 #endif
+	}
 }
 
 #include <sstream>

@@ -15,7 +15,7 @@ u32 get_random_number()
 inline
 i32 get_random_number_between(i32 min, i32 max)
 {
-	assert(min < max);
+	assert(min <= max);
 	i32 result = get_random_number() % (max+1-min) + min;
 	return result;
 }
