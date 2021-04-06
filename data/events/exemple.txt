@@ -10,6 +10,12 @@ event : creatif_test {
 
 event : creatif_succession {
   perso = ?a
-  descr = ?a etait creatif
-  cond = event(creatif_test, ?a)
+  descr = ?a etait creatif mais pas ?b
+  conds = [event(creatif_test, ?a), ?b.creatif < .3]
+}
+
+event: creatif_not_succ {
+  perso = ?a
+  descr = ?a eu ete creatif
+  cond = event(creatif_succession, ?a)
 }

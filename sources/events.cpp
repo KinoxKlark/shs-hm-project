@@ -135,6 +135,56 @@ bool compile_pattern_to_boolean(Pattern *pattern)
 		
 		result = lhs_value > rhs_value;
 	} break;
+	case SymboleType::CMP_SMALLER:
+	{
+		Pattern *lhs = first->next;
+		Pattern *rhs = lhs->next;
+
+		r32 lhs_value = compile_pattern_to_number(lhs);
+		r32 rhs_value = compile_pattern_to_number(rhs); 
+		
+		result = lhs_value < rhs_value;
+	} break;
+	case SymboleType::CMP_GR_OR_EQ:
+	{
+		Pattern *lhs = first->next;
+		Pattern *rhs = lhs->next;
+
+		r32 lhs_value = compile_pattern_to_number(lhs);
+		r32 rhs_value = compile_pattern_to_number(rhs); 
+		
+		result = lhs_value >= rhs_value;
+	} break;
+	case SymboleType::CMP_SM_OR_EQ:
+	{
+		Pattern *lhs = first->next;
+		Pattern *rhs = lhs->next;
+
+		r32 lhs_value = compile_pattern_to_number(lhs);
+		r32 rhs_value = compile_pattern_to_number(rhs); 
+		
+		result = lhs_value <= rhs_value;
+	} break;
+	case SymboleType::CMP_EQ:
+	{
+		Pattern *lhs = first->next;
+		Pattern *rhs = lhs->next;
+
+		r32 lhs_value = compile_pattern_to_number(lhs);
+		r32 rhs_value = compile_pattern_to_number(rhs); 
+		
+		result = lhs_value == rhs_value;
+	} break;
+	case SymboleType::CMP_NOT_EQ:
+	{
+		Pattern *lhs = first->next;
+		Pattern *rhs = lhs->next;
+
+		r32 lhs_value = compile_pattern_to_number(lhs);
+		r32 rhs_value = compile_pattern_to_number(rhs); 
+		
+		result = lhs_value != rhs_value;
+	} break;
 	default:
 		result =  false;
 		break;
@@ -499,7 +549,6 @@ void main_simulation_update(Application *app)
 		trans->next = tmp;
 		trans = tmp;
 		
-		
 		for(auto const& variable : event.major_variables)
 		{
 			u32 user_id = event.users[variable];
@@ -561,6 +610,21 @@ std::string convert_pattern_to_string(Pattern *pattern)
 		} break;
 		case SymboleType::CMP_GREATER:
 			result += ">";
+			break;
+		case SymboleType::CMP_SMALLER:
+			result += "<";
+			break;
+		case SymboleType::CMP_GR_OR_EQ:
+			result += ">=";
+			break;
+		case SymboleType::CMP_SM_OR_EQ:
+			result += "<=";
+			break;
+		case SymboleType::CMP_EQ:
+			result += "==";
+			break;
+		case SymboleType::CMP_NOT_EQ:
+			result += "!=";
 			break;
 		case SymboleType::OP_NOT:
 			result += "!";

@@ -445,12 +445,24 @@ bool importEventsFile(EventSystem *event_system, std::string const& filename)
 							}
 							expression.push_back({ItemType::NONE, ")"});
 						}
-						else if(tokens[idx] == ">") // Operateur
+						else if(tokens[idx] == ">"
+							|| tokens[idx] == "<") // Operateur
 						{
 							Item item;
 							item.type = ItemType::BINARY_OPERATOR;
 							item.str = tokens[idx];
 							expression.push_back(item);
+						}
+						else if((tokens[idx] == "=" && tokens[idx+1] == "=")
+							|| (tokens[idx] == "!" && tokens[idx+1] == "=")
+							|| (tokens[idx] == "<" && tokens[idx+1] == "=")
+							|| (tokens[idx] == ">" && tokens[idx+1] == "=")) // Operateur
+						{
+							Item item;
+							item.type = ItemType::BINARY_OPERATOR;
+							item.str = tokens[idx]+tokens[idx+1];
+							expression.push_back(item);
+							++idx;
 						}
 						else if(tokens[idx] == "!")
 						{
@@ -902,29 +914,7 @@ Node convertExpressionToTree(std::vector<Item> const& expression, u32 idstart, u
 Pattern* convertTreeToPattern(Node const& node,
 							  std::unordered_map<std::string, char>& current_variables,
 							  std::unordered_map<std::string, u32>& event_ids)
-{
-	/*
-	  enum class SymboleType {
-	  // Must not be used
-	  NONE = 0, 
-
-	  // Inferrences
-	  PERE,
-	  FRERE,
-	  ONCLE,
-
-	  // Compilables
-	  NUMBER,
-	  USER,
-	  PERSONALITY_GAUGE,
-	  INTEREST_GAUGE,
-	  CMP_GREATER,
-
-	  // Special Action
-	  _SELECT_EVENT,
-	  }
-	*/
-	
+{	
 	Pattern *pattern = new Pattern();
 	pattern->next = nullptr;
 	pattern->data = 0;
@@ -1007,6 +997,16 @@ Pattern* convertTreeToPattern(Node const& node,
 
 		if(node.item.str == ">")
 			first->type = SymboleType::CMP_GREATER;
+		else if(node.item.str == "<")
+			first->type = SymboleType::CMP_SMALLER;
+		else if(node.item.str == ">=")
+			first->type = SymboleType::CMP_GR_OR_EQ;
+		else if(node.item.str == "<=")
+			first->type = SymboleType::CMP_SM_OR_EQ;
+		else if(node.item.str == "==")
+			first->type = SymboleType::CMP_EQ;
+		else if(node.item.str == "!=")
+			first->type = SymboleType::CMP_NOT_EQ;
 		else
 		{ break_with_error("Unknown binary operator"); }
 

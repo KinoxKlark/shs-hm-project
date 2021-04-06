@@ -43,6 +43,11 @@ enum class SymboleType {
 	PERSONALITY_GAUGE,
 	INTEREST_GAUGE,
 	CMP_GREATER,
+	CMP_SMALLER,
+	CMP_GR_OR_EQ,
+	CMP_SM_OR_EQ,
+	CMP_EQ,
+	CMP_NOT_EQ,
 	OP_NOT, // TODO(Sam): Implement this!
 
 	// Special Action
