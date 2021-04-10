@@ -29,7 +29,8 @@ event: creatif_not_succ {
 event: cours_de_respect {
   perso = ?a, ?b
   descr = ?a donne un cours de respect a ?b
-  cond = [ ?a.respectueux > 0.9, ?a.respectueux > ?b.respectueux,
+  cond = [ ?a.respectueux > 0.9,
+   	   	   ?a.respectueux > ?b.respectueux,
   	       ?b.respectueux < 0.4]
 }
 
@@ -42,5 +43,17 @@ post : reaction_cours_1 {
 post : reaction_cours_2 {
   event = cours_de_respect(?a,?b)
   type = partage(?a => ?b)
-  text = "Alors ?b, tu as aimer ce cours de respect ?"
+  text = "Alors ?b, tu as aimé ce cours de respect ?"
+}
+
+event : trololo {
+  perso = ?manon
+  descr = ?manon fait des jeux à la maison
+  conds = ?manon.jeux > .3
+}
+
+post : hehe {
+  event = trololo
+  type = nope
+  text = "C'est une super jeux !"
 }

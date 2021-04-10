@@ -307,7 +307,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 				{
 					states.push(EventTokenParserState::EventFieldPerso);
 				}
-				else if(token == "descr")
+				else if(token == "descr" || token == "desc")
 				{
 					states.push(EventTokenParserState::EventFieldDescr);
 				}
