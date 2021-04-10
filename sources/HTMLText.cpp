@@ -489,7 +489,7 @@ namespace sf
 					line_words_count = 0;
 					line_width = 0.f;
 				}
-			}
+			} 
 			else
 			{
 				token += curChar;
@@ -507,6 +507,28 @@ namespace sf
 			}
 		}
 		prevChar = 0;
+
+
+		// If last char is not an end of line char
+		if(m_string[m_string.getSize()-1] != L' ' && m_string[m_string.getSize()-1] != L'\n')
+		{
+			if(line_width + word_width > m_textWidth)
+			{
+				line_words_counts.push_back(line_words_count);
+				line_spaces.push_back(whitespaceWidth);
+				line_words_count = 0;
+				line_width = 0.f;
+			}
+
+			++line_words_count;
+			line_width += word_width;
+			words.push_back(token);
+				
+			line_words_counts.push_back(line_words_count);
+			line_spaces.push_back(whitespaceWidth);
+					
+		}
+		
 
 		std::size_t idx_word = 0;
 		for(std::size_t idx = 0; idx < line_words_counts.size(); ++idx)

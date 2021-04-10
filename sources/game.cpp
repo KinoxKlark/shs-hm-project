@@ -175,6 +175,16 @@ void update(Application *app, sf::Time dt)
 			}
 			GuiEndContainer();
 
+			GuiBeginContainer(obj6, GuiElementAlignment::HORIZONTAL);
+			{
+				GuiButton("Click");
+				GuiTitle("Test");
+				GuiText("test");
+				GuiBeginContainer(obj3);
+				GuiEndContainer();
+			}
+			GuiEndContainer();
+			
 			GuiBeginContainer(obj2, GuiElementAlignment::HORIZONTAL);
 			if(GuiButton("Click Me"))
 			{

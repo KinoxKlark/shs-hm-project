@@ -681,6 +681,8 @@ void GuiText(sf::String text)
 {
 	GuiManager *gui = global_gui_manager;
 
+	assert(("Text can only be puts in container", gui->most_recent_container));
+	
 	GuiObject obj;
 	
 	//obj.margin = {1,1,1,1};
@@ -688,15 +690,13 @@ void GuiText(sf::String text)
 
 	obj.margin = {};
 	obj.padding = {};
-	
+
 	obj.bg_color = sf::Color(0,0,0,0);
 	obj.htmltext.setString(text);
 	obj.htmltext.setFont(gui->font);
 	obj.htmltext.setCharacterSize(12);
 	obj.htmltext.setFillColor(sf::Color(50,50,50));
 	obj.htmltext.setTextWidth(rect_size(gui->most_recent_container->inner_bounds).x);
-
-	assert(("Text can only be puts in container", gui->most_recent_container));
 
 	v2 region = rect_size(gui->most_recent_container->inner_bounds);
 	v2 text_size = rect_size(obj.htmltext.getLocalBounds());
