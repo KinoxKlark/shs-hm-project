@@ -349,6 +349,18 @@ bool importEventsFile(GameData *data, std::string const& filename)
 						std::cout << "ERROR:" << "Post without linked event: '" << constructed_post.id << "'." << "\n";
 						return false;
 					}
+
+					for(auto const& pair : current_variables)
+					{
+						str_replace(constructed_post.text,
+									pair.first,
+									std::string("?")+pair.second);
+						// TODO(Sam): TMP
+						str_replace(constructed_post.type,
+									pair.first,
+									std::string("?")+pair.second);
+					}
+					
 					
 					social_post_system->all_posts.push_back(constructed_post);
 					constructed_post.id = 0;

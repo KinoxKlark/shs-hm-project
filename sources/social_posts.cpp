@@ -19,6 +19,17 @@ void instanciate_social_post_for_event(Application *app, Event *event)
 		SocialPost post = social_post_system->all_posts[idx];
 		post.id = create_id();
 		post.color = sf::Color({200,100,190});
+		for(auto const& pair : event->users)
+		{
+			User *user = &app->data->users[pair.second];
+			str_replace(post.text,
+						std::string("?")+pair.first,
+						user->fullname);
+			// TODO(Sam): tmp
+			str_replace(post.type,
+						std::string("?")+pair.first,
+						user->fullname);
+		}
 		social_post_system->available_posts.push_back(post);
 	}
 }

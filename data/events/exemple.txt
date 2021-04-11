@@ -35,9 +35,9 @@ event: cours_de_respect {
 }
 
 post : reaction_cours_1 {
-  event = cours_de_respect(?a,?b)
-  type = partage(?b => ?a)
-  text = "C'etait vraiment super ce cours! Merci ?a!!!"
+  event = cours_de_respect(?aaa,?bbb)
+  type = partage(?bbb => ?aaa)
+  text = "C'etait vraiment super ce cours! Merci ?aaa!!!"
 }
 
 post : reaction_cours_2 {

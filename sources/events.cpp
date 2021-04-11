@@ -712,6 +712,7 @@ std::string convert_pattern_to_string(Pattern *pattern)
 
 }
 
+
 void init_event_system(EventSystem *event_system)
 {
 	GameData *data = global_app->data;
