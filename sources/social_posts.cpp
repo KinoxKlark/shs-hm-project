@@ -18,6 +18,7 @@ void instanciate_social_post_for_event(Application *app, Event *event)
 	{
 		SocialPost post = social_post_system->all_posts[idx];
 		post.id = create_id();
+		
 		post.color = sf::Color({200,100,190});
 		for(auto const& pair : event->users)
 		{
@@ -30,6 +31,13 @@ void instanciate_social_post_for_event(Application *app, Event *event)
 						std::string("?")+pair.first,
 						user->fullname);
 		}
+
+		post.major_user_ids.reserve(event->major_variables.size());
+		for(auto const& major_variable : event->major_variables)
+		{
+			post.major_user_ids.push_back(event->users[major_variable]);
+		}
+		
 		social_post_system->available_posts.push_back(post);
 	}
 }

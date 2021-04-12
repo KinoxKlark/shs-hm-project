@@ -625,6 +625,9 @@ std::string convert_pattern_to_string(Pattern *pattern)
 		case SymboleType::EVENT_OCCURED:
 			result += "EVENT OCCURED";
 			break;
+		case SymboleType::SOCIAL_POST_SEEN:
+			result += "A VU";
+			break;
 		case SymboleType::NUMBER:
 		{
 			std::stringstream ss;
@@ -663,6 +666,14 @@ std::string convert_pattern_to_string(Pattern *pattern)
 				result += ss.str();
 			}
 			//result += global_app->data->event_system.all_events[pattern->data].description;
+			break;
+		case SymboleType::SOCIAL_POST:
+			result += "Social post";
+			{
+				std::stringstream ss;
+				ss << " [" << pattern->data << "]";
+				result += ss.str();
+			}
 			break;
 		case SymboleType::PERSONALITY_GAUGE:
 			result += "PERSONALITY " + global_app->data->personalities[pattern->data].name;

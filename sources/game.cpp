@@ -6,9 +6,61 @@ struct post_payload {
 bool drag_drop_accept_payload(void *payload, void* user_data)
 {
 	GameData *data = global_app->data;
+	EventSystem *event_system = &data->event_system;
 	SocialPost *post = (SocialPost*)payload;
 	SocialFeed *feed = (SocialFeed*)user_data;
 
+	// (SOCIAL_POST_SEEN, post id, ?viewer, ?a, ?b, ?c, ... )
+		
+	Pattern p0 = {};
+	p0.symbole = false;
+	p0.next = nullptr;
+	{
+		Pattern *trans = &p0;
+		Pattern *tmp = new Pattern();
+		tmp->symbole = true;
+		tmp->variable = false;
+		tmp->type = SymboleType::SOCIAL_POST_SEEN;
+		tmp->data = 0;
+		p0.first = tmp;
+		trans = tmp;
+
+		tmp = new Pattern();
+		tmp->symbole = true;
+		tmp->variable = false;
+		tmp->type = SymboleType::SOCIAL_POST;
+		tmp->data = (u64)(post->id);
+		trans->next = tmp;
+		trans = tmp;
+
+		tmp = new Pattern();
+		tmp->symbole = true;
+		tmp->variable = false;
+		tmp->type = SymboleType::USER;
+		tmp->data = (u64)(feed->user_id);
+		trans->next = tmp;
+		trans = tmp;
+		
+		for(auto const& user_id : post->major_user_ids)
+		{
+			tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = false;
+			tmp->type = SymboleType::USER;
+			tmp->data = (u64)(user_id);
+			trans->next = tmp;
+			trans = tmp;
+		}
+	}
+
+	Fact f0 = {};
+	f0.id = event_system->fact_next_id++;
+	f0.pattern = new Pattern(p0);
+
+	event_system->facts.insert({f0.id,f0});
+	event_system->facts[f0.id].pattern_proprio = true;
+
+	
 	feed->posts.push_back(*post);
 
 	for(auto it = data->social_post_system.available_posts.begin();
@@ -436,7 +488,7 @@ GameData* game_data_init()
 		color.r = get_random_number_between(100,200);
 		color.g = get_random_number_between(100,200);
 		color.b = get_random_number_between(100,200);
-		data->social_post_system.available_posts.push_back({create_id(), (u32)(-1), "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id arcu at diam interdum fringilla. Quisque euismod in augue imperdiet aliquet. In ornare fermentum nisl, ut cursus orci commodo eget. In hac habitasse platea dictumst. Ut finibus venenatis tincidunt. Nulla commodo aliquam tellus vel gravida. Aliquam semper elementum lacus, vitae bibendum ante volutpat sagittis. Ut libero velit, vulputate eget suscipit et, hendrerit vehicula tellus. Aliquam erat volutpat. Ut mattis et odio in fringilla. Phasellus pretium aliquet eros, mollis tempor odio. Aliquam auctor ante in turpis lacinia lobortis. Quisque mauris nunc, pulvinar sed euismod et, lacinia sit amet sapien. Fusce tristique mi sed volutpat molestie. Aliquam congue sagittis tellus, vitae pretium tellus rhoncus posuere.", "DEFAULT", color});
+		data->social_post_system.available_posts.push_back({create_id(), (u32)(-1), "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id arcu at diam interdum fringilla. Quisque euismod in augue imperdiet aliquet. In ornare fermentum nisl, ut cursus orci commodo eget. In hac habitasse platea dictumst. Ut finibus venenatis tincidunt. Nulla commodo aliquam tellus vel gravida. Aliquam semper elementum lacus, vitae bibendum ante volutpat sagittis. Ut libero velit, vulputate eget suscipit et, hendrerit vehicula tellus. Aliquam erat volutpat. Ut mattis et odio in fringilla. Phasellus pretium aliquet eros, mollis tempor odio. Aliquam auctor ante in turpis lacinia lobortis. Quisque mauris nunc, pulvinar sed euismod et, lacinia sit amet sapien. Fusce tristique mi sed volutpat molestie. Aliquam congue sagittis tellus, vitae pretium tellus rhoncus posuere.", {}, "DEFAULT", color});
 	}
 	
 	return data;

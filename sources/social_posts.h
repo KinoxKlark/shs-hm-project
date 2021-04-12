@@ -1,10 +1,14 @@
 
 struct SocialPost {
 	u32 id;
-	u32 event_id;
+	// NOTE(Sam): Id of raw event, not instanciated event. Thus can't be used to access
+	// info about users, maybe this should be changed?
+	u32 event_id; 
 
 	std::string text;
 
+	std::vector<u32> major_user_ids;
+	
     // TODO(Sam): faire un vrai system de types
 	std::string type;
 	sf::Color color;	
