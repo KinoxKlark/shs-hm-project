@@ -374,7 +374,7 @@ void update(Application *app, sf::Time dt)
 		if(!pair.second.pattern->symbole && pair.second.pattern->first->symbole &&
 		   pair.second.pattern->first->type == SymboleType::EVENT_OCCURED)
 		{
-			Event *event = &event_system->all_events[pair.second.pattern->first->data];
+			Event *event = &event_system->all_events[pair.second.pattern->first->next->data];
 			if(event->description.size() > 0)
 				ImGui::Text("    %s", event->description.c_str());
 		}
