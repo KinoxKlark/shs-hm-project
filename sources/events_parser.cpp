@@ -1337,6 +1337,7 @@ bool importEventsFiles(GameData *data)
 	std::string line;
 	while(std::getline(file, line))
 	{
+		if(line.size() == 0 || line[0] == '#') continue;
 		filename_list.push_back(line);
 	}
 
