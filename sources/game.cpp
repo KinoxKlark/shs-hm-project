@@ -120,9 +120,11 @@ void update(Application *app, sf::Time dt)
 	{
 		for(u32 idx = 0; idx < data->social_post_system.social_feeds.size(); ++idx)
 		{
+			SocialFeed *feed = &data->social_post_system.social_feeds[idx];
 			GuiSelectGridCell(idx/3, idx % 3);
 			GuiBeginContainer(obj_full);
-			GuiDroppableArea(drag_drop_accept_payload, &data->social_post_system.social_feeds[idx]);
+			GuiTitle(data->users[feed->user_id].fullname);
+			GuiDroppableArea(drag_drop_accept_payload, feed);
 
 			for(u32 post_idx = 0; post_idx < data->social_post_system.social_feeds[idx].posts.size(); ++post_idx)
 			{
@@ -426,7 +428,7 @@ GameData* game_data_init()
 	data->drop_counter = 0;
 
 	for(u32 idx = 0; idx < 6; ++idx)
-		data->social_post_system.social_feeds.push_back({});
+		data->social_post_system.social_feeds.push_back({idx, {}});
 
 	for(u32 idx = 0; idx < 3; ++idx)
 	{

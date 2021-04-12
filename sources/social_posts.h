@@ -11,6 +11,7 @@ struct SocialPost {
 };
 
 struct SocialFeed {
+	u32 user_id;
 	std::vector<SocialPost> posts;
 };
 
