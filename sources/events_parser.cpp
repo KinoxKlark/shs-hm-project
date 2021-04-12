@@ -32,6 +32,7 @@ enum class ItemType{
 	USER_FIELD,
 	NUMBER,
 	EVENT_ID,
+	SOCIAL_POST_ID,
 
 	ACCESSOR,
 	BINARY_OPERATOR,
@@ -75,7 +76,8 @@ Node convertExpressionToTree(std::vector<Item> const& expression, u32 idstart, u
 void displayTree(Node const& node, std::string const& prefix = "");
 Pattern* convertTreeToPattern(Node const& node,
 							  std::unordered_map<std::string, char>& current_variables,
-							  std::unordered_map<std::string, u32>& event_ids);
+							  std::unordered_map<std::string, u32>& event_ids,
+							  std::unordered_map<std::string, u32>& post_ids);
 
 bool importEventsFile(GameData *data, std::string const& filename)
 {
@@ -276,6 +278,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 				post_ids[post_id] = id;
 				constructed_post.id = id;
 				constructed_post.event_id = -1;
+				constructed_post.social_post_id = id;
 									
 		
 				while(white_chars.count(tokens[++idx][0]) > 0) continue;
@@ -364,6 +367,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 					social_post_system->all_posts.push_back(constructed_post);
 					constructed_post.id = 0;
 					constructed_post.event_id = -1;
+					constructed_post.social_post_id = 0;
 
 					current_variables.clear();
 					variable_id = 'A';
@@ -580,6 +584,56 @@ bool importEventsFile(GameData *data, std::string const& filename)
 							}
 							expression.push_back({ItemType::NONE, ")"});
 						}
+						else if(tokens[idx] == "saw") // Have seen a social post
+						{
+							Item item;
+							item.type = ItemType::FUNCTION;
+							item.str = tokens[idx];
+							expression.push_back(item);
+
+							if(tokens[++idx] != "(")
+							{
+								std::cout << "ERROR:" << "Expected openning parenthesis.\n";
+								return false;
+							}
+							expression.push_back({ItemType::NONE, "("});
+
+							item.type = ItemType::SOCIAL_POST_ID;
+							item.str = "";
+							while((tokens[++idx] != "," && tokens[idx] != ")")
+								  && white_chars.count(tokens[idx][0]) == 0)
+							{
+								item.str += tokens[idx];
+							}
+							expression.push_back(item);
+							--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
+							if(tokens[idx] != ",")
+							{
+								std::cout << "ERROR:" << "Expected a comma ',' followed by the observer id.\n";
+							}
+
+							while(tokens[idx] == ",")
+							{
+								expression.push_back({ItemType::NONE, ","});
+								while(white_chars.count(tokens[++idx][0])>0) continue;
+							
+								item.type = ItemType::VARIABLE;
+								item.str = "";
+								if(!parseVariableName(tokens, idx, item.str, current_variables, variable_id))
+									return false;
+								expression.push_back(item);
+								
+								while(white_chars.count(tokens[++idx][0])>0) continue;
+							}
+							
+							--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
+							if(tokens[idx] != ")")
+							{
+								std::cout << "ERROR:" << "Expected closing parenthesis.\n";
+								return false;
+							}
+							expression.push_back({ItemType::NONE, ")"});
+						}
 						else if(tokens[idx] == ">"
 							|| tokens[idx] == "<") // Operateur
 						{
@@ -664,7 +718,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 					displayTree(expression_tree, "        ");
 #endif
 
-					Pattern *condition_pattern =  convertTreeToPattern(expression_tree, current_variables, event_ids);
+					Pattern *condition_pattern =  convertTreeToPattern(expression_tree, current_variables, event_ids, post_ids);
 					rule.conditions.push_back(*condition_pattern);
 					delete condition_pattern;
 				}
@@ -1091,6 +1145,7 @@ Node convertExpressionToTree(std::vector<Item> const& expression, u32 idstart, u
 		case ItemType::USER_FIELD:
 		case ItemType::NUMBER:
 		case ItemType::EVENT_ID:
+		case ItemType::SOCIAL_POST_ID:
 		{
 			breaking_error(root.item.type != ItemType::_INVALID, "Invalid expression tree!");
 			root.item = expression[i];
@@ -1162,7 +1217,8 @@ Node convertExpressionToTree(std::vector<Item> const& expression, u32 idstart, u
 
 Pattern* convertTreeToPattern(Node const& node,
 							  std::unordered_map<std::string, char>& current_variables,
-							  std::unordered_map<std::string, u32>& event_ids)
+							  std::unordered_map<std::string, u32>& event_ids,
+							  std::unordered_map<std::string, u32>& post_ids)
 {	
 	Pattern *pattern = new Pattern();
 	pattern->next = nullptr;
@@ -1226,12 +1282,20 @@ Pattern* convertTreeToPattern(Node const& node,
 		pattern->data = (u64)(event_ids[node.item.str]);
 
 	} break;
+	case ItemType::SOCIAL_POST_ID:
+	{
+		breaking_error(post_ids.count(node.item.str)==0, "Post id does not exist"); // Memory leak
+		pattern->symbole = true;
+		pattern->variable = false;
+		pattern->type = SymboleType::SOCIAL_POST;
+		pattern->data = (u64)(event_ids[node.item.str]);
+	} break;
 	case ItemType::ACCESSOR:
 	{
 		breaking_error(node.children.size() != 2, "Accessor operator is a binary operator"); // Memory leak
 		pattern->symbole = false;
-		pattern->first = convertTreeToPattern(node.children[1], current_variables, event_ids);
-		pattern->first->next = convertTreeToPattern(node.children[0], current_variables, event_ids);
+		pattern->first = convertTreeToPattern(node.children[1], current_variables, event_ids, post_ids);
+		pattern->first->next = convertTreeToPattern(node.children[0], current_variables, event_ids, post_ids);
 	} break;
 	case ItemType::BINARY_OPERATOR:
 	{
@@ -1259,8 +1323,8 @@ Pattern* convertTreeToPattern(Node const& node,
 		else
 		{ break_with_error("Unknown binary operator"); }
 
-		first->next = convertTreeToPattern(node.children[0], current_variables, event_ids);
-		first->next->next = convertTreeToPattern(node.children[1], current_variables, event_ids);
+		first->next = convertTreeToPattern(node.children[0], current_variables, event_ids, post_ids);
+		first->next->next = convertTreeToPattern(node.children[1], current_variables, event_ids, post_ids);
 
 		pattern->symbole = false;
 		pattern->first = first;
@@ -1281,7 +1345,7 @@ Pattern* convertTreeToPattern(Node const& node,
 		else
 		{ break_with_error("Unknown unary operator"); }
 
-		first->next = convertTreeToPattern(node.children[0], current_variables, event_ids);
+		first->next = convertTreeToPattern(node.children[0], current_variables, event_ids, post_ids);
 
 		pattern->symbole = false;
 		pattern->first = first;
@@ -1298,13 +1362,15 @@ Pattern* convertTreeToPattern(Node const& node,
 
 		if(node.item.str == "event")
 			first->type = SymboleType::EVENT_OCCURED;
+		else if(node.item.str == "saw")
+			first->type = SymboleType::SOCIAL_POST_SEEN;
 		else
 		{ break_with_error("Unknown function"); }
 
 		Pattern *list_elem = first;
 		for(u32 i = 0; i < node.children.size(); ++i)
 		{
-			Pattern *pat = convertTreeToPattern(node.children[i], current_variables, event_ids);
+			Pattern *pat = convertTreeToPattern(node.children[i], current_variables, event_ids, post_ids);
 			list_elem->next = pat;
 			list_elem = pat;
 		}

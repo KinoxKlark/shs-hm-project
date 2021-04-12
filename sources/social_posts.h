@@ -1,9 +1,11 @@
 
 struct SocialPost {
 	u32 id;
+	
 	// NOTE(Sam): Id of raw event, not instanciated event. Thus can't be used to access
 	// info about users, maybe this should be changed?
-	u32 event_id; 
+	u32 event_id;
+	u32 social_post_id;
 
 	std::string text;
 

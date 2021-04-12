@@ -14,6 +14,18 @@ post : reaction_1 {
   text = "Je suis quelqu'un de créatif!"
 }
 
+event : se_pleint_de_reaction_creative {
+  perso = ?observer, ?b
+  descr = ?observer réagit à la publication de ?b
+  cond = saw(reaction_1, ?observer, ?b)
+}
+
+post : contre_reaction {
+  event = se_pleint_de_reaction_creative(?a, ?b)
+  type = publication(?a)
+  text = "Quel ventard ce ?b!"
+}
+
 event : creatif_succession {
   perso = ?a
   descr = ?a etait creatif mais pas ?b

@@ -29,7 +29,7 @@ bool drag_drop_accept_payload(void *payload, void* user_data)
 		tmp->symbole = true;
 		tmp->variable = false;
 		tmp->type = SymboleType::SOCIAL_POST;
-		tmp->data = (u64)(post->id);
+		tmp->data = (u64)(post->social_post_id);
 		trans->next = tmp;
 		trans = tmp;
 
@@ -488,7 +488,7 @@ GameData* game_data_init()
 		color.r = get_random_number_between(100,200);
 		color.g = get_random_number_between(100,200);
 		color.b = get_random_number_between(100,200);
-		data->social_post_system.available_posts.push_back({create_id(), (u32)(-1), "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id arcu at diam interdum fringilla. Quisque euismod in augue imperdiet aliquet. In ornare fermentum nisl, ut cursus orci commodo eget. In hac habitasse platea dictumst. Ut finibus venenatis tincidunt. Nulla commodo aliquam tellus vel gravida. Aliquam semper elementum lacus, vitae bibendum ante volutpat sagittis. Ut libero velit, vulputate eget suscipit et, hendrerit vehicula tellus. Aliquam erat volutpat. Ut mattis et odio in fringilla. Phasellus pretium aliquet eros, mollis tempor odio. Aliquam auctor ante in turpis lacinia lobortis. Quisque mauris nunc, pulvinar sed euismod et, lacinia sit amet sapien. Fusce tristique mi sed volutpat molestie. Aliquam congue sagittis tellus, vitae pretium tellus rhoncus posuere.", {}, "DEFAULT", color});
+		data->social_post_system.available_posts.push_back({create_id(), (u32)(-1), (u32)(-1), "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id arcu at diam interdum fringilla. Quisque euismod in augue imperdiet aliquet. In ornare fermentum nisl, ut cursus orci commodo eget. In hac habitasse platea dictumst. Ut finibus venenatis tincidunt. Nulla commodo aliquam tellus vel gravida. Aliquam semper elementum lacus, vitae bibendum ante volutpat sagittis. Ut libero velit, vulputate eget suscipit et, hendrerit vehicula tellus. Aliquam erat volutpat. Ut mattis et odio in fringilla. Phasellus pretium aliquet eros, mollis tempor odio. Aliquam auctor ante in turpis lacinia lobortis. Quisque mauris nunc, pulvinar sed euismod et, lacinia sit amet sapien. Fusce tristique mi sed volutpat molestie. Aliquam congue sagittis tellus, vitae pretium tellus rhoncus posuere.", {}, "DEFAULT", color});
 	}
 	
 	return data;
