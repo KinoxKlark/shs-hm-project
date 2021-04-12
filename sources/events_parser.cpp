@@ -77,7 +77,6 @@ Pattern* convertTreeToPattern(Node const& node,
 							  std::unordered_map<std::string, char>& current_variables,
 							  std::unordered_map<std::string, u32>& event_ids);
 
-
 bool importEventsFile(GameData *data, std::string const& filename)
 {
 	EventSystem *event_system = &data->event_system;
@@ -1327,9 +1326,33 @@ void displayTree(Node const& node, std::string const& prefix)
 		displayTree(child, next_prefix);
 }
 
+bool importEventsFiles(GameData *data)
+{
+	std::ifstream file;
+	std::vector<std::string> filename_list;
+	
+	file.open("data/event_files.txt", std::ios::in);
+	assert(("Event files list can't be open!", file.is_open()));
+
+	std::string line;
+	while(std::getline(file, line))
+	{
+		filename_list.push_back(line);
+	}
+
+	file.close();
+
+	for(auto const& filename : filename_list)
+	{
+		if(!(importEventsFile(data, std::string("data/events/")+filename)))
+			return false;
+	}
+	
+	return true;
+}
+
 void importEvents(GameData *data)
 {
-	// TODO(Sam): Get all .txt files
-	if(!importEventsFile(data, "data/events/exemple.txt"))
+	if(!importEventsFiles(data))
 		std::cout << "Error";
 }
