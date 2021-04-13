@@ -12,6 +12,7 @@ struct UserGauge {
 struct UserIdentity {
 	std::vector<UserGauge> personalities;
 	std::vector<UserGauge> interests;
+	std::vector<r32> relations;
 };
 
 struct User {

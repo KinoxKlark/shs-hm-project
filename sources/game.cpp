@@ -363,6 +363,30 @@ void update(Application *app, sf::Time dt)
 
 			ImGui::EndTable();
 		}
+
+		if(ImGui::BeginTable("Relations", 3))
+		{
+			ImGui::TableSetupColumn("User ID");
+			ImGui::TableSetupColumn("Fullname");
+			ImGui::TableSetupColumn("Amount");
+			ImGui::TableHeadersRow();
+			for(size_t idx(0); idx < user->identity.relations.size(); ++idx)
+			{
+				if(idx == idx_user) continue;
+				
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("%i", idx);
+				
+				ImGui::TableSetColumnIndex(1);
+				ImGui::Text("%s", data->users[idx].fullname.c_str());
+
+				ImGui::TableSetColumnIndex(2);
+				ImGui::Text("%.2f", user->identity.relations[idx]);
+			}
+
+			ImGui::EndTable();
+		}
 	}
 	ImGui::End();
 
@@ -475,6 +499,14 @@ GameData* game_data_init()
 		}
 	
 	}
+
+	for(u32 idx1 = 0; idx1 < data->users.size(); ++idx1)
+		for(u32 idx2 = 0; idx2 < idx1; ++idx2)
+		{
+			r32 relation = get_random_number_between(0.f, 1.f);
+			data->users[idx1].identity.relations[idx2] = relation;
+			data->users[idx2].identity.relations[idx1] = relation;
+		}
 	
 	data->click_counter = 0;
 	data->drop_counter = 0;

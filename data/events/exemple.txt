@@ -12,18 +12,27 @@ post : reaction_1 {
   event = creatif_test(?a)
   type = publication
   text = "Je suis quelqu'un de créatif!"
+  # Par défaut c'est le viewer qui est modifiés
+  modif = creatif+
 }
 
 event : se_pleint_de_reaction_creative {
   perso = ?observer, ?b
   descr = ?observer réagit à la publication de ?b
   cond = saw(reaction_1, ?observer, ?b)
+  modifs = ?observer.creatif-, ?observer.respect--
 }
 
 post : contre_reaction {
   event = se_pleint_de_reaction_creative(?a, ?b)
   type = publication(?a)
   text = "Quel ventard ce ?b!"
+  # est ce que la modif ?b n'agit que si c'est ?b qui voit le post ?
+  modifs = [
+  		 ?&.creatif-,
+		 ?b.creatif--,
+     	 ?b.liens.?a--
+		 ]
 }
 
 event : creatif_succession {
@@ -44,6 +53,7 @@ event: cours_de_respect {
   cond = [ ?a.respectueux > 0.9,
    	   	   ?a.respectueux > ?b.respectueux,
   	       ?b.respectueux < 0.4]
+  modif = ?b.respectueux++
 }
 
 post : reaction_cours_1 {

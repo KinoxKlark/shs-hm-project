@@ -23,6 +23,7 @@ enum class EventTokenParserState {
 	PostFieldEvent,
 	PostFieldType,
 	PostFieldText,
+	PostFieldModifs,
 };
 
 enum class ItemType{
@@ -387,6 +388,10 @@ bool importEventsFile(GameData *data, std::string const& filename)
 				else if(token == "text")
 				{
 					states.push(EventTokenParserState::PostFieldText);
+				}
+				else if(token == "modifs" || token == "modif")
+				{
+					states.push(EventTokenParserState::PostFieldModifs);
 				}
 				else
 				{
@@ -879,6 +884,29 @@ bool importEventsFile(GameData *data, std::string const& filename)
 				
 			} break;
 
+			case EventTokenParserState::PostFieldModifs:
+			{
+				--idx;
+				while(white_chars.count(tokens[++idx][0]) > 0) continue;
+
+				bool array = tokens[idx] == "[";
+
+				// TODO(Sam): Les modifs...
+				while(tokens[++idx] != "]" && (array || tokens[idx] != "\n")) continue;
+				// TODO(Sam): tmp code, remove it!
+				
+				if(array && tokens[idx] != "]")
+				{
+					std::cout << "ERROR:" << "Expected end of array ']', got '" << tokens[idx] << "'." << "\n";
+					return false;
+				}
+				
+				while(white_chars.count(tokens[++idx][0]) > 0) continue;
+				--idx;
+
+				states.pop();
+			} break;
+			
 			InvalidDefaultCase;
 			};
 		}

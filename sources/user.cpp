@@ -88,6 +88,9 @@ UserIdentity createUserIdentity(GameData *data)
 		interest_id; // Dummy line
 	}
 
+	// NOTE(Sam): Relations are selected after for every pnj at once
+	identity.relations = std::vector<r32>(6, 0.f);
+
 	return identity;
 	
 }
