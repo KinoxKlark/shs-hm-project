@@ -527,6 +527,20 @@ bool importEventsFile(GameData *data, std::string const& filename)
 									item.str = tokens[idx];
 								}
 								expression.push_back(item);
+
+								if(item.str == "lien" || item.str == "liens")
+								{
+									stoping_error(tokens[++idx] != ".", "Accessor 'liens' must be followed by '.'");
+									expression.push_back({ItemType::ACCESSOR, "."});
+									
+									++idx;
+
+									item.type = ItemType::VARIABLE;
+									if(!parseVariableName(tokens, idx, item.str, current_variables, variable_id))
+										return false;
+									expression.push_back(item);
+								}
+
 							}
 							else --idx;
 						}
@@ -1265,6 +1279,14 @@ Pattern* convertTreeToPattern(Node const& node,
 	{
 		pattern->symbole = true;
 		pattern->variable = false;
+
+		if(node.item.str == "lien" ||node.item.str == "liens")
+		{
+			pattern->type = SymboleType::RELATION;
+			pattern->data = 0;
+			goto correct_user_field;
+		}
+		
 		for(u32 i = 0; i < global_app->data->personalities.size(); ++i)
 		{
 			GaugeInfo &gauge = global_app->data->personalities[i];
@@ -1321,9 +1343,21 @@ Pattern* convertTreeToPattern(Node const& node,
 	case ItemType::ACCESSOR:
 	{
 		breaking_error(node.children.size() != 2, "Accessor operator is a binary operator"); // Memory leak
-		pattern->symbole = false;
-		pattern->first = convertTreeToPattern(node.children[1], current_variables, event_ids, post_ids);
-		pattern->first->next = convertTreeToPattern(node.children[0], current_variables, event_ids, post_ids);
+
+		if(node.children[0].item.type == ItemType::ACCESSOR)
+		{
+			pattern = convertTreeToPattern(node.children[0], current_variables, event_ids, post_ids);
+			Pattern *child_pattern = pattern->first;
+			while(child_pattern->next != nullptr) child_pattern = child_pattern->next;
+
+			child_pattern->next = convertTreeToPattern(node.children[1], current_variables, event_ids, post_ids);
+		}
+		else
+		{
+			pattern->symbole = false;
+			pattern->first = convertTreeToPattern(node.children[1], current_variables, event_ids, post_ids);
+			pattern->first->next = convertTreeToPattern(node.children[0], current_variables, event_ids, post_ids);
+		}
 	} break;
 	case ItemType::BINARY_OPERATOR:
 	{

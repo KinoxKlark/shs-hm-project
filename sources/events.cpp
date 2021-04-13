@@ -108,6 +108,16 @@ r32 compile_pattern_to_number(Pattern *pattern)
 
 		return gauge ? gauge->amount : 0.f;	
 	} break;
+	case SymboleType::RELATION:
+	{
+		Pattern *second = first->next;
+		Pattern *third = second->next;
+
+		User *user = compile_pattern_to_user(second);
+		User *other_user = compile_pattern_to_user(third);
+
+		return user->identity.relations[other_user->id];
+	} break;
 	default:
 		assert(false);
 	}
@@ -699,6 +709,10 @@ std::string convert_pattern_to_string(Pattern *pattern)
 					ss << " [-]";
 				result += ss.str();
 			}
+			break;
+		case SymboleType::RELATION:
+			result += "RELATION";
+			
 			break;
 		case SymboleType::_SELECT_EVENT:
 		{
