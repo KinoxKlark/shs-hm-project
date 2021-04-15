@@ -208,10 +208,17 @@ struct Rule {
 	Pattern conclusion;
 };
 
+struct Modifs;
+
+// TODO(Sam): Il y a beaucoup de truc inutile la plupart du temps dans events
+// on va vouloir une struct pour les données d'event qu'on défini pour l'instanciation
+// et une autre pour les données instanciées
 struct Event {
 	u32 id;
 	std::vector<char> major_variables;
 	std::unordered_map<char, u32> users;
+	std::vector<Modifs> users_modifs;
+	
 	u64 timestamp;
 	
 	// Debug

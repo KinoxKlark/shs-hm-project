@@ -473,6 +473,11 @@ void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* 
 			}
 		}
 
+		for(u32 idx = 0; idx < event.users_modifs.size(); ++idx)
+		{
+			event.users_modifs[idx].user_id = event.users[(char)event.users_modifs[idx].user_id];
+		}
+		
 		event_system->selected_events.push_back(event);
 	}
 	else
@@ -602,6 +607,8 @@ void main_simulation_update(Application *app)
 		event_system->debut_instancied_events.push_back(event);
 #endif
 
+		user_react_to_modifs(&event.users_modifs);
+		
 		instanciate_social_post_for_event(app, &event);
 		
 	}

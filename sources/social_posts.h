@@ -1,4 +1,6 @@
 
+struct Modifs;
+
 struct SocialPost {
 	u32 id;
 	
@@ -10,6 +12,7 @@ struct SocialPost {
 	std::string text;
 
 	std::vector<u32> major_user_ids;
+	std::vector<Modifs> users_modifs;
 	
     // TODO(Sam): faire un vrai system de types
 	std::string type;

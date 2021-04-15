@@ -94,3 +94,116 @@ UserIdentity createUserIdentity(GameData *data)
 	return identity;
 	
 }
+
+r32 user_modif_nudge_up(r32 value)
+{
+	return std::sqrt(value);
+}
+
+r32 user_modif_nudge_down(r32 value)
+{
+	return 1.f - std::sqrt(1.f - value);
+}
+
+void user_react_to_modifs(User *user, std::vector<Modif> *modifs)
+{
+	for(auto const& modif : *modifs)
+	{
+		r32 *value;
+		switch(modif.type)
+		{
+		case ModifType::PERSONALITY:
+			value = &get_personality_gauge(user, modif.gauge_id)->amount;
+			break;
+		case ModifType::INTEREST:
+			value = &get_interest_gauge(user, modif.gauge_id)->amount;
+			break;
+		case ModifType::RELATION:
+			value = get_relation_value(user, modif.gauge_id);
+			break;
+			InvalidDefaultCase;
+		}
+
+		u8 nudge_amount = std::abs(modif.nudge_amount);
+		bool up = modif.nudge_amount > 0;
+		for(u8 i = 0; i < nudge_amount; ++i)
+		{
+			if(up)
+				*value = user_modif_nudge_up(*value);
+			else
+				*value = user_modif_nudge_down(*value);
+		}
+
+		if(modif.type == ModifType::RELATION)
+		{
+			r32 *sym_val = get_relation_value(&global_app->data->users[modif.gauge_id], user->id);
+			*sym_val = *value;
+		}
+	}
+	
+}
+
+void user_react_to_modifs(std::vector<Modifs> *users_modifs)
+{
+	for(u32 i = 0; i < users_modifs->size(); ++i)
+	{
+		Modifs *modifs = &((*users_modifs)[i]);
+		user_react_to_modifs(&global_app->data->users[modifs->user_id], &modifs->modifs);	
+	}
+}
+	
+
+void user_see_post(EventSystem *event_system, SocialFeed *feed, SocialPost *post)
+{
+	// (SOCIAL_POST_SEEN, post id, ?viewer, ?a, ?b, ?c, ... )
+		
+	Pattern p0 = {};
+	p0.symbole = false;
+	p0.next = nullptr;
+	{
+		Pattern *trans = &p0;
+		Pattern *tmp = new Pattern();
+		tmp->symbole = true;
+		tmp->variable = false;
+		tmp->type = SymboleType::SOCIAL_POST_SEEN;
+		tmp->data = 0;
+		p0.first = tmp;
+		trans = tmp;
+
+		tmp = new Pattern();
+		tmp->symbole = true;
+		tmp->variable = false;
+		tmp->type = SymboleType::SOCIAL_POST;
+		tmp->data = (u64)(post->social_post_id);
+		trans->next = tmp;
+		trans = tmp;
+
+		tmp = new Pattern();
+		tmp->symbole = true;
+		tmp->variable = false;
+		tmp->type = SymboleType::USER;
+		tmp->data = (u64)(feed->user_id);
+		trans->next = tmp;
+		trans = tmp;
+		
+		for(auto const& user_id : post->major_user_ids)
+		{
+			tmp = new Pattern();
+			tmp->symbole = true;
+			tmp->variable = false;
+			tmp->type = SymboleType::USER;
+			tmp->data = (u64)(user_id);
+			trans->next = tmp;
+			trans = tmp;
+		}
+	}
+
+	Fact f0 = {};
+	f0.id = event_system->fact_next_id++;
+	f0.pattern = new Pattern(p0);
+
+	event_system->facts.insert({f0.id,f0});
+	event_system->facts[f0.id].pattern_proprio = true;
+
+	user_react_to_modifs(&post->users_modifs);
+}

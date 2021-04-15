@@ -12,6 +12,7 @@ struct Application;
 #include "inputs.h"
 #include "events.h"
 #include "social_posts.h"
+#include "user.h"
 #include "game.h"
 #include "application.h"
 #include "renderer.h"

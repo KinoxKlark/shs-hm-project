@@ -37,6 +37,11 @@ void instanciate_social_post_for_event(Application *app, Event *event)
 		{
 			post.major_user_ids.push_back(event->users[major_variable]);
 		}
+
+		for(u32 idx = 0; idx < post.users_modifs.size(); ++idx)
+		{
+			post.users_modifs[idx].user_id = event->users[(char)post.users_modifs[idx].user_id];
+		}
 		
 		social_post_system->available_posts.push_back(post);
 	}

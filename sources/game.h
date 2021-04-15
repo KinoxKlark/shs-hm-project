@@ -1,4 +1,21 @@
 
+enum class ModifType {
+	PERSONALITY,
+	INTEREST,
+	RELATION,
+};
+
+struct Modif {
+	ModifType type;
+	u32 gauge_id;
+	i8 nudge_amount;
+};
+
+struct Modifs {
+	u32 user_id;
+	std::vector<Modif> modifs;
+};
+
 struct GaugeInfo {
 	u32 id;
 	std::string name;
@@ -44,6 +61,12 @@ UserGauge* get_interest_gauge(User *user, u32 gauge_id)
 	}
 
 	return nullptr;
+}
+
+inline
+r32 *get_relation_value(User *user, u32 other_user_id)
+{
+	return &user->identity.relations[other_user_id];
 }
 
 struct GameData {
