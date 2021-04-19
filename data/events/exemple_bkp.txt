@@ -11,6 +11,14 @@ event : creatif_test {
 event : my_event_id_01 {
 	  perso = ?A
 	  descr = ?A mange au fast food local
+	  cond = ?A.cuisine < .3
+}
+
+post : test_post_fast_food {
+	 event = my_event_id_01(?a)
+	 type = publication(?a)
+	 text = "Miam, un McDo"
+	 modifs = [?a.sport--,cuisine-]
 }
 
 event : my_event_02

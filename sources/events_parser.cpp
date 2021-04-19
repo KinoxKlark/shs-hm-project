@@ -769,6 +769,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 				while(white_chars.count(tokens[++idx][0]) > 0) continue;
 
 				bool array = tokens[idx] == "[";
+				if(array) ++idx;
 
 				std::unordered_map<char, std::vector<Modif>> current_modifs;
 				Modif modif = {};
@@ -782,7 +783,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 						continue;
 					}
 
-					while(tokens[idx] != "," && tokens[idx] != "\n")
+					while(tokens[idx] != "," && tokens[idx] != "\n" && tokens[idx] != "]")
 					{
 						--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
 
@@ -1019,7 +1020,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 						continue;
 					}
 
-					while(tokens[idx] != "," && tokens[idx] != "\n")
+					while(tokens[idx] != "," && tokens[idx] != "\n" && tokens[idx] != "]")
 					{
 
 						--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
