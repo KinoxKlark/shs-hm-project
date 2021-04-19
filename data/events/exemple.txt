@@ -6,6 +6,7 @@ event : creatif_test {
   perso = ?a
   descr = ?a est creatif
   cond = ?a.creatif > 0.7
+  modifs = ?a.creatif+
 }
 
 post : reaction_1 {
@@ -78,4 +79,10 @@ post : hehe {
   event = trololo
   type = nope
   text = "C'est une super jeux !"
+}
+
+event : test {
+	  perso = ?a, ?b
+	  descr = test
+	  modif = ?a.lien.?b+++-+
 }

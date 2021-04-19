@@ -363,10 +363,26 @@ void update(Application *app, sf::Time dt)
 		for(auto& event : event_system->all_events)
 		{
 			ImGui::Text("[%i] %s", event.id, event.description.c_str());
-			for(auto& pair : event.users)
+			
+			for(Modifs& modifs : event.users_modifs)
 			{
-				ImGui::Text("  - ?%c = %s", pair.first, data->users[pair.second].fullname.c_str());
+				for(Modif& modif : modifs.modifs)
+				{
+					switch(modif.type)
+					{
+					case ModifType::PERSONALITY:
+						ImGui::Text(" * %c %s: %+i", (char)modifs.user_id, data->personalities[modif.gauge_id].name.c_str(), (int)modif.nudge_amount );
+						break;
+					case ModifType::INTEREST:
+						ImGui::Text(" * %c %s: %+i", (char)modifs.user_id, data->interests[modif.gauge_id].name.c_str(), (int)modif.nudge_amount );
+						break;
+					case ModifType::RELATION:
+						ImGui::Text(" * Relation %c et %c: %+i", (char)modifs.user_id, (char)modif.gauge_id, modif.nudge_amount );
+						break;
+					}
+				} 
 			}
+								
 		}
 	}
 	if(ImGui::CollapsingHeader("Selected Events"))

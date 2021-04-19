@@ -20,6 +20,8 @@ struct Application;
 Application *global_app = nullptr;
 Renderer *global_renderer = nullptr;
 
+#include "game_utilities.h"
+
 #include "events.cpp"
 #include "social_posts.cpp"
 #include "events_parser.cpp"

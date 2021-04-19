@@ -205,5 +205,17 @@ void user_see_post(EventSystem *event_system, SocialFeed *feed, SocialPost *post
 	event_system->facts.insert({f0.id,f0});
 	event_system->facts[f0.id].pattern_proprio = true;
 
+	// We set correctly the viewer
+	for(auto& modifs : post->users_modifs)
+	{
+		if(modifs.user_id == -1)
+			modifs.user_id = feed->user_id;
+		for(auto& modif : modifs.modifs)
+		{
+			if(modif.type == ModifType::RELATION && modif.gauge_id == -1)
+				modif.gauge_id = feed->user_id;
+		}
+	}
+	
 	user_react_to_modifs(&post->users_modifs);
 }

@@ -147,7 +147,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 		Event constructed_event = {};
 		SocialPost constructed_post = {};
 		std::unordered_map<std::string, char> current_variables;
-		
+
 		std::stack<EventTokenParserState> states;
 		states.push(EventTokenParserState::Default);
 		for(u32 idx = 0; idx < tokens.size(); ++idx)
@@ -299,6 +299,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 					constructed_event.id = 0;
 					constructed_event.description = "";
 					constructed_event.major_variables.clear();
+					constructed_event.users_modifs.clear();
 					current_variables.clear();
 					variable_id = 'A';
 					
@@ -369,6 +370,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 					constructed_post.id = 0;
 					constructed_post.event_id = -1;
 					constructed_post.social_post_id = 0;
+					constructed_post.users_modifs.clear();
 
 					current_variables.clear();
 					variable_id = 'A';
@@ -768,14 +770,111 @@ bool importEventsFile(GameData *data, std::string const& filename)
 
 				bool array = tokens[idx] == "[";
 
-				// TODO(Sam): Les modifs...
-				while(tokens[++idx] != "]" && (array || tokens[idx] != "\n")) continue;
-				// TODO(Sam): tmp code, remove it!
+				std::unordered_map<char, std::vector<Modif>> current_modifs;
+				Modif modif = {};
+				while(tokens[idx] != "]" && (array || tokens[idx] != "\n"))
+				{
+					--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
+
+					if(tokens[idx] == "\n" || tokens[idx] == ",")
+					{
+						++idx;
+						continue;
+					}
+
+					while(tokens[idx] != "," && tokens[idx] != "\n")
+					{
+						--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
+
+						stoping_error(tokens[idx][0] != '?', "Modif flag should start with a variable in Event!");
+
+						std::string variable;
+						if(!parseVariableName(tokens, idx, variable, current_variables, variable_id))
+							return false;
+
+						++idx;
+						stoping_error(tokens[idx][0] != '.', "In Modifs, variable shoulde be preceded by accessor '.'");
+
+						std::string field = "";
+						if(tokens[++idx][0] == '"')
+						{
+							++idx;
+							if(!parseString(tokens, idx, field, '"'))
+								return false;
+						}
+						else
+						{
+							field = tokens[idx];
+						}
+
+						++idx;
+						
+						std::cout << " * " << variable << " -> " << field;
+
+						if(field == "lien" || field == "liens")
+						{
+							stoping_error(tokens[idx] != ".", "Modif in field 'lien' should be folowed by a '.' and got '"+tokens[idx]+"'");
+							++idx;
+
+							stoping_error(tokens[idx][0] != '?', "Modif in field 'lien' should be folowed by a variable.");
+							std::string other_variable;
+							if(!parseVariableName(tokens, idx, other_variable, current_variables, variable_id))
+								return false;
+							++idx;
+
+							modif.type = ModifType::RELATION;
+							modif.gauge_id = current_variables[other_variable];
+							
+							std::cout << " -> " << other_variable;
+						}
+						else
+						{
+							GaugeInfo *gauge = nullptr;
+							if(gauge = get_personality_gauge_info(field))
+							{
+								modif.type = ModifType::PERSONALITY;
+								modif.gauge_id = gauge->id;
+							}
+							else if(gauge = get_interest_gauge_info(field))
+							{
+								modif.type = ModifType::INTEREST;
+								modif.gauge_id = gauge->id;
+							}
+						}
+
+						modif.nudge_amount = 0;
+						--idx;
+						while(tokens[++idx] == "+" || tokens[idx] == "-")
+						{
+							if(tokens[idx] == "+") ++modif.nudge_amount;
+							else --modif.nudge_amount;
+						}
+
+						std::cout << " " << (int)modif.nudge_amount;
+
+						std::cout << "\n";
+
+						current_modifs[current_variables[variable]].push_back(modif);
+
+					}
+
+					
+					
+				}
 				
 				if(array && tokens[idx] != "]")
 				{
 					std::cout << "ERROR:" << "Expected end of array ']', got '" << tokens[idx] << "'." << "\n";
 					return false;
+				}
+
+				
+				for(auto& pair : current_modifs)
+				{
+					Modifs modifs;
+					modifs.user_id = (u32)pair.first;
+					modifs.modifs.swap(pair.second);
+					constructed_event.users_modifs.push_back(modifs);
 				}
 				
 				while(white_chars.count(tokens[++idx][0]) > 0) continue;
@@ -904,15 +1003,131 @@ bool importEventsFile(GameData *data, std::string const& filename)
 				while(white_chars.count(tokens[++idx][0]) > 0) continue;
 
 				bool array = tokens[idx] == "[";
+				if(array) ++idx;
 
-				// TODO(Sam): Les modifs...
-				while(tokens[++idx] != "]" && (array || tokens[idx] != "\n")) continue;
-				// TODO(Sam): tmp code, remove it!
+				std::unordered_map<char, std::vector<Modif>> current_modifs;
+				Modif modif = {};
+				while(tokens[idx] != "]" && (array || tokens[idx] != "\n"))
+				{
+					--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
+
+					if(tokens[idx] == "]") continue;
+					
+					if(tokens[idx] == "\n" || tokens[idx] == ",")
+					{
+						++idx;
+						continue;
+					}
+
+					while(tokens[idx] != "," && tokens[idx] != "\n")
+					{
+
+						--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
+
+						std::string variable;
+						if(tokens[idx][0] == '?')
+						{
+
+							if(!parseVariableName(tokens, idx, variable, current_variables, variable_id))
+								return false;
+
+							++idx;
+							stoping_error(tokens[idx][0] != '.', "In Modifs, variable shoulde be preceded by accessor '.'");
+							++idx;
+							stoping_error(variable == "&", "Variable name '&' is reserved in post");
+						}
+						else
+						{
+							variable = "?&";
+						}
+
+						std::string field = "";
+						if(tokens[idx][0] == '"')
+						{
+							++idx;
+							if(!parseString(tokens, idx, field, '"'))
+								return false;
+						}
+						else
+						{
+							field = tokens[idx];
+						}
+
+						++idx;
+						
+						std::cout << " * " << variable << " -> " << field;
+
+						if(field == "lien" || field == "liens")
+						{
+							stoping_error(tokens[idx] != ".", "Modif in field 'lien' should be folowed by a '.' and got '"+tokens[idx]+"'");
+							++idx;
+
+							stoping_error(tokens[idx][0] != '?', "Modif in field 'lien' should be folowed by a variable.");
+							std::string other_variable;
+							if(!parseVariableName(tokens, idx, other_variable, current_variables, variable_id))
+								return false;
+							++idx;
+
+							modif.type = ModifType::RELATION;
+							if(other_variable != "?&")
+								modif.gauge_id = current_variables[other_variable];
+							else
+								modif.gauge_id = -1;
+							
+							std::cout << " -> " << other_variable;
+						}
+						else
+						{
+							GaugeInfo *gauge = nullptr;
+							if(gauge = get_personality_gauge_info(field))
+							{
+								modif.type = ModifType::PERSONALITY;
+								modif.gauge_id = gauge->id;
+							}
+							else if(gauge = get_interest_gauge_info(field))
+							{
+								modif.type = ModifType::INTEREST;
+								modif.gauge_id = gauge->id;
+							}
+						}
+
+						modif.nudge_amount = 0;
+						--idx;
+						while(tokens[++idx] == "+" || tokens[idx] == "-")
+						{
+							if(tokens[idx] == "+") ++modif.nudge_amount;
+							else --modif.nudge_amount;
+						}
+
+						std::cout << " " << (int)modif.nudge_amount;
+
+						std::cout << "\n";
+
+						if(variable != "?&")
+							current_modifs[current_variables[variable]].push_back(modif);
+						else
+						{
+							current_modifs[-1].push_back(modif);
+						}
+					}
+
+				}
 				
 				if(array && tokens[idx] != "]")
 				{
 					std::cout << "ERROR:" << "Expected end of array ']', got '" << tokens[idx] << "'." << "\n";
 					return false;
+				}
+
+				for(auto& pair : current_modifs)
+				{
+					Modifs modifs;
+					u32 id = pair.first;
+					if(pair.first == -1)
+						id = -1; // NOTE(Sam): char -1 is not equals u32 -1
+					modifs.user_id = id;
+					modifs.modifs.swap(pair.second);
+					constructed_post.users_modifs.push_back(modifs);
 				}
 				
 				while(white_chars.count(tokens[++idx][0]) > 0) continue;
@@ -1286,27 +1501,21 @@ Pattern* convertTreeToPattern(Node const& node,
 			pattern->data = 0;
 			goto correct_user_field;
 		}
-		
-		for(u32 i = 0; i < global_app->data->personalities.size(); ++i)
+
+		GaugeInfo *gauge = get_personality_gauge_info(node.item.str);
+		if(gauge)
 		{
-			GaugeInfo &gauge = global_app->data->personalities[i];
-			if(gauge.name == node.item.str)
-			{
-				pattern->type = SymboleType::PERSONALITY_GAUGE;
-				pattern->data = gauge.id;
-				goto correct_user_field;
-			}
+			pattern->type = SymboleType::PERSONALITY_GAUGE;
+			pattern->data = gauge->id;
+			goto correct_user_field;
 		}
 
-		for(u32 i = 0; i < global_app->data->interests.size(); ++i)
+		GaugeInfo *interest = get_interest_gauge_info(node.item.str);
+		if(interest)
 		{
-			GaugeInfo &interest = global_app->data->interests[i];
-			if(interest.name == node.item.str)
-			{
-				pattern->type = SymboleType::INTEREST_GAUGE;
-				pattern->data = interest.id;
-				goto correct_user_field;
-			}
+			pattern->type = SymboleType::INTEREST_GAUGE;
+			pattern->data = interest->id;
+			goto correct_user_field;
 		}
 
 		breaking_error(false, "User Field does not exist");

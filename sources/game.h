@@ -39,36 +39,6 @@ struct User {
 	std::string fullname;
 };
 
-inline
-UserGauge* get_personality_gauge(User *user, u32 gauge_id)
-{
-	for(auto& gauge : user->identity.personalities)
-	{
-		if(gauge.id == gauge_id)
-			return &gauge;
-	}
-
-	return nullptr;
-}
-
-inline
-UserGauge* get_interest_gauge(User *user, u32 gauge_id)
-{
-	for(auto& gauge : user->identity.interests)
-	{
-		if(gauge.id == gauge_id)
-			return &gauge;
-	}
-
-	return nullptr;
-}
-
-inline
-r32 *get_relation_value(User *user, u32 other_user_id)
-{
-	return &user->identity.relations[other_user_id];
-}
-
 struct GameData {
 	EventSystem event_system;
 	SocialPostSystem social_post_system;

@@ -40,7 +40,19 @@ void instanciate_social_post_for_event(Application *app, Event *event)
 
 		for(u32 idx = 0; idx < post.users_modifs.size(); ++idx)
 		{
-			post.users_modifs[idx].user_id = event->users[(char)post.users_modifs[idx].user_id];
+			if(post.users_modifs[idx].user_id != -1)
+				post.users_modifs[idx].user_id = event->users[(char)post.users_modifs[idx].user_id];
+
+			for(u32 idx_modif = 0; idx_modif < post.users_modifs[idx].modifs.size(); ++idx_modif)
+			{
+				Modif *modif = &post.users_modifs[idx].modifs[idx_modif];
+				if(modif->type == ModifType::RELATION)
+				{
+					if(modif->gauge_id == -1) modif->gauge_id = event->users[(char)post.users_modifs[idx].user_id];
+					else
+						modif->gauge_id = event->users[modif->gauge_id];
+				}
+			}
 		}
 		
 		social_post_system->available_posts.push_back(post);
