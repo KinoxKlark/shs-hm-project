@@ -205,9 +205,14 @@ void user_see_post(EventSystem *event_system, SocialFeed *feed, SocialPost *post
 	event_system->facts.insert({f0.id,f0});
 	event_system->facts[f0.id].pattern_proprio = true;
 
+	std::vector<u32> modifs_ids;
+	
 	// We set correctly the viewer
-	for(auto& modifs : post->users_modifs)
+	for(u32 idx = 0; idx < post->users_modifs.size(); ++idx)
 	{
+		auto& modifs = post->users_modifs[idx];
+		if(modifs.user_id == feed->user_id)
+			modifs_ids.push_back(idx);
 		if(modifs.user_id == -1)
 			modifs.user_id = feed->user_id;
 		for(auto& modif : modifs.modifs)
@@ -216,6 +221,20 @@ void user_see_post(EventSystem *event_system, SocialFeed *feed, SocialPost *post
 				modif.gauge_id = feed->user_id;
 		}
 	}
-	
-	user_react_to_modifs(&post->users_modifs);
+
+	if(modifs_ids.size() > 0)
+	{
+		for(auto const& idx : modifs_ids)
+		{
+			auto& modifs = post->users_modifs[idx];
+			user_react_to_modifs(&global_app->data->users[modifs.user_id],&modifs.modifs);
+		}
+	}
+	else
+	for(auto& modifs : post->users_modifs)
+	{
+		if(modifs.user_id == feed->user_id)
+			user_react_to_modifs(&global_app->data->users[feed->user_id],&modifs.modifs);
+		
+	}
 }
