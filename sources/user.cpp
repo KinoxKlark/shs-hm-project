@@ -222,6 +222,7 @@ void user_see_post(EventSystem *event_system, SocialFeed *feed, SocialPost *post
 		}
 	}
 
+	// TODO(Sam): If post type is a publication on another wall, multiple viewers should be considered ?
 	if(modifs_ids.size() > 0)
 	{
 		for(auto const& idx : modifs_ids)
