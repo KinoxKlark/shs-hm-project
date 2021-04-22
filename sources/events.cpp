@@ -527,7 +527,7 @@ void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* 
 		if(global_app->data->event_counters.first_already_computed)
 		{
 			global_app->data->event_counters_first = global_app->data->event_counters;
-			global_app->data->event_counters_first.duration = global_app->data->event_chrono.getElapsedTime();
+			global_app->data->event_duration = global_app->data->event_chrono.getElapsedTime();
 		}
 		#endif
 	}
@@ -851,7 +851,7 @@ void event_selection()
 
 
 	#if DEBUG
-	global_app->data->event_counters.duration = global_app->data->event_chrono.getElapsedTime();
+	global_app->data->event_duration = global_app->data->event_chrono.getElapsedTime();
 	#endif
 }
 

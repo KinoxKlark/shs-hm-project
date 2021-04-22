@@ -48,7 +48,6 @@ struct DebugEventCounter {
 	u32 compile_number;
 	u32 compile_user;
 	bool first_already_computed;
-	sf::Time duration;
 };
 
 struct GameData {
@@ -64,6 +63,7 @@ struct GameData {
 	DebugEventCounter event_counters;
 	DebugEventCounter event_counters_first;
 	sf::Clock event_chrono;
+	sf::Time event_duration;
 	
 	
 	u32 click_counter;

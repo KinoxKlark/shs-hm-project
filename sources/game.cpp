@@ -50,11 +50,10 @@ void main_simulation_update(Application *app, sf::Time dt)
 	EventSystem *event_system = &app->data->event_system;
 
 
-	const sf::Time EVENT_SYSTEM_INFERENCE_DT(sf::seconds(1.f));
+	const sf::Time EVENT_SYSTEM_INFERENCE_DT(sf::seconds(3.f));
 	event_system->time_since_last_inference += dt;
 	if(event_system->time_since_last_inference > EVENT_SYSTEM_INFERENCE_DT)
 	{
-		event_system->time_since_last_inference -= EVENT_SYSTEM_INFERENCE_DT;
 	
 		bool do_the_event_selection = false;
 
@@ -64,6 +63,8 @@ void main_simulation_update(Application *app, sf::Time dt)
 
 		if(do_the_event_selection)
 		{
+			event_system->time_since_last_inference -= EVENT_SYSTEM_INFERENCE_DT;
+
 			event_system->event_selection_done = false;
 
 			event_system->thread->launch();
@@ -448,7 +449,7 @@ void update(Application *app, sf::Time dt)
 	ImGui::Begin("Debug Infos");
 	int debug_time = app->debug_clock.restart().asMilliseconds();
 	ImGui::Text("Frame duration: %ims (%.2ffps)", debug_time, 1e3/(float)debug_time);
-	ImGui::Text("Events instanciation: %ums:", global_app->data->event_counters.duration.asMilliseconds());
+	ImGui::Text("Events instanciation: %ums:", global_app->data->event_duration.asMilliseconds());
 	ImGui::Text("- %u facts", global_app->data->event_counters.facts);
 	ImGui::Text("- %u rules", global_app->data->event_counters.rules);
 	ImGui::Text("- %u conditions", global_app->data->event_counters.conditions);
@@ -456,7 +457,7 @@ void update(Application *app, sf::Time dt)
 	ImGui::Text("- %u compile bool", global_app->data->event_counters.compile_bool);
 	ImGui::Text("- %u compile number", global_app->data->event_counters.compile_number);
 	ImGui::Text("- %u compile user", global_app->data->event_counters.compile_user);
-	ImGui::Text("First event events instanciation: %ums:", global_app->data->event_counters_first.duration.asMilliseconds());
+	ImGui::Text("First event events instanciation:"); //, global_app->data->event_counters_first.duration.asMilliseconds());
 	ImGui::Text("- %u facts", global_app->data->event_counters_first.facts);
 	ImGui::Text("- %u rules", global_app->data->event_counters_first.rules);
 	ImGui::Text("- %u conditions", global_app->data->event_counters_first.conditions);
