@@ -1592,7 +1592,7 @@ Pattern* convertTreeToPattern(Node const& node,
 		{
 			pattern->type = SymboleType::RELATION;
 			pattern->data = 0;
-			goto correct_user_field;
+			break;
 		}
 
 		GaugeInfo *gauge = get_personality_gauge_info(node.item.str);
@@ -1600,7 +1600,7 @@ Pattern* convertTreeToPattern(Node const& node,
 		{
 			pattern->type = SymboleType::PERSONALITY_GAUGE;
 			pattern->data = gauge->id;
-			goto correct_user_field;
+			break;
 		}
 
 		GaugeInfo *interest = get_interest_gauge_info(node.item.str);
@@ -1608,12 +1608,11 @@ Pattern* convertTreeToPattern(Node const& node,
 		{
 			pattern->type = SymboleType::INTEREST_GAUGE;
 			pattern->data = interest->id;
-			goto correct_user_field;
+			break;
 		}
 
 		breaking_error(false, "User Field does not exist");
-	correct_user_field:
-		break;
+
 	} break;
 	case ItemType::NUMBER:
 	{
