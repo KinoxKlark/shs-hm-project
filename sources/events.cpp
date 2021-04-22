@@ -509,8 +509,17 @@ void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* 
 		for(u32 idx = 0; idx < event.users_modifs.size(); ++idx)
 		{
 			event.users_modifs[idx].user_id = event.users[(char)event.users_modifs[idx].user_id];
+
+			for(u32 idx_modif = 0; idx_modif < event.users_modifs[idx].modifs.size(); ++idx_modif)
+			{
+				Modif *modif = &event.users_modifs[idx].modifs[idx_modif];
+				if(modif->type == ModifType::RELATION)
+				{
+					modif->gauge_id = event.users[modif->gauge_id];
+				}
+			}
 		}
-		
+
 		event_system->selected_events.push_back(event);
 	}
 	else

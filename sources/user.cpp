@@ -113,15 +113,23 @@ void user_react_to_modifs(User *user, std::vector<Modif> *modifs)
 		switch(modif.type)
 		{
 		case ModifType::PERSONALITY:
-			value = &get_personality_gauge(user, modif.gauge_id)->amount;
-			break;
+		{
+			UserGauge* gauge = get_personality_gauge(user, modif.gauge_id);
+			if(!gauge) continue;
+			value = &gauge->amount;
+		} break;
 		case ModifType::INTEREST:
-			value = &get_interest_gauge(user, modif.gauge_id)->amount;
-			break;
+		{
+			UserGauge* gauge = get_interest_gauge(user, modif.gauge_id);
+			if(!gauge) continue;
+			value = &gauge->amount;
+		} break;
 		case ModifType::RELATION:
+		{
 			value = get_relation_value(user, modif.gauge_id);
-			break;
-			InvalidDefaultCase;
+			if(!value) continue;
+		}break;
+		InvalidDefaultCase;
 		}
 
 		u8 nudge_amount = std::abs(modif.nudge_amount);
