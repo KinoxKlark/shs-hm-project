@@ -39,6 +39,16 @@ struct User {
 	std::string fullname;
 };
 
+struct DebugEventCounter {
+	u32 facts;
+	u32 rules;
+	u32 conditions;
+	u32 filter_calls;
+	u32 compile_bool;
+	u32 compile_number;
+	u32 compile_user;
+};
+
 struct GameData {
 	EventSystem event_system;
 	SocialPostSystem social_post_system;
@@ -47,9 +57,13 @@ struct GameData {
 	std::vector<GaugeInfo> personalities;
 	std::vector<GaugeInfo> interests;
 
+#ifdef DEBUG
+	DebugEventCounter event_counters;
+	
 	u32 click_counter;
 	u32 drop_counter;
-
+#endif
+	
 };
 
 inline GameData* game_data_init();

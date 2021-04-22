@@ -655,6 +655,95 @@ bool importEventsFile(GameData *data, std::string const& filename)
 							}
 							expression.push_back({ItemType::NONE, ")"});
 						}
+						else if(tokens[idx] == "low" || tokens[idx] == "high" ||
+								tokens[idx] == "dislike" || tokens[idx] == "like" ||
+								tokens[idx] == "hate" || tokens[idx] == "love") // Gauge shortcut
+						{
+							Item item;
+							item.type = ItemType::FUNCTION;
+							item.str = tokens[idx];
+							expression.push_back(item);
+
+							if(tokens[++idx] != "(")
+							{
+								std::cout << "ERROR:" << "Expected openning parenthesis.\n";
+								return false;
+							}
+							expression.push_back({ItemType::NONE, "("});
+
+							item.type = ItemType::USER_FIELD;
+							item.str = "";
+							while((tokens[++idx] != "," && tokens[idx] != ")")
+								  && white_chars.count(tokens[idx][0]) == 0)
+							{
+								item.str += tokens[idx];
+							}
+							expression.push_back(item);
+							--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
+							if(tokens[idx] != ",")
+							{
+								std::cout << "ERROR:" << "Expected a comma ',' followed by the user variable.\n";
+							}
+
+							while(tokens[idx] == ",")
+							{
+								expression.push_back({ItemType::NONE, ","});
+								while(white_chars.count(tokens[++idx][0])>0) continue;
+							
+								item.type = ItemType::VARIABLE;
+								item.str = "";
+								if(!parseVariableName(tokens, idx, item.str, current_variables, variable_id))
+									return false;
+								expression.push_back(item);
+								
+								while(white_chars.count(tokens[++idx][0])>0) continue;
+							}
+							
+							--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
+							if(tokens[idx] != ")")
+							{
+								std::cout << "ERROR:" << "Expected closing parenthesis.\n";
+								return false;
+							}
+							expression.push_back({ItemType::NONE, ")"});
+						}
+						else if(tokens[idx] == "friend" || tokens[idx] == "neutral" || tokens[idx] == "enemy") // Relationship
+						{
+							Item item;
+							item.type = ItemType::FUNCTION;
+							item.str = tokens[idx];
+							expression.push_back(item);
+
+							if(tokens[++idx] != "(")
+							{
+								std::cout << "ERROR:" << "Expected openning parenthesis.\n";
+								return false;
+							}
+							expression.push_back({ItemType::NONE, "("});
+
+							while(tokens[idx] == "," || tokens[idx] == "(")
+							{
+								if(tokens[idx] == ",")
+									expression.push_back({ItemType::NONE, ","});
+								while(white_chars.count(tokens[++idx][0])>0) continue;
+							
+								item.type = ItemType::VARIABLE;
+								item.str = "";
+								if(!parseVariableName(tokens, idx, item.str, current_variables, variable_id))
+									return false;
+								expression.push_back(item);
+								
+								while(white_chars.count(tokens[++idx][0])>0) continue;
+							}
+							
+							--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
+							if(tokens[idx] != ")")
+							{
+								std::cout << "ERROR:" << "Expected closing parenthesis.\n";
+								return false;
+							}
+							expression.push_back({ItemType::NONE, ")"});
+						}
 						else if(tokens[idx] == ">"
 							|| tokens[idx] == "<") // Operateur
 						{
@@ -1639,6 +1728,24 @@ Pattern* convertTreeToPattern(Node const& node,
 			first->type = SymboleType::EVENT_OCCURED;
 		else if(node.item.str == "saw")
 			first->type = SymboleType::SOCIAL_POST_SEEN;
+		else if(node.item.str == "low")
+			first->type = SymboleType::LOW;
+		else if(node.item.str == "high")
+			first->type = SymboleType::HIGH;
+		else if(node.item.str == "dislike")
+			first->type = SymboleType::DISLIKE;
+		else if(node.item.str == "like")
+			first->type = SymboleType::LIKE;
+		else if(node.item.str == "hate")
+			first->type = SymboleType::HATE;
+		else if(node.item.str == "love")
+			first->type = SymboleType::LOVE;
+		else if(node.item.str == "friend")
+			first->type = SymboleType::FRIEND;
+		else if(node.item.str == "neutral")
+			first->type = SymboleType::NEUTRAL;
+		else if(node.item.str == "enemy")
+			first->type = SymboleType::ENEMY;
 		else
 		{ break_with_error("Unknown function"); }
 

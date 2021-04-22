@@ -34,6 +34,18 @@ enum class SymboleType {
 	PERE,
 	FRERE,
 	ONCLE,
+
+	HIGH,
+	LOW,
+	LIKE,
+	DISLIKE,
+	LOVE,
+	HATE,
+	
+	FRIEND,
+	NEUTRAL,
+	ENEMY,
+
 	EVENT_OCCURED,
 	SOCIAL_POST_SEEN,
 
@@ -78,6 +90,19 @@ struct Pattern {
 
 	Pattern() {
 		memset(this, 0, sizeof(Pattern));
+	}
+
+	Pattern(SymboleType t) {
+		memset(this, 0, sizeof(Pattern));
+		symbole = true;
+		type = t;
+	}
+	
+	Pattern(SymboleType t, u64 d) {
+		memset(this, 0, sizeof(Pattern));
+		symbole = true;
+		type = t;
+		data = d;
 	}
 	
 	Pattern(Pattern const& p) {

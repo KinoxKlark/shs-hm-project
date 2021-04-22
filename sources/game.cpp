@@ -433,6 +433,14 @@ void update(Application *app, sf::Time dt)
 	ImGui::Begin("Debug Infos");
 	int debug_time = app->debug_clock.restart().asMilliseconds();
 	ImGui::Text("Frame duration: %ims (%.2ffps)", debug_time, 1e3/(float)debug_time);
+	ImGui::Text("Events instanciation:");
+	ImGui::Text("- %u facts", global_app->data->event_counters.facts);
+	ImGui::Text("- %u rules", global_app->data->event_counters.rules);
+	ImGui::Text("- %u conditions", global_app->data->event_counters.conditions);
+	ImGui::Text("- %u filter calls", global_app->data->event_counters.filter_calls);
+	ImGui::Text("- %u compile bool", global_app->data->event_counters.compile_bool);
+	ImGui::Text("- %u compile number", global_app->data->event_counters.compile_number);
+	ImGui::Text("- %u compile user", global_app->data->event_counters.compile_user);
 	ImGui::End();
 #endif
 }
@@ -441,6 +449,10 @@ inline
 GameData* game_data_init()
 {
 	GameData* data = new GameData();
+
+#if DEBUG
+	data->event_counters = {};
+#endif
 
 	std::vector<std::string> firstnames_men = importFirstNames(true);
 	std::vector<std::string> firstnames_women = importFirstNames(false);

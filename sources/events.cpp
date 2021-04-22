@@ -56,6 +56,9 @@ void replace_with_environments(Pattern *pattern, Environement *environement)
 // NOTE(Sam): Given pattern MUST be compilable to User*, no checking, only assert in debug mode!
 User* compile_pattern_to_user(Pattern *pattern)
 {
+#if DEBUG
+	++global_app->data->event_counters.compile_user;
+#endif
 	if(pattern->symbole)
 	{
 		assert(!pattern->variable);
@@ -78,6 +81,9 @@ User* compile_pattern_to_user(Pattern *pattern)
 // NOTE(Sam): Given pattern MUST be compilable to number, no checking, only assert in debug mode!
 r32 compile_pattern_to_number(Pattern *pattern)
 {
+#if DEBUG
+	++global_app->data->event_counters.compile_number;
+#endif
 	if(pattern->symbole)
 	{
 		assert(!pattern->variable);
@@ -127,6 +133,10 @@ r32 compile_pattern_to_number(Pattern *pattern)
 // NOTE(Sam): Given pattern MUST be compilable to boolean, no checking, only assert in debug mode!
 bool compile_pattern_to_boolean(Pattern *pattern)
 {
+#if DEBUG
+	++global_app->data->event_counters.compile_bool;
+#endif
+			
 	assert(!pattern->symbole);
 	
 	Pattern *first = pattern->first;
@@ -251,6 +261,10 @@ bool filter_recurse(Pattern *pattern, Pattern *datum, Environement *environement
 
 bool filter(Pattern *condition, Fact const& datum, Environement *environement_to_set)
 {
+#if DEBUG
+	++global_app->data->event_counters.filter_calls;
+#endif
+			
 	Pattern modified_condition(*condition);
 	replace_with_environments( &modified_condition, environement_to_set);
 	return filter_recurse( &modified_condition, datum.pattern, environement_to_set);
@@ -283,11 +297,15 @@ std::unordered_set<char> get_variables_in_pattern(Pattern *pattern)
 }
 
 std::vector<ConditionWithEnvironement> rule_has_condition(Fact const& fact, Rule *rule)
-{
+{	
 	std::vector<ConditionWithEnvironement> result;
 	
 	for(u32 idx = 0; idx < rule->conditions.size(); ++idx)
 	{
+#if DEBUG
+		++global_app->data->event_counters.conditions;
+#endif
+			
 		if(fact.pattern->symbole
 		   && !fact.pattern->variable
 		   && fact.pattern->type == SymboleType::USER)
@@ -321,6 +339,11 @@ std::vector<Environement> rule_may_be_valid(std::unordered_map<u32, Fact> *facts
 	
 	for(u32 cond_id = 0; cond_id < rule->conditions.size(); ++cond_id)
 	{
+		
+#if DEBUG
+		++global_app->data->event_counters.conditions;
+#endif
+		
 		if(cond_id == condition_id && environement->conditions_to_compile.count(cond_id) == 0)
 			continue;
 
@@ -329,6 +352,9 @@ std::vector<Environement> rule_may_be_valid(std::unordered_map<u32, Fact> *facts
 
 		for(auto const& fact : *facts)
 		{
+#if DEBUG
+			++global_app->data->event_counters.facts;
+#endif
 			for(u32 env_id = 0; env_id < result.size(); ++env_id)
 			{
 				Environement environement = result[env_id];
@@ -381,6 +407,9 @@ bool rule_is_valid(std::unordered_map<u32, Fact> *facts, Rule *rule, Environemen
 {
 	for(u32 cond_id = 0; cond_id < rule->conditions.size(); ++cond_id)
 	{
+#if DEBUG
+		++global_app->data->event_counters.conditions;
+#endif
 		Pattern *condition = &rule->conditions[cond_id];
 		bool condition_should_compile = environement->conditions_to_compile.count(cond_id) > 0;
 		if(condition_should_compile)
@@ -425,6 +454,10 @@ void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* 
 
 		for(auto const& pair : event_system->facts)
 		{
+#if DEBUG
+			++global_app->data->event_counters.facts;
+#endif
+			
 			Pattern *pattern = pair.second.pattern;
 			if(pattern->symbole) continue;
 			if(!pattern->first->symbole) continue;
@@ -489,6 +522,152 @@ void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* 
 	}
 }
 
+void create_and_push_pattern(std::queue<Fact>& queue, u32& fact_id, SymboleType type,
+							 SymboleType gauge_type, u64 gauge_id, User const& user)
+{
+	Pattern* base = new Pattern();
+	base->first = new Pattern(type);
+	base->first->next = new Pattern(gauge_type, gauge_id);
+	base->first->next->next = new Pattern(SymboleType::USER, (u64)user.id);
+
+	Fact fact = {};
+	fact.id = fact_id++;
+	fact.pattern = base;
+
+	queue.push(fact);
+	queue.back().pattern_proprio = true;
+}
+
+void create_and_push_pattern(std::queue<Fact>& queue, u32& fact_id, SymboleType type,
+							 User const& user, User const& other_user)
+{
+	Pattern* base = new Pattern();
+	base->first = new Pattern(type);
+	base->first->next = new Pattern(SymboleType::USER, (u64)user.id);
+	base->first->next->next = new Pattern(SymboleType::USER, (u64)other_user.id);
+	
+	Fact fact = {};
+	fact.id = fact_id++;
+	fact.pattern = base;
+
+	queue.push(fact);
+	queue.back().pattern_proprio = true;
+}
+
+void push_precompiled_facts(Application *app, u32& fact_id, std::queue<Fact>& queue)
+{
+	for(auto const& user : app->data->users)
+	{		
+		for(auto const& gauge : user.identity.personalities)
+		{
+			if(gauge.amount > .5f)
+			{
+				create_and_push_pattern(queue, fact_id, SymboleType::HIGH,
+										SymboleType::PERSONALITY_GAUGE,
+										(u64)gauge.id, user);
+			}
+			else if(gauge.amount < .5)
+			{
+				create_and_push_pattern(queue, fact_id, SymboleType::LOW,
+										SymboleType::PERSONALITY_GAUGE,
+										(u64)gauge.id, user);	
+			}
+			
+			if(gauge.amount > .75f)
+			{
+				create_and_push_pattern(queue, fact_id, SymboleType::LIKE,
+										SymboleType::PERSONALITY_GAUGE,
+										(u64)gauge.id, user);
+			}
+			else if(gauge.amount < .25)
+			{
+				create_and_push_pattern(queue, fact_id, SymboleType::DISLIKE,
+										SymboleType::PERSONALITY_GAUGE,
+										(u64)gauge.id, user);	
+			}
+			
+			if(gauge.amount > .9f)
+			{
+				create_and_push_pattern(queue, fact_id, SymboleType::LOVE,
+										SymboleType::PERSONALITY_GAUGE,
+										(u64)gauge.id, user);
+			}
+			else if(gauge.amount < .1)
+			{
+				create_and_push_pattern(queue, fact_id, SymboleType::HATE,
+										SymboleType::PERSONALITY_GAUGE,
+										(u64)gauge.id, user);	
+			}
+		}
+
+		for(auto const& gauge : user.identity.interests)
+		{
+
+			if(gauge.amount > .5f)
+			{
+				create_and_push_pattern(queue, fact_id, SymboleType::HIGH,
+										SymboleType::INTEREST_GAUGE,
+										(u64)gauge.id, user);
+			}
+			else if(gauge.amount < .5)
+			{
+				create_and_push_pattern(queue, fact_id, SymboleType::LOW,
+										SymboleType::INTEREST_GAUGE,
+										(u64)gauge.id, user);	
+			}
+			
+			if(gauge.amount > .75f)
+			{
+				create_and_push_pattern(queue, fact_id, SymboleType::LIKE,
+										SymboleType::INTEREST_GAUGE,
+										(u64)gauge.id, user);
+			}
+			else if(gauge.amount < .25)
+			{
+				create_and_push_pattern(queue, fact_id, SymboleType::DISLIKE,
+										SymboleType::INTEREST_GAUGE,
+										(u64)gauge.id, user);	
+			}
+			
+			if(gauge.amount > .9f)
+			{
+				create_and_push_pattern(queue, fact_id, SymboleType::LOVE,
+										SymboleType::INTEREST_GAUGE,
+										(u64)gauge.id, user);
+			}
+			else if(gauge.amount < .1)
+			{
+				create_and_push_pattern(queue, fact_id, SymboleType::HATE,
+										SymboleType::INTEREST_GAUGE,
+										(u64)gauge.id, user);	
+			}
+		}
+
+		for(u32 idx = 0; idx < user.identity.relations.size(); ++idx)
+		{
+			if(idx == user.id) continue;
+			r32 relation = user.identity.relations[idx];
+
+			User const& other_user = app->data->users[idx];
+
+			if(relation > .75f)
+			{
+				create_and_push_pattern(queue, fact_id, SymboleType::FRIEND, user, other_user);
+				create_and_push_pattern(queue, fact_id, SymboleType::FRIEND, other_user, user);
+			}
+			else if(relation < .25)
+			{
+				create_and_push_pattern(queue, fact_id, SymboleType::ENEMY, user, other_user);
+				create_and_push_pattern(queue, fact_id, SymboleType::ENEMY, other_user, user);
+			}
+			else
+			{
+				create_and_push_pattern(queue, fact_id, SymboleType::NEUTRAL, user, other_user);
+				create_and_push_pattern(queue, fact_id, SymboleType::NEUTRAL, other_user, user);
+			}
+		}
+	}
+}
 
 void inference(Application *app)
 {
@@ -505,7 +684,9 @@ void inference(Application *app)
 	{
 		working_queue.push(it->second);
 	}
-	
+
+	push_precompiled_facts(app, fact_id, working_queue);
+
 	while(!working_queue.empty())
 	{
 		Fact fact = working_queue.front();
@@ -517,16 +698,30 @@ void inference(Application *app)
 			deduced_facts.insert({fact.id,fact});
 			fact_swap_property(deduced_facts[fact.id],fact);
 
+#if DEBUG
+			++global_app->data->event_counters.facts;
+#endif
+		
+
+
 			// TODO(Sam): On extrait si besoins...
 			//std::cout << convert_pattern_to_string(fact.pattern) << std::endl;
 
 			for(u32 rule_id = 0; rule_id < event_system->rules.size(); ++rule_id)
 			{
+#if DEBUG
+				++global_app->data->event_counters.rules;
+#endif
+			
 				Rule *rule = &event_system->rules[rule_id];
 				std::vector<ConditionWithEnvironement> conds_envs = rule_has_condition(fact, rule);
 
 				for(u32 condenv_id = 0; condenv_id < conds_envs.size(); ++condenv_id)
 				{
+#if DEBUG
+					++global_app->data->event_counters.conditions;
+#endif
+			
 					u32 condition_id = conds_envs[condenv_id].condition;
 					Environement *environement = &(conds_envs[condenv_id].environement);
 
@@ -551,6 +746,10 @@ void inference(Application *app)
 void main_simulation_update(Application *app)
 {
 	EventSystem *event_system = &app->data->event_system;
+
+#if DEBUG
+	global_app->data->event_counters = {};
+#endif
 	
 	// NOTE(Sam): This use the inference engine to select the list
 	// of intanciable events
@@ -638,6 +837,33 @@ std::string convert_pattern_to_string(Pattern *pattern)
 			break;
 		case SymboleType::ONCLE:
 			result += "ONCLE";
+			break;
+		case SymboleType::HIGH:
+			result += "HIGH";
+			break;
+		case SymboleType::LOW:
+			result += "LOW";
+			break;
+		case SymboleType::LIKE:
+			result += "LIKE";
+			break;
+		case SymboleType::DISLIKE:
+			result += "DISLIKE";
+			break;
+		case SymboleType::LOVE:
+			result += "LOVE";
+			break;
+		case SymboleType::HATE:
+			result += "HATE";
+			break;
+		case SymboleType::FRIEND:
+			result += "FRIEND";
+			break;
+		case SymboleType::NEUTRAL:
+			result += "NEUTRAL";
+			break;
+		case SymboleType::ENEMY:
+			result += "ENEMY";
 			break;
 		case SymboleType::EVENT_OCCURED:
 			result += "EVENT OCCURED";
