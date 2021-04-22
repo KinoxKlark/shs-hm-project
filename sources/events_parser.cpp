@@ -857,6 +857,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 
 						current_modifs[current_variables[variable]].push_back(modif);
 
+						--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
 					}
 
 					
@@ -1110,6 +1111,8 @@ bool importEventsFile(GameData *data, std::string const& filename)
 						{
 							current_modifs[-1].push_back(modif);
 						}
+
+						--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
 					}
 
 				}
