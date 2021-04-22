@@ -1014,6 +1014,7 @@ std::string convert_pattern_to_string(Pattern *pattern)
 
 void destroy_event_system(EventSystem *event_system)
 {
+	event_system->thread->terminate();
 	delete event_system->thread;
 }
 
@@ -1021,7 +1022,7 @@ void init_event_system(EventSystem *event_system)
 {
 	GameData *data = global_app->data;
 
-	
+	event_system->time_since_last_inference = sf::seconds(10);
 	event_system->fact_next_id = 0;
 	event_system->event_selection_done = true;
 	event_system->thread = new sf::Thread(&event_selection);
