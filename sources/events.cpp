@@ -521,6 +521,15 @@ void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* 
 		}
 
 		event_system->selected_events.push_back(event);
+
+		#if DEBUG
+		global_app->data->event_counters.first_already_computed = true;
+		if(global_app->data->event_counters.first_already_computed)
+		{
+			global_app->data->event_counters_first = global_app->data->event_counters;
+			global_app->data->event_counters_first.duration = global_app->data->event_chrono.getElapsedTime();
+		}
+		#endif
 	}
 	else
 	{
@@ -682,6 +691,10 @@ void inference(Application *app)
 {
 	GameData *data = app->data;
 	EventSystem *event_system = &data->event_system;
+
+	
+	event_system->thread_mutex.lock();
+
 	event_system->selected_events.clear();
 
 	u32 fact_id = event_system->fact_next_id;
@@ -693,6 +706,9 @@ void inference(Application *app)
 	{
 		working_queue.push(it->second);
 	}
+	
+	event_system->thread_mutex.unlock();
+
 
 	push_precompiled_facts(app, fact_id, working_queue);
 
@@ -752,17 +768,22 @@ void inference(Application *app)
 	
 }
 
-void main_simulation_update(Application *app)
+// Threaded
+void event_selection()
 {
+	Application* app = global_app;
 	EventSystem *event_system = &app->data->event_system;
 
-#if DEBUG
+	#if DEBUG
 	global_app->data->event_counters = {};
+	global_app->data->event_chrono.restart();
 #endif
 	
 	// NOTE(Sam): This use the inference engine to select the list
 	// of intanciable events
 	inference(app);
+
+	event_system->thread_mutex.lock();
 
 	if(event_system->selected_events.size() > 0)
 	{
@@ -808,6 +829,8 @@ void main_simulation_update(Application *app)
 		f0.id = event_system->fact_next_id++;
 		f0.pattern = new Pattern(p0);
 
+		
+
 		event_system->facts.insert({f0.id,f0});
 		event_system->facts[f0.id].pattern_proprio = true;
 
@@ -818,8 +841,18 @@ void main_simulation_update(Application *app)
 		user_react_to_modifs(&event.users_modifs);
 		
 		instanciate_social_post_for_event(app, &event);
+
+		event_system->event_selection_done = true;
 		
+
 	}
+
+	event_system->thread_mutex.unlock();
+
+
+	#if DEBUG
+	global_app->data->event_counters.duration = global_app->data->event_chrono.getElapsedTime();
+	#endif
 }
 
 #include <sstream>
@@ -979,6 +1012,10 @@ std::string convert_pattern_to_string(Pattern *pattern)
 
 }
 
+void destroy_event_system(EventSystem *event_system)
+{
+	delete event_system->thread;
+}
 
 void init_event_system(EventSystem *event_system)
 {
@@ -986,6 +1023,8 @@ void init_event_system(EventSystem *event_system)
 
 	
 	event_system->fact_next_id = 0;
+	event_system->event_selection_done = true;
+	event_system->thread = new sf::Thread(&event_selection);
 
 	for(u32 i = 0; i < data->users.size(); ++i)
 	{

@@ -44,6 +44,33 @@ void social_post_gui(SocialPost *post, bool draggable = false)
 	GuiEndContainer();
 }
 
+inline
+void main_simulation_update(Application *app, sf::Time dt)
+{
+	EventSystem *event_system = &app->data->event_system;
+
+
+	const sf::Time EVENT_SYSTEM_INFERENCE_DT(sf::seconds(1.f));
+	event_system->time_since_last_inference += dt;
+	if(event_system->time_since_last_inference > EVENT_SYSTEM_INFERENCE_DT)
+	{
+		event_system->time_since_last_inference -= EVENT_SYSTEM_INFERENCE_DT;
+	
+		bool do_the_event_selection = false;
+
+		event_system->thread_mutex.lock();
+		do_the_event_selection = event_system->event_selection_done;
+		event_system->thread_mutex.unlock();
+
+		if(do_the_event_selection)
+		{
+			event_system->event_selection_done = false;
+
+			event_system->thread->launch();
+		}
+	}
+}
+
 void update(Application *app, sf::Time dt)
 {
 #ifdef DEBUG
@@ -61,22 +88,7 @@ void update(Application *app, sf::Time dt)
 	if(inputs->quit)
 		app->should_quit = true;
 	
-	// TODO(Sam): Debug counter...
-	static u32 counter = 0;
-	
-	const sf::Time EVENT_SYSTEM_INFERENCE_DT(sf::seconds(1.f));
-	event_system->time_since_last_inference += dt;
-	if(event_system->time_since_last_inference > EVENT_SYSTEM_INFERENCE_DT)
-	{
-		event_system->time_since_last_inference -= EVENT_SYSTEM_INFERENCE_DT;
-		main_simulation_update(app);
-		counter += 1;
-	}
-
-	// TODO(Sam): Debug counter...
-	ImGui::Begin("Debug");
-	ImGui::Text("%i inferences", counter);
-	ImGui::End();
+	main_simulation_update(app, dt);
 	
 	
 	// TODO(Sam): Put this in the right place
@@ -341,6 +353,9 @@ void update(Application *app, sf::Time dt)
 	}
 	ImGui::End();
 
+	
+	event_system->thread_mutex.lock();
+
 	ImGui::Begin("Known Facts");
 	for(auto& pair : event_system->facts)
 	{
@@ -433,7 +448,7 @@ void update(Application *app, sf::Time dt)
 	ImGui::Begin("Debug Infos");
 	int debug_time = app->debug_clock.restart().asMilliseconds();
 	ImGui::Text("Frame duration: %ims (%.2ffps)", debug_time, 1e3/(float)debug_time);
-	ImGui::Text("Events instanciation:");
+	ImGui::Text("Events instanciation: %ums:", global_app->data->event_counters.duration.asMilliseconds());
 	ImGui::Text("- %u facts", global_app->data->event_counters.facts);
 	ImGui::Text("- %u rules", global_app->data->event_counters.rules);
 	ImGui::Text("- %u conditions", global_app->data->event_counters.conditions);
@@ -441,8 +456,20 @@ void update(Application *app, sf::Time dt)
 	ImGui::Text("- %u compile bool", global_app->data->event_counters.compile_bool);
 	ImGui::Text("- %u compile number", global_app->data->event_counters.compile_number);
 	ImGui::Text("- %u compile user", global_app->data->event_counters.compile_user);
+	ImGui::Text("First event events instanciation: %ums:", global_app->data->event_counters_first.duration.asMilliseconds());
+	ImGui::Text("- %u facts", global_app->data->event_counters_first.facts);
+	ImGui::Text("- %u rules", global_app->data->event_counters_first.rules);
+	ImGui::Text("- %u conditions", global_app->data->event_counters_first.conditions);
+	ImGui::Text("- %u filter calls", global_app->data->event_counters_first.filter_calls);
+	ImGui::Text("- %u compile bool", global_app->data->event_counters_first.compile_bool);
+	ImGui::Text("- %u compile number", global_app->data->event_counters_first.compile_number);
+	ImGui::Text("- %u compile user", global_app->data->event_counters_first.compile_user);
 	ImGui::End();
 #endif
+
+	
+	event_system->thread_mutex.unlock();
+
 }
 
 inline
@@ -504,6 +531,8 @@ GameData* game_data_init()
 	
 	return data;
 }
+
+
 
 inline
 void game_data_shutdown(GameData *data)

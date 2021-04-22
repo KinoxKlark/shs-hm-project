@@ -250,8 +250,15 @@ struct Event {
 	std::string description;
 };
 
+void event_selection();
 
 struct EventSystem {
+
+	sf::Thread* thread;
+	sf::Mutex thread_mutex;
+
+	bool event_selection_done;
+	
 	std::vector<Rule> rules;
 	std::unordered_map<u32, Fact> facts;
 	u32 fact_next_id;

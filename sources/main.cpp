@@ -67,6 +67,7 @@ int main()
 	}
 
 	gui_shutdown();
+	destroy_event_system(&(app->data->event_system));
 	renderer_shutdown(renderer);
 	application_shutdown(app);
 	
