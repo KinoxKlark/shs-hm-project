@@ -418,7 +418,7 @@ void update(Application *app, sf::Time dt)
 		u32 i = 0;
 		for(auto& rule : event_system->rules)
 		{
-			ImGui::Text("Rule [%i]:", i);
+			ImGui::Text("Rule [%i]: %s", i, !rule.active ? "x" : "");
 			for(auto & condition : rule.conditions)
 			{
 				ImGui::Text("  + %s", convert_pattern_to_string(&condition).c_str());
