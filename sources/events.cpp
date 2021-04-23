@@ -947,10 +947,12 @@ void event_selection()
 		
 		instanciate_social_post_for_event(app, &event);
 
-		event_system->event_selection_done = true;
 		
 
 	}
+
+	event_system->event_selection_done = true;
+
 
 	event_system->thread_mutex.unlock();
 
