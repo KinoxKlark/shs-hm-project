@@ -47,6 +47,10 @@ struct DebugEventCounter {
 	u32 compile_bool;
 	u32 compile_number;
 	u32 compile_user;
+
+	u32 nb_discarded_facts;
+	u32 nb_total_facts;
+	
 	bool first_already_computed;
 };
 

@@ -231,6 +231,7 @@ struct ConditionWithEnvironement {
 struct Rule {
 	std::vector<Pattern> conditions;
 	Pattern conclusion;
+	bool active;
 };
 
 struct Modifs;
@@ -263,6 +264,8 @@ struct EventSystem {
 	std::unordered_map<u32, Fact> facts;
 	u32 fact_next_id;
 
+	std::unordered_map<SymboleType, u32> symbole_count;
+	
 	sf::Time time_since_last_inference;
 	std::vector<Event> all_events;
 	std::vector<Event> selected_events;

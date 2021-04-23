@@ -444,7 +444,7 @@ Fact instanciate_conclusion(Rule *rule, Environement *environement, u32 fact_id)
 	return result;
 }
 
-void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* queue, u32 *fact_id, EventSystem *event_system)
+void apply_conclusion(Rule *rule, Environement *environement, std::deque<Fact>* queue, u32 *fact_id, EventSystem *event_system)
 {
 	if(rule->conclusion.symbole
 	   && !rule->conclusion.variable
@@ -535,12 +535,12 @@ void apply_conclusion(Rule *rule, Environement *environement, std::queue<Fact>* 
 	{
 		// NOTE(Sam): Il doit y avoir transfert de propriété du pattern
 		Fact conclusion = instanciate_conclusion(rule, environement, (*fact_id)++);
-		queue->push(conclusion);
+		queue->push_back(conclusion);
 		queue->back().pattern_proprio = true;
 	}
 }
 
-void create_and_push_pattern(std::queue<Fact>& queue, u32& fact_id, SymboleType type,
+void create_and_push_pattern(std::deque<Fact>& queue, u32& fact_id, SymboleType type,
 							 SymboleType gauge_type, u64 gauge_id, User const& user)
 {
 	Pattern* base = new Pattern();
@@ -552,11 +552,11 @@ void create_and_push_pattern(std::queue<Fact>& queue, u32& fact_id, SymboleType 
 	fact.id = fact_id++;
 	fact.pattern = base;
 
-	queue.push(fact);
+	queue.push_back(fact);
 	queue.back().pattern_proprio = true;
 }
 
-void create_and_push_pattern(std::queue<Fact>& queue, u32& fact_id, SymboleType type,
+void create_and_push_pattern(std::deque<Fact>& queue, u32& fact_id, SymboleType type,
 							 User const& user, User const& other_user)
 {
 	Pattern* base = new Pattern();
@@ -568,12 +568,25 @@ void create_and_push_pattern(std::queue<Fact>& queue, u32& fact_id, SymboleType 
 	fact.id = fact_id++;
 	fact.pattern = base;
 
-	queue.push(fact);
+	queue.push_back(fact);
 	queue.back().pattern_proprio = true;
 }
 
-void push_precompiled_facts(Application *app, u32& fact_id, std::queue<Fact>& queue)
+void push_precompiled_facts(Application *app, u32& fact_id, std::deque<Fact>& queue)
 {
+	std::unordered_map<SymboleType, u32>& symbole_count = app->data->event_system.symbole_count;
+	symbole_count.clear();
+
+	symbole_count[SymboleType::HIGH] = 0;
+	symbole_count[SymboleType::LOW] = 0;
+	symbole_count[SymboleType::LIKE] = 0;
+	symbole_count[SymboleType::DISLIKE] = 0;
+	symbole_count[SymboleType::LOVE] = 0;
+	symbole_count[SymboleType::HATE] = 0;
+	symbole_count[SymboleType::FRIEND] = 0;
+	symbole_count[SymboleType::NEUTRAL] = 0;
+	symbole_count[SymboleType::ENEMY] = 0;
+	 
 	for(auto const& user : app->data->users)
 	{		
 		for(auto const& gauge : user.identity.personalities)
@@ -583,12 +596,14 @@ void push_precompiled_facts(Application *app, u32& fact_id, std::queue<Fact>& qu
 				create_and_push_pattern(queue, fact_id, SymboleType::HIGH,
 										SymboleType::PERSONALITY_GAUGE,
 										(u64)gauge.id, user);
+				++symbole_count[SymboleType::HIGH];
 			}
 			else if(gauge.amount < .5)
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::LOW,
 										SymboleType::PERSONALITY_GAUGE,
 										(u64)gauge.id, user);	
+				++symbole_count[SymboleType::LOW];
 			}
 			
 			if(gauge.amount > .75f)
@@ -596,12 +611,14 @@ void push_precompiled_facts(Application *app, u32& fact_id, std::queue<Fact>& qu
 				create_and_push_pattern(queue, fact_id, SymboleType::LIKE,
 										SymboleType::PERSONALITY_GAUGE,
 										(u64)gauge.id, user);
+				++symbole_count[SymboleType::LIKE];
 			}
 			else if(gauge.amount < .25)
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::DISLIKE,
 										SymboleType::PERSONALITY_GAUGE,
 										(u64)gauge.id, user);	
+				++symbole_count[SymboleType::DISLIKE];
 			}
 			
 			if(gauge.amount > .9f)
@@ -609,12 +626,14 @@ void push_precompiled_facts(Application *app, u32& fact_id, std::queue<Fact>& qu
 				create_and_push_pattern(queue, fact_id, SymboleType::LOVE,
 										SymboleType::PERSONALITY_GAUGE,
 										(u64)gauge.id, user);
+				++symbole_count[SymboleType::LOVE];
 			}
 			else if(gauge.amount < .1)
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::HATE,
 										SymboleType::PERSONALITY_GAUGE,
 										(u64)gauge.id, user);	
+				++symbole_count[SymboleType::HATE];
 			}
 		}
 
@@ -626,12 +645,14 @@ void push_precompiled_facts(Application *app, u32& fact_id, std::queue<Fact>& qu
 				create_and_push_pattern(queue, fact_id, SymboleType::HIGH,
 										SymboleType::INTEREST_GAUGE,
 										(u64)gauge.id, user);
+				++symbole_count[SymboleType::HIGH];
 			}
 			else if(gauge.amount < .5)
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::LOW,
 										SymboleType::INTEREST_GAUGE,
 										(u64)gauge.id, user);	
+				++symbole_count[SymboleType::LOW];
 			}
 			
 			if(gauge.amount > .75f)
@@ -639,12 +660,14 @@ void push_precompiled_facts(Application *app, u32& fact_id, std::queue<Fact>& qu
 				create_and_push_pattern(queue, fact_id, SymboleType::LIKE,
 										SymboleType::INTEREST_GAUGE,
 										(u64)gauge.id, user);
+				++symbole_count[SymboleType::LIKE];
 			}
 			else if(gauge.amount < .25)
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::DISLIKE,
 										SymboleType::INTEREST_GAUGE,
 										(u64)gauge.id, user);	
+				++symbole_count[SymboleType::DISLIKE];
 			}
 			
 			if(gauge.amount > .9f)
@@ -652,12 +675,14 @@ void push_precompiled_facts(Application *app, u32& fact_id, std::queue<Fact>& qu
 				create_and_push_pattern(queue, fact_id, SymboleType::LOVE,
 										SymboleType::INTEREST_GAUGE,
 										(u64)gauge.id, user);
+				++symbole_count[SymboleType::LOVE];
 			}
 			else if(gauge.amount < .1)
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::HATE,
 										SymboleType::INTEREST_GAUGE,
 										(u64)gauge.id, user);	
+				++symbole_count[SymboleType::HATE];
 			}
 		}
 
@@ -672,20 +697,97 @@ void push_precompiled_facts(Application *app, u32& fact_id, std::queue<Fact>& qu
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::FRIEND, user, other_user);
 				create_and_push_pattern(queue, fact_id, SymboleType::FRIEND, other_user, user);
+				++symbole_count[SymboleType::FRIEND];
 			}
 			else if(relation < .25)
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::ENEMY, user, other_user);
 				create_and_push_pattern(queue, fact_id, SymboleType::ENEMY, other_user, user);
+				++symbole_count[SymboleType::ENEMY];
 			}
 			else
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::NEUTRAL, user, other_user);
 				create_and_push_pattern(queue, fact_id, SymboleType::NEUTRAL, other_user, user);
+				++symbole_count[SymboleType::NEUTRAL];
 			}
 		}
 	}
 }
+
+void deactivate_impossible_rules(Application* app, std::deque<Fact>& queue)
+{
+	EventSystem* event_system = &app->data->event_system;
+	
+	std::unordered_set<u32> event_ids;
+	for(auto it = queue.begin(); it != queue.end(); ++it)
+	{
+		Pattern* pattern = it->pattern;
+		if(pattern && !pattern->symbole && pattern->first->symbole &&
+		   pattern->first->type == SymboleType::EVENT_OCCURED)
+		{
+			event_ids.insert((u32)pattern->first->next->data);
+		}
+				
+		// TODO(Sam): check si la rule aune condition event, le cas échéant
+		// vérifier si l'event est dans la liste
+		// TODO(sam): Check si il y a une condition qui ne pourra pas etre
+		// vraie, e.g. si c'est un pattern (genre FRIEND() qui n'est pas dans la liste
+		// des facts)
+	}
+	
+	for(u32 rule_id = 0; rule_id < event_system->rules.size(); ++rule_id)
+	{
+		Rule* rule = &event_system->rules[rule_id];
+		rule->active = true;
+
+		// TODO(Sam): For now we will avoid to repeat an event twice, even
+		// if it is with different actors because we do not have enough events
+		// so that the repetition isnt obvious
+		if(rule->conclusion.type == SymboleType::_SELECT_EVENT &&
+		   event_ids.count(rule->conclusion.data) > 0)
+		{
+			rule->active = false;
+			goto deactivate_next_rule;
+		}
+		
+		for(u32 cond_id = 0; cond_id < rule->conditions.size(); ++cond_id)
+		{
+			Pattern* condition = &rule->conditions[cond_id];
+
+			if(!condition->symbole && condition->first->symbole)
+			{
+				if(condition->first->type == SymboleType::EVENT_OCCURED &&
+				   event_ids.count((u32)condition->first->next->data) == 0)
+				{
+					rule->active = false;
+					goto deactivate_next_rule;
+				}
+
+
+				if(event_system->symbole_count.count(condition->first->type) &&
+				   event_system->symbole_count[condition->first->type] == 0)
+				{
+					rule->active = false;
+					goto deactivate_next_rule;
+				}
+			
+			}
+
+		}
+
+	deactivate_next_rule:
+
+#if DEBUG
+		if(!rule->active)
+			++app->data->event_counters.nb_discarded_facts;
+		++app->data->event_counters.nb_total_facts;
+#endif
+		
+		continue;
+	}
+}
+
 
 void inference(Application *app)
 {
@@ -699,24 +801,26 @@ void inference(Application *app)
 
 	u32 fact_id = event_system->fact_next_id;
 	
-	std::queue<Fact> working_queue{};
+	std::deque<Fact> working_queue{};
 	std::unordered_map<u32, Fact> deduced_facts{};
 	
 	for(auto it = event_system->facts.begin(); it != event_system->facts.end(); ++it)
 	{
-		working_queue.push(it->second);
+		working_queue.push_back(it->second);
 	}
 	
 	event_system->thread_mutex.unlock();
 
 
 	push_precompiled_facts(app, fact_id, working_queue);
+	
+	deactivate_impossible_rules(app, working_queue);
 
 	while(!working_queue.empty())
 	{
 		Fact fact = working_queue.front();
 		fact_swap_property(fact, working_queue.front());
-		working_queue.pop();
+		working_queue.pop_front();
 
 		if(deduced_facts.count(fact.id) == 0)
 		{
@@ -726,14 +830,14 @@ void inference(Application *app)
 #if DEBUG
 			++global_app->data->event_counters.facts;
 #endif
-		
-
-
 			// TODO(Sam): On extrait si besoins...
 			//std::cout << convert_pattern_to_string(fact.pattern) << std::endl;
 
 			for(u32 rule_id = 0; rule_id < event_system->rules.size(); ++rule_id)
 			{
+				if(!event_system->rules[rule_id].active) continue;
+
+				
 #if DEBUG
 				++global_app->data->event_counters.rules;
 #endif
@@ -768,13 +872,14 @@ void inference(Application *app)
 	
 }
 
+
 // Threaded
 void event_selection()
 {
 	Application* app = global_app;
 	EventSystem *event_system = &app->data->event_system;
 
-	#if DEBUG
+#if DEBUG
 	global_app->data->event_counters = {};
 	global_app->data->event_chrono.restart();
 #endif

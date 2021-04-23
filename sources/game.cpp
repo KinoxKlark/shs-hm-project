@@ -449,7 +449,9 @@ void update(Application *app, sf::Time dt)
 	ImGui::Begin("Debug Infos");
 	int debug_time = app->debug_clock.restart().asMilliseconds();
 	ImGui::Text("Frame duration: %ims (%.2ffps)", debug_time, 1e3/(float)debug_time);
-	ImGui::Text("Events instanciation: %ums:", global_app->data->event_duration.asMilliseconds());
+	ImGui::Text("Skipped %i rules over %i", global_app->data->event_counters.nb_discarded_facts,
+				global_app->data->event_counters.nb_total_facts);
+	ImGui::Text("Events instanciation: %ums:", global_app->data->event_chrono.getElapsedTime().asMilliseconds());
 	ImGui::Text("- %u facts", global_app->data->event_counters.facts);
 	ImGui::Text("- %u rules", global_app->data->event_counters.rules);
 	ImGui::Text("- %u conditions", global_app->data->event_counters.conditions);

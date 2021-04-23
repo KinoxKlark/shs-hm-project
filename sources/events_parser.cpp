@@ -483,6 +483,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 				if(array) ++idx;
 				
 				Rule rule = {};
+				rule.active = true;
 				while(tokens[idx] != "]" && (array || tokens[idx] != "\n"))
 				{
 					--idx; while(white_chars.count(tokens[++idx][0])>0) continue;
