@@ -1640,7 +1640,7 @@ Pattern* convertTreeToPattern(Node const& node,
 		pattern->symbole = true;
 		pattern->variable = false;
 		pattern->type = SymboleType::SOCIAL_POST;
-		pattern->data = (u64)(event_ids[node.item.str]);
+		pattern->data = (u64)(post_ids[node.item.str]);
 	} break;
 	case ItemType::ACCESSOR:
 	{

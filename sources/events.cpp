@@ -729,11 +729,6 @@ void deactivate_impossible_rules(Application* app, std::deque<Fact>& queue)
 			event_ids.insert((u32)pattern->first->next->data);
 		}
 				
-		// TODO(Sam): check si la rule aune condition event, le cas échéant
-		// vérifier si l'event est dans la liste
-		// TODO(sam): Check si il y a une condition qui ne pourra pas etre
-		// vraie, e.g. si c'est un pattern (genre FRIEND() qui n'est pas dans la liste
-		// des facts)
 	}
 	
 	for(u32 rule_id = 0; rule_id < event_system->rules.size(); ++rule_id)
@@ -764,6 +759,15 @@ void deactivate_impossible_rules(Application* app, std::deque<Fact>& queue)
 					goto deactivate_next_rule;
 				}
 
+				if(condition->first->type == SymboleType::SOCIAL_POST_SEEN &&
+				   event_ids.count(
+					   app->data->social_post_system.all_posts[(u32)condition->first->next->data].event_id) == 0)
+				{
+					assert(("diferent post id", app->data->social_post_system.all_posts[(u32)condition->first->next->data].social_post_id == (u32)condition->first->next->data));
+
+					rule->active = false;
+					goto deactivate_next_rule;
+				}
 
 				if(event_system->symbole_count.count(condition->first->type) &&
 				   event_system->symbole_count[condition->first->type] == 0)
