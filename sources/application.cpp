@@ -1,6 +1,13 @@
 
+#include<ctime>
+
+
+
 Application* application_init()
 {
+	random_init(time(0));
+	//random_init(0);
+	
 	Application *app = new Application();
 	app->window = new sf::RenderWindow(sf::VideoMode(800,600), "SHS");
 	//app->window = new sf::RenderWindow(sf::VideoMode::getFullscreenModes()[0], "SHS", sf::Style::Fullscreen);
@@ -10,8 +17,6 @@ Application* application_init()
 	app->should_quit = false;
 	global_app = app;
 
-	random_init(0);
-	
 	return app;
 }
 
