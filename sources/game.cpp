@@ -39,7 +39,30 @@ void social_post_gui(SocialPost *post, bool draggable = false)
 
 	GuiBeginContainer(post->id, obj, GuiElementAlignment::HORIZONTAL);
 	if(draggable) GuiDefineContainerAsDraggable(post);
-	GuiTitle(post->type);
+
+	switch(post->type)
+	{
+	case PostType::PUBLICATION:
+		GuiTitle(global_app->data->users[post->author_id].fullname);
+		break;
+	case PostType::PARTAGE:
+		GuiTitle(global_app->data->users[post->author_id].fullname+" to "+global_app->data->users[post->receiver_id].fullname);
+		break;
+	case PostType::PHOTO:
+		GuiTitle("Photo de "+global_app->data->users[post->author_id].fullname);
+		break;
+	case PostType::ARTICLE:
+		GuiTitle(post->article_origin+": "+post->article_title);
+		break;
+	case PostType::PUB:
+		GuiTitle("PUB");
+		break;
+	case PostType::LOCALISATION:
+		GuiTitle(global_app->data->users[post->author_id].fullname+" se trouve a "+post->localisation);
+		break;
+		InvalidDefaultCase;
+	};
+
 	GuiText(post->text);
 	GuiEndContainer();
 }

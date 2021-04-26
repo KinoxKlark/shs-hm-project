@@ -60,6 +60,13 @@ struct Node {
 #define breaking_error(expr, msg) if((expr)) { break_with_error(msg) }
 #define stoping_error(expr, msg) if((expr)) { stop_with_error(msg) }
 
+#define expect_comma_separator() \
+	while(white_chars.count(tokens[++idx][0]) > 0) continue; \
+	stoping_error(tokens[idx] != ",", "In 'type': expecting a ',' but go '"+tokens[idx]+"'"); \
+	while(white_chars.count(tokens[++idx][0]) > 0) continue;
+					
+
+
 const std::unordered_set<char> white_chars = {' ', '\t', '\r', '\b'};
 const std::unordered_set<char> special_chars = {
 	'{', '}', '[', ']', ':', '=', '(', ')', '"', '.',';','+','-',
@@ -72,6 +79,7 @@ bool parseVariableName(std::vector<std::string> const& tokens, u32& idx, std::st
 					   std::unordered_map<std::string, char>& current_variables, char& variable_id);
 bool parseStringNumber(std::vector<std::string> const& tokens, u32& idx, std::string &str);
 bool parseNumber(std::string const& str, r32 &number);
+bool parseImageType(std::vector<std::string> const& tokens, u32& idx, ImageType& type);
 
 Node convertExpressionToTree(std::vector<Item> const& expression, u32 idstart, u32 idend);
 void displayTree(Node const& node, std::string const& prefix = "");
@@ -366,8 +374,13 @@ bool importEventsFile(GameData *data, std::string const& filename)
 						str_replace(constructed_post.text,
 									pair.first,
 									std::string("?")+pair.second);
-						// TODO(Sam): TMP
-						str_replace(constructed_post.type,
+						str_replace(constructed_post.article_origin,
+									pair.first,
+									std::string("?")+pair.second);
+						str_replace(constructed_post.article_title,
+									pair.first,
+									std::string("?")+pair.second);
+						str_replace(constructed_post.localisation,
 									pair.first,
 									std::string("?")+pair.second);
 					}
@@ -379,6 +392,15 @@ bool importEventsFile(GameData *data, std::string const& filename)
 					constructed_post.social_post_id = 0;
 					constructed_post.users_modifs.clear();
 
+					constructed_post.type = PostType::NONE;
+					constructed_post.author_id = -1;
+					constructed_post.receiver_id = -1;
+					constructed_post.image_type = ImageType::NONE;
+					constructed_post.article_origin = "";
+					constructed_post.article_title = "";
+					constructed_post.localisation = "";
+					constructed_post.text = "";
+					
 					current_variables.clear();
 					variable_id = 'A';
 					
@@ -1012,8 +1034,6 @@ bool importEventsFile(GameData *data, std::string const& filename)
 						if(!parseVariableName(tokens, idx, variable, current_variables, variable_id))
 							return false;
 
-						// TODO(Sam): On en fait qqch de cette variable ?
-						
 						while(white_chars.count(tokens[++idx][0]) > 0)
 							continue;
 						
@@ -1055,12 +1075,139 @@ bool importEventsFile(GameData *data, std::string const& filename)
 				--idx;
 				while(white_chars.count(tokens[++idx][0]) > 0) continue;
 
-				// TODO(Sam): Implement this...
-				std::string tmp_string;
-				--idx;
-				while(tokens[++idx] != "\n")
-					tmp_string += tokens[idx];
-				constructed_post.type = tmp_string;
+				if(tokens[idx] == "publication")
+				{
+					constructed_post.type = PostType::PUBLICATION;
+				}
+				else if(tokens[idx] == "partage")
+				{
+					constructed_post.type = PostType::PARTAGE;
+				}
+				else if(tokens[idx] == "photo")
+				{
+					constructed_post.type = PostType::PHOTO;
+				}
+				else if(tokens[idx] == "article")
+				{
+					constructed_post.type = PostType::ARTICLE;
+				}
+				else if(tokens[idx] == "pub")
+				{
+					constructed_post.type = PostType::PUB;
+				}
+				else if(tokens[idx] == "localisation")
+				{
+					constructed_post.type = PostType::LOCALISATION;
+				}
+				else
+				{
+					stop_with_error("Type should be one of [publication, partage, photo, article, pub, localisation], but we get '"+tokens[idx]+"'");
+				}
+
+				stoping_error(tokens[++idx] != "(", "'type' field expected opening parenthesis but got '"+tokens[idx]+"'");
+					
+				while(white_chars.count(tokens[++idx][0]) > 0) continue;
+
+				switch(constructed_post.type)
+				{
+				case PostType::PUBLICATION:
+				{
+					std::string variable;
+					if(!parseVariableName(tokens, idx, variable, current_variables, variable_id))
+						return false;
+					constructed_post.author_id = current_variables[variable];
+
+				} break;
+				case PostType::PARTAGE:
+				{
+					std::string variable;
+					if(!parseVariableName(tokens, idx, variable, current_variables, variable_id))
+						return false;
+					constructed_post.author_id = current_variables[variable];
+
+					expect_comma_separator();
+					
+					if(!parseVariableName(tokens, idx, variable, current_variables, variable_id))
+						return false;
+					constructed_post.receiver_id = current_variables[variable];
+
+				} break;
+				case PostType::PHOTO:
+				{
+					std::string variable;
+					if(!parseVariableName(tokens, idx, variable, current_variables, variable_id))
+						return false;
+					constructed_post.author_id = current_variables[variable];
+
+					expect_comma_separator();
+					
+					ImageType image;
+					if(!parseImageType(tokens, idx, image))
+						return false;
+					constructed_post.image_type;
+				} break;
+				case PostType::ARTICLE:
+				{
+					stoping_error(tokens[idx] != "\"", "article first parameter should be a string delimited with '\"', got '"+tokens[idx]+"'");
+
+					std::string str;
+					if(!parseString(tokens, ++idx, str, '"'))
+						return false;
+					constructed_post.article_origin = str;
+
+					expect_comma_separator();
+					stoping_error(tokens[idx] != "\"", "article second parameter should be a string delimited with '\"', got '"+tokens[idx]+"'");
+
+					if(!parseString(tokens, ++idx, str, '"'))
+						return false;
+					constructed_post.article_title = str;
+
+					while(white_chars.count(tokens[++idx][0])>0) continue;
+					
+					if(tokens[idx] != ")")
+					{
+						--idx;
+						expect_comma_separator();
+					
+						ImageType image;
+						if(!parseImageType(tokens, idx, image))
+							return false;
+						constructed_post.image_type;
+					}
+					else
+					{
+						--idx;
+					}
+					
+				} break;
+				case PostType::PUB:
+				{
+					ImageType image;
+					if(!parseImageType(tokens, idx, image))
+						return false;
+					constructed_post.image_type;
+				} break;
+				case PostType::LOCALISATION:
+				{
+					std::string variable;
+					if(!parseVariableName(tokens, idx, variable, current_variables, variable_id))
+						return false;
+					constructed_post.author_id = current_variables[variable];
+
+					expect_comma_separator();
+					stoping_error(tokens[idx] != "\"", "localisation second parameter should be a string delimited with '\"', got '"+tokens[idx]+"'");
+
+					std::string str;
+					if(!parseString(tokens, ++idx, str, '"'))
+						return false;
+					constructed_post.localisation = str;
+					
+				} break;
+				InvalidDefaultCase;
+				}
+
+				while(white_chars.count(tokens[++idx][0]) > 0) continue;
+				stoping_error(tokens[idx] != ")", "'type' field missing closing parenthesis '"+tokens[idx]+"'");
 
 				states.pop();
 				break;
@@ -1351,6 +1498,16 @@ bool parseStringNumber(std::vector<std::string> const& tokens, u32& idx, std::st
 	str = digits + "." + decimals;
 
 	return true;
+}
+
+bool parseImageType(std::vector<std::string> const& tokens, u32& idx, ImageType& type)
+{
+	bool result = true;
+
+	type = ImageType::NONE;
+	// TODO(Sam): Check for image type
+
+	return result;
 }
 
 u32 fromStringToNumber(std::string str)
