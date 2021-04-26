@@ -990,13 +990,16 @@ bool importEventsFile(GameData *data, std::string const& filename)
 				}
 
 				if(tokens[idx] == "(")
-				{
+				{	
 					// Il y a donc des variables
 					while(++idx) 
 					{
 						--idx;
 						while(white_chars.count(tokens[++idx][0]) > 0)
 							continue;
+
+						if(tokens[idx] == ")")
+							break;
 
 						std::string variable;
 						if(!parseVariableName(tokens, idx, variable, current_variables, variable_id))
