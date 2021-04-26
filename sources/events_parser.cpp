@@ -127,6 +127,8 @@ bool importEventsFile(GameData *data, std::string const& filename)
 				if(c == '\n')
 				{
 					state = EventCharParserState::Default;
+					token = "";
+					tokens.push_back(token+c);
 					break;
 				}
 			} break;
