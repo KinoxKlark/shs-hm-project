@@ -35,6 +35,10 @@ void instanciate_social_post_for_event(Application *app, Event *event)
 			str_replace(post.type,
 						std::string("?")+pair.first,
 						user->fullname);
+
+			//TODO(Sam): If publication or partage -> score up
+			//TODO(Sam): If partage receiver -> rect to post
+			//TODO(Sam): If publication or partage and score == 0 -> skip
 		}
 
 		post.major_user_ids.reserve(event->major_variables.size());

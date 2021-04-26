@@ -47,9 +47,11 @@ void social_post_gui(SocialPost *post, bool draggable = false)
 inline
 void main_simulation_update(Application *app, sf::Time dt)
 {
+	GameData *data = app->data;
 	EventSystem *event_system = &app->data->event_system;
 
-
+	const r32 SPEED_SCORE_REDUCTION = 6e-3f; // score/seconds
+	
 	const sf::Time EVENT_SYSTEM_INFERENCE_DT(sf::seconds(3.f));
 	event_system->time_since_last_inference += dt;
 	if(event_system->time_since_last_inference > EVENT_SYSTEM_INFERENCE_DT)
@@ -70,6 +72,12 @@ void main_simulation_update(Application *app, sf::Time dt)
 
 			event_system->thread->launch();
 		}
+	}
+
+	for(u32 idx_user = 0; idx_user < data->users.size(); ++idx_user)
+	{
+		User *user = &data->users[idx_user];
+		user_score_down(user, dt.asSeconds()*SPEED_SCORE_REDUCTION);
 	}
 }
 
@@ -283,7 +291,7 @@ void update(Application *app, sf::Time dt)
 	{
 		User *user = &data->users[idx_user];
 
-		ImGui::Text("[%u] %s", user->id, user->fullname.c_str());
+		ImGui::Text("[%u] %s (score: %.2f)", user->id, user->fullname.c_str(), user->interaction_score);
 
 		if(ImGui::BeginTable("User Personality", 3))
 		{
@@ -498,6 +506,7 @@ GameData* game_data_init()
 		data->users[idx].id = idx;
 		data->users[idx].identity = createUserIdentity(data);
 		data->users[idx].isMan = get_random_number_between(0,1) == 0;
+		data->users[idx].interaction_score = 1.f;
 
 		if(data->users[idx].isMan)
 		{

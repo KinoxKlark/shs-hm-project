@@ -107,6 +107,8 @@ r32 user_modif_nudge_down(r32 value)
 
 void user_react_to_modifs(User *user, std::vector<Modif> *modifs)
 {
+	i8 nudge_alignment = 0;
+	
 	for(auto const& modif : *modifs)
 	{
 		r32 *value;
@@ -137,9 +139,15 @@ void user_react_to_modifs(User *user, std::vector<Modif> *modifs)
 		for(u8 i = 0; i < nudge_amount; ++i)
 		{
 			if(up)
+			{
+				nudge_alignment += *value > .5f ? +1 : -1;
 				*value = user_modif_nudge_up(*value);
+			}
 			else
+			{
+				nudge_alignment += *value < .5f ? +1 : -1;
 				*value = user_modif_nudge_down(*value);
+			}
 		}
 
 		if(modif.type == ModifType::RELATION)
@@ -147,6 +155,15 @@ void user_react_to_modifs(User *user, std::vector<Modif> *modifs)
 			r32 *sym_val = get_relation_value(&global_app->data->users[modif.gauge_id], user->id);
 			*sym_val = *value;
 		}
+	}
+
+	if(nudge_alignment > 0)
+	{
+		user_score_up(user, 0.05f*nudge_alignment);
+	}
+	else
+	{
+		user_score_down(user, 0.05f*std::abs(nudge_alignment));
 	}
 	
 }
@@ -246,4 +263,21 @@ void user_see_post(EventSystem *event_system, SocialFeed *feed, SocialPost *post
 			user_react_to_modifs(&global_app->data->users[feed->user_id],&modifs.modifs);
 		
 	}
+}
+
+void user_score_up(User *user, r32 dx)
+{
+	if(user->interaction_score > 0.f)
+	{
+		user->interaction_score += dx;
+		if(user->interaction_score > 1.f)
+			user->interaction_score = 1.f;
+	}
+}
+
+void user_score_down(User *user, r32 dx)
+{
+	user->interaction_score -= dx;
+	if(user->interaction_score <= 0.f)
+		user->interaction_score = 0.f;
 }

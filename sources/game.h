@@ -37,6 +37,7 @@ struct User {
 	UserIdentity identity;
 	bool isMan;
 	std::string fullname;
+	r32 interaction_score;
 };
 
 struct DebugEventCounter {
