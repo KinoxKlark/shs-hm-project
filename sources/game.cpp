@@ -63,7 +63,8 @@ void main_simulation_update(Application *app, sf::Time dt)
 
 		if(do_the_event_selection)
 		{
-			event_system->time_since_last_inference -= EVENT_SYSTEM_INFERENCE_DT;
+			//event_system->time_since_last_inference -= EVENT_SYSTEM_INFERENCE_DT;
+			event_system->time_since_last_inference = sf::seconds(0);
 
 			event_system->event_selection_done = false;
 
