@@ -13,9 +13,14 @@ void instanciate_social_post_for_event(Application *app, Event *event)
 
 	}
 
-	// TODO(Sam) Random selection of one or more compatible posts
 	for(auto const& idx : post_compatibles)
 	{
+		// TODO(Sam): For now we have in average 2 post per event, maybe we want more?
+		// problem is if there is only one post. How can we setup the probability correctly?
+		r32 r = get_random_number_between(0.f, 1.f);
+		if(r > 2.f/(r32)post_compatibles.size())
+			continue;
+		
 		SocialPost post = social_post_system->all_posts[idx];
 		post.id = create_id();
 		
