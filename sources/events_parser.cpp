@@ -144,6 +144,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 		u32 next_post_id = social_post_system->all_posts.size();
 		std::unordered_map<std::string, u32> event_ids;
 		std::unordered_map<std::string, u32> post_ids;
+		bool event_has_conds = false;
 
 		char variable_id = 'A';
 		Event constructed_event = {};
@@ -297,6 +298,10 @@ bool importEventsFile(GameData *data, std::string const& filename)
 
 				if(token == "}")
 				{
+					if(!event_has_conds)
+						event_system->events_without_rules.push_back(constructed_event.id);
+					event_has_conds = false;
+					
 					event_system->all_events.push_back(constructed_event);
 					constructed_event.id = 0;
 					constructed_event.description = "";
@@ -833,6 +838,8 @@ bool importEventsFile(GameData *data, std::string const& filename)
 
 					Pattern *condition_pattern =  convertTreeToPattern(expression_tree, current_variables, event_ids, post_ids);
 					rule.conditions.push_back(*condition_pattern);
+					event_has_conds = true;
+
 					delete condition_pattern;
 				}
 					

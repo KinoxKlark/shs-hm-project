@@ -259,6 +259,8 @@ struct EventSystem {
 	sf::Mutex thread_mutex;
 
 	bool event_selection_done;
+	bool first_time_arround;
+	u32 random_seed;
 	
 	std::vector<Rule> rules;
 	std::unordered_map<u32, Fact> facts;
@@ -269,6 +271,7 @@ struct EventSystem {
 	sf::Time time_since_last_inference;
 	std::vector<Event> all_events;
 	std::vector<Event> selected_events;
+	std::vector<u32> events_without_rules;
 
 	std::vector<Event> debut_instancied_events;
 };

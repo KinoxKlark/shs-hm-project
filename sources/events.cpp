@@ -452,6 +452,7 @@ void apply_conclusion(Rule *rule, Environement *environement, std::deque<Fact>* 
 	{
 		Event event = event_system->all_events[rule->conclusion.data];
 
+#if 0 // this will not happens since we unactivate event that already occured for now
 		for(auto const& pair : event_system->facts)
 		{
 #if DEBUG
@@ -483,6 +484,7 @@ void apply_conclusion(Rule *rule, Environement *environement, std::deque<Fact>* 
 			event_check_next_iteration:
 					int dummy = 0;
 		}
+#endif
 
 		event.timestamp = 0;
 		event.users.reserve(environement->associations.size());
@@ -876,6 +878,81 @@ void inference(Application *app)
 	
 }
 
+void select_events_without_rules(EventSystem *event_system)
+{
+	GameData *data = global_app->data;
+
+	// TODO(Sam): Code duplication here :/
+	std::unordered_set<u32> event_ids;
+	for(auto it = event_system->facts.begin(); it != event_system->facts.end(); ++it)
+	{
+		Pattern* pattern = it->second.pattern;
+		if(pattern && !pattern->symbole && pattern->first->symbole &&
+		   pattern->first->type == SymboleType::EVENT_OCCURED)
+		{
+			event_ids.insert((u32)pattern->first->next->data);
+		}
+				
+	}
+	
+	for(u32 idx : event_system->events_without_rules)
+	{
+		Event event = event_system->all_events[idx];
+
+		if(event_ids.count(event.id)>0) continue;
+
+		event.timestamp = 0;
+		// TODO(Sam): Ceci ne permet pas de récup les perso qui sont dans modifs, c'est un bug
+		// qui existe également pour les event "normaux"
+		event.users.reserve(event.major_variables.size());
+
+		// NOTE(Sam): We select N different users which seems more efficiant than selecting all
+		// possible combination of users
+		std::vector<u32> user_ids(event.major_variables.size());
+		for(u32 idx = 0; idx < user_ids.size(); ++idx)
+		{
+			bool loop = true;
+			while(loop)
+			{
+				user_ids[idx] = get_random_number_between(0, data->users.size()-1);
+				loop = false;
+				for(u32 idx2 = 0; idx2 < idx; ++idx2)
+				{
+					if(user_ids[idx2] == user_ids[idx])
+					{
+						loop = true;
+						break;
+					}
+				}
+			}
+		}
+
+		u32 idx = 0;
+		for(char var : event.major_variables)
+		{
+			event.users[var] = user_ids[idx];
+			++idx;
+		}
+		
+		for(u32 idx = 0; idx < event.users_modifs.size(); ++idx)
+		{
+			event.users_modifs[idx].user_id = event.users[(char)event.users_modifs[idx].user_id];
+
+			for(u32 idx_modif = 0; idx_modif < event.users_modifs[idx].modifs.size(); ++idx_modif)
+			{
+				Modif *modif = &event.users_modifs[idx].modifs[idx_modif];
+				if(modif->type == ModifType::RELATION)
+				{
+					modif->gauge_id = event.users[modif->gauge_id];
+				}
+			}
+		}
+
+		event_system->selected_events.push_back(event);
+	}
+	
+
+}
 
 // Threaded
 void event_selection()
@@ -883,6 +960,18 @@ void event_selection()
 	Application* app = global_app;
 	EventSystem *event_system = &app->data->event_system;
 
+	if(event_system->first_time_arround)
+	{
+		event_system->first_time_arround = false;
+		random_init(time(0));
+		event_system->random_seed = get_random_number_between(0,1024);
+	}
+
+	random_init(event_system->random_seed);
+	event_system->random_seed = get_random_number_between(0,1024);
+	
+	
+	
 #if DEBUG
 	global_app->data->event_counters = {};
 	global_app->data->event_chrono.restart();
@@ -891,6 +980,7 @@ void event_selection()
 	// NOTE(Sam): This use the inference engine to select the list
 	// of intanciable events
 	inference(app);
+	select_events_without_rules(event_system);
 
 	event_system->thread_mutex.lock();
 
@@ -1137,6 +1227,7 @@ void init_event_system(EventSystem *event_system)
 	event_system->fact_next_id = 0;
 	event_system->event_selection_done = true;
 	event_system->thread = new sf::Thread(&event_selection);
+	event_system->first_time_arround = true;
 
 	for(u32 i = 0; i < data->users.size(); ++i)
 	{
