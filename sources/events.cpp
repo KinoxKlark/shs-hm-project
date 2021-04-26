@@ -927,11 +927,11 @@ void select_events_without_rules(EventSystem *event_system)
 			}
 		}
 
-		u32 idx = 0;
+		u32 id_user = 0;
 		for(char var : event.major_variables)
 		{
-			event.users[var] = user_ids[idx];
-			++idx;
+			event.users[var] = user_ids[id_user];
+			++id_user;
 		}
 		
 		for(u32 idx = 0; idx < event.users_modifs.size(); ++idx)
