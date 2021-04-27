@@ -114,9 +114,25 @@ u32 GuiAddElementToContainer(GuiObject obj, GuiElementAlignment alignment)
 		obj.size.x < 0 ? 1.f : obj.size.x,
 		obj.size.y < 0 ? 1.f : obj.size.y
 	};
+
 	v2 outer_size = hadamar(rect_size(container_region), relative_size);
 	v2 size = { outer_size.x - (obj.margin.left+obj.margin.right)*gui->margin_unit,
 				outer_size.y - (obj.margin.top+obj.margin.bottom)*gui->margin_unit };
+
+	if(obj.keep_ratio > 0.f && size.y != 0.f)
+	{
+		r32 ratio = size.x/size.y;
+		
+		if(ratio > obj.keep_ratio)
+		{
+			size.x = size.y*obj.keep_ratio;
+		}
+		else
+		{
+			size.y = size.x/obj.keep_ratio;
+		}
+	}
+	
 	v2 inner_size = { size.x - (obj.padding.left+obj.padding.right)*gui->margin_unit,
 					  size.y - (obj.padding.top+obj.padding.bottom)*gui->margin_unit };
 
@@ -231,7 +247,7 @@ void GuiCreateRootContainer()
 	gui->elements[0].line_width = 0.f;
 	gui->elements[0].alignment = GuiElementAlignment::HORIZONTAL;
 
-	gui->elements[0].obj.bg_color = sf::Color::White;
+	gui->elements[0].obj.bg_color = BACKGROUND_COLOR;
 	gui->elements[0].draggable = false;
 		
 
@@ -333,7 +349,7 @@ bool _GuiTab(u32 id, sf::String label, GuiElementAlignment alignment)
 	// TODO(Sam): Magic value
 	r32 tab_bar_height = 2*gui->margin_unit;
 	
-	GuiObject obj;
+	GuiObject obj = {};
 	obj.margin = {.5,.5,0,0};
 	obj.padding = {.5,.5,.5,.5};
 	obj.bg_color = container->selected_tab_id == id ? sf::Color(50, 100, 100) : sf::Color(100, 150, 150);
@@ -416,7 +432,7 @@ void GuiBeginGrid(u32 n_rows, u32 n_cols, GuiObject obj)
 	gui->most_recent_container->grid_n_rows = n_rows;
 	gui->most_recent_container->grid_n_cols = n_cols;
 
-	GuiObject cell_obj;
+	GuiObject cell_obj = {};
 	r32 one_before_epsilon = 1.f - 1e-4;
 	cell_obj.size = { one_before_epsilon*1.f/(r32)n_cols, one_before_epsilon*1.f/(r32)n_rows };
 	cell_obj.margin = {};
@@ -596,7 +612,7 @@ bool _GuiButton(u32 id, sf::String label)
 	GuiElementProperties *props = &gui->properties[id];
 	props->touched = true;
 
-	GuiObject obj;
+	GuiObject obj = {};
 	
 	obj.margin = {1,1,1,1};
 	obj.padding = {.5,.5,.5,.5};
@@ -650,7 +666,7 @@ void GuiTitle(sf::String title)
 {
 	GuiManager *gui = global_gui_manager;
 
-	GuiObject obj;
+	GuiObject obj = {};
 	
 	obj.margin = {0,0,0,.5};
 	obj.padding = {};
@@ -683,7 +699,7 @@ void GuiText(sf::String text)
 
 	assert(("Text can only be puts in container", gui->most_recent_container));
 	
-	GuiObject obj;
+	GuiObject obj = {};
 	
 	//obj.margin = {1,1,1,1};
 	//obj.padding = {.5,.5,.5,.5};

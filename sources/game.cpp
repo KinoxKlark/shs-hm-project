@@ -31,7 +31,7 @@ bool drag_drop_accept_payload(void *payload, void* user_data)
 
 void social_post_gui(SocialPost *post, bool draggable = false)
 {
-	GuiObject obj;
+	GuiObject obj = {};
 	obj.size = { draggable ? 1.f/3.f : -1, .25 };
 	obj.margin = {1,1,1,1};
 	obj.padding = {1,1,1,1};
@@ -125,19 +125,19 @@ void update(Application *app, sf::Time dt)
 	
 	
 	// TODO(Sam): Put this in the right place
-	GuiObject obj1;
+	GuiObject obj1 = {};
 	obj1.size = v2(.5, GUI_STRETCH);
 	obj1.margin = {1, 1, 1, 1};
 	obj1.padding = {};
 	obj1.bg_color = sf::Color(150, 150, 150);
 
-	GuiObject obj2;
+	GuiObject obj2 = {};
 	obj2.size = v2(GUI_STRETCH, .25);
 	obj2.margin = {1,1,1,1};
 	obj2.padding = {};
 	obj2.bg_color = sf::Color(255, 150, 150);
 
-	GuiObject obj3;
+	GuiObject obj3 = {};
 	obj3.size = v2(.33, .5);
 	obj3.margin = {};
 	obj3.padding = {};
@@ -146,31 +146,44 @@ void update(Application *app, sf::Time dt)
 	GuiObject obj4 = obj1;
 	obj4.padding = {1,1,1,1};
 
-	GuiObject obj5;
+	GuiObject obj5 = {};
 	obj5.size = {1.f/3.f, .25};
 	obj5.margin = {1,1,1,1};
 	obj5.padding = {};
 	obj5.bg_color = sf::Color(255,150,150);
 
-	GuiObject obj6;
+	GuiObject obj6 = {};
 	obj6.size = {.33,.5};
 	obj6.margin = {1,1,1,1};
 	obj6.padding = {1,1,1,1};
 	obj6.bg_color = sf::Color(150,150,255);
 
-	GuiObject obj_full;
+	GuiObject obj_full = {};
 	obj_full.size = {1,1};
 	obj_full.margin = {};
 	obj_full.padding = {};
 	obj_full.bg_color = sf::Color(0,0,0,0);
+
+
 	
-	GuiBeginGrid(2, 3, obj4);
+	
+	GuiObject obj_social_feed_grid = {};
+	obj_social_feed_grid.size = v2(.5, GUI_STRETCH);
+	obj_social_feed_grid.padding = {1,1,1,1};
+	obj_social_feed_grid.bg_color = sf::Color({0,0,0,0});
+	GuiObject obj_social_feed_full = {};
+	obj_social_feed_full.size = v2(GUI_STRETCH, GUI_STRETCH);
+	obj_social_feed_full.keep_ratio = UI_FEED_RATIO;
+	obj_social_feed_full.bg_color = UI_MAIN_BG_COLOR;
+	
+	GuiBeginGrid(2, 3, obj_social_feed_grid);
 	{
 		for(u32 idx = 0; idx < data->social_post_system.social_feeds.size(); ++idx)
 		{
 			SocialFeed *feed = &data->social_post_system.social_feeds[idx];
+
 			GuiSelectGridCell(idx/3, idx % 3);
-			GuiBeginContainer(obj_full);
+			GuiBeginContainer(obj_social_feed_full);
 			GuiTitle(data->users[feed->user_id].fullname);
 			GuiDroppableArea(drag_drop_accept_payload, feed);
 
@@ -184,7 +197,14 @@ void update(Application *app, sf::Time dt)
 	}
 	GuiEndGrid();
 
-	GuiBeginTabs(obj1);
+
+	GuiObject obj_right_pannel = {};
+	obj_right_pannel.size = v2(.5, GUI_STRETCH);
+	obj_right_pannel.margin = {};
+	obj_right_pannel.padding = {};
+	obj_right_pannel.bg_color = UI_MAIN_BG_COLOR;
+	
+	GuiBeginTabs(obj_right_pannel);
 	{
 		if(GuiTab("Tab1"))
 		{

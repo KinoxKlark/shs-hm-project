@@ -4,6 +4,28 @@
 
 #include "HTMLText.h"
 
+const sf::Color BACKGROUND_COLOR = sf::Color({24, 119, 242});
+const sf::Color UI_MAIN_BG_COLOR = sf::Color({240, 242, 245});
+const sf::Color UI_POST_BG_COLOR = sf::Color({255, 255, 255});
+const sf::Color UI_POST_BORDER_COLOR = sf::Color({228, 230, 235});
+const sf::Color UI_MAIN_TEXT_COLOR = sf::Color({0,0,0});
+const sf::Color UI_SMALL_TEXT_COLOR = sf::Color({96, 103, 112});
+
+constexpr r32 pt2px = 1.33333f;
+constexpr r32 invRefWidth = 1.f/1920.f;
+constexpr r32 invRefHeight = 1.f/1040.f;
+
+constexpr r32 UI_MAIN_TEXT_FS = 15.f*pt2px*invRefWidth;
+constexpr r32 UI_SMALL_TEXT_FS = 13.f*pt2px*invRefWidth;
+constexpr r32 UI_BIG_TEXT_FS = 19.f*pt2px*invRefWidth;
+
+constexpr r32 UI_OUTTER_MARGIN = 25.f*invRefHeight;
+constexpr r32 UI_FEED_INNER_MARGIN = 16.f*invRefWidth;
+constexpr r32 UI_POST_INTER_MARGIN = 9.f*invRefWidth;
+constexpr r32 UI_BORDER_ROUNDING_RADIUS = 4.5f*invRefWidth;
+
+constexpr r32 UI_FEED_RATIO = 284.f/473.f;
+
 #define ID_BANDWIDTH 1000
 std::stack<u32> gui_global_container_id;
 inline u32 create_id()
@@ -47,6 +69,7 @@ constexpr size_t hash ( const char (&s)[N] ) {
 
 struct GuiObject {
 	v2 size;
+	r32 keep_ratio;
 	v4 margin;
 	v4 padding;
 	sf::Color bg_color;
@@ -130,6 +153,7 @@ struct GuiManager {
 	std::unordered_map<u32, GuiElementProperties> properties;
 	
 	sf::Font font;
+	sf::Font font_bold;
 
 	// Debug:
 	u32 intersect_count;
@@ -149,12 +173,23 @@ inline GuiManager* gui_init()
 	sf::String font_file = sf::String(windir);
 	font_file.insert(font_file.getSize(), "\\fonts\\Segoeui.ttf");
 
+	sf::String font_file_bold = sf::String(windir);
+	font_file_bold.insert(font_file_bold.getSize(), "\\fonts\\Seguisb.ttf");
+
 	// TODO(Sam): Font fallback from assets if windows font fail
 	if(!gui->font.loadFromFile(font_file))
 	{
 		// TODO(Sam): Proper error management
 		assert(("Problem with font loading!", false));
 	}
+
+	// TODO(Sam): Font fallback from assets if windows font fail
+	if(!gui->font_bold.loadFromFile(font_file_bold))
+	{
+		// TODO(Sam): Proper error management
+		assert(("Problem with bold font loading!", false));
+	}
+
 
 	gui->push_to_dragging_payload = false;
 	gui->dragging_payload = -1;
