@@ -2,7 +2,7 @@
 struct Modifs;
 
 enum class ImageType {
-	NONE, // TODO(Sam): Get some images here!
+	NONE, // TODO(Sam): Get some images here!		
 };
 
 enum class PostType {

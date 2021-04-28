@@ -29,12 +29,17 @@ bool drag_drop_accept_payload(void *payload, void* user_data)
 	return true;
 }
 
-void social_post_gui(SocialPost *post, bool draggable = false)
+void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pannel = false)
 {
 	GuiObject obj = {};
 	obj.size = { draggable ? 1.f/3.f : -1, .25 };
-	obj.margin = {1,1,1,1};
-	obj.padding = {1,1,1,1};
+	obj.margin = {0,0,UI_POST_INTER_MARGIN,0};
+	obj.padding = {UI_POST_INNER_MARGIN_SIDES,UI_POST_INNER_MARGIN_SIDES,
+				   UI_POST_INNER_MARGIN_TOP,UI_POST_INNER_MARGIN_SIDES};
+
+	if(in_side_pannel)
+		obj.margin = {0,UI_POST_INNER_MARGIN_SIDES,UI_POST_INNER_MARGIN_SIDES,UI_POST_INTER_MARGIN};
+	
 	obj.bg_color = post->color;
 
 	GuiBeginContainer(post->id, obj, GuiElementAlignment::HORIZONTAL);
@@ -65,6 +70,48 @@ void social_post_gui(SocialPost *post, bool draggable = false)
 
 	GuiText(post->text);
 	GuiEndContainer();
+}
+
+void social_feed_gui(SocialFeed *feed)
+{
+	GameData *data = global_app->data;
+	
+	GuiObject obj_social_feed_full = {};
+	obj_social_feed_full.size = v2(GUI_STRETCH, GUI_STRETCH);
+	obj_social_feed_full.keep_ratio = UI_FEED_RATIO;
+	obj_social_feed_full.bg_color = UI_MAIN_BG_COLOR;
+
+	r32 header_ratio = 66.f/473.f;
+	GuiObject obj_social_feed_header = {};
+	obj_social_feed_header.size = v2(GUI_STRETCH, header_ratio);
+	obj_social_feed_header.bg_color = UI_POST_BG_COLOR;
+	obj_social_feed_header.padding = {.1, .1, .1, .1};
+	GuiObject obj_social_feed_body = {};
+	obj_social_feed_body.size = v2(GUI_STRETCH, 1.f-header_ratio);
+	obj_social_feed_body.bg_color = UI_TRANSPARENT;
+	obj_social_feed_body.padding = {UI_FEED_INNER_MARGIN, UI_FEED_INNER_MARGIN, 0, UI_FEED_INNER_MARGIN};
+
+	GuiBeginContainer(obj_social_feed_full);
+
+	GuiBeginContainer(obj_social_feed_header);
+	{
+		GuiTitle(data->users[feed->user_id].fullname);
+	}
+	GuiEndContainer();
+
+	GuiBeginContainer(obj_social_feed_body);
+	{
+		GuiDroppableArea(drag_drop_accept_payload, feed);
+
+		for(u32 post_idx = 0; post_idx < feed->posts.size(); ++post_idx)
+		{
+			social_post_gui(&(feed->posts[post_idx]));
+		}
+	}
+	GuiEndContainer();
+				
+	GuiEndContainer();
+	
 }
 
 inline
@@ -171,21 +218,7 @@ void update(Application *app, sf::Time dt)
 	obj_social_feed_grid.size = v2(.5, GUI_STRETCH);
 	obj_social_feed_grid.padding = {1,1,1,1};
 	obj_social_feed_grid.bg_color = sf::Color({0,0,0,0});
-	GuiObject obj_social_feed_full = {};
-	obj_social_feed_full.size = v2(GUI_STRETCH, GUI_STRETCH);
-	obj_social_feed_full.keep_ratio = UI_FEED_RATIO;
-	obj_social_feed_full.bg_color = UI_MAIN_BG_COLOR;
-
-	r32 header_ratio = .1;
-	GuiObject obj_social_feed_header = {};
-	obj_social_feed_header.size = v2(GUI_STRETCH, header_ratio);
-	obj_social_feed_header.bg_color = UI_POST_BG_COLOR;
-	obj_social_feed_header.padding = {.1, .1, .1, .1};
-	GuiObject obj_social_feed_body = {};
-	obj_social_feed_body.size = v2(GUI_STRETCH, 1.f-header_ratio);
-	obj_social_feed_body.bg_color = UI_TRANSPARENT;
-	obj_social_feed_body.padding = {.1, .1, .1, .1};
-
+	
 	GuiBeginGrid(2, 3, obj_social_feed_grid);
 	{
 		for(u32 idx = 0; idx < data->social_post_system.social_feeds.size(); ++idx)
@@ -193,26 +226,7 @@ void update(Application *app, sf::Time dt)
 			SocialFeed *feed = &data->social_post_system.social_feeds[idx];
 
 			GuiSelectGridCell(idx/3, idx % 3);
-			GuiBeginContainer(obj_social_feed_full);
-
-			GuiBeginContainer(obj_social_feed_header);
-			{
-				GuiTitle(data->users[feed->user_id].fullname);
-			}
-			GuiEndContainer();
-
-			GuiBeginContainer(obj_social_feed_body);
-			{
-				GuiDroppableArea(drag_drop_accept_payload, feed);
-
-				for(u32 post_idx = 0; post_idx < data->social_post_system.social_feeds[idx].posts.size(); ++post_idx)
-				{
-					social_post_gui(&(data->social_post_system.social_feeds[idx].posts[post_idx]));
-				}
-			}
-			GuiEndContainer();
-				
-			GuiEndContainer();
+			social_feed_gui(feed);
 		}
 				
 	}
@@ -222,30 +236,29 @@ void update(Application *app, sf::Time dt)
 	GuiObject obj_right_pannel = {};
 	obj_right_pannel.size = v2(.5, GUI_STRETCH);
 	obj_right_pannel.margin = {};
-	obj_right_pannel.padding = {};
+	obj_right_pannel.padding = {UI_OUTTER_MARGIN,UI_OUTTER_MARGIN,0,UI_OUTTER_MARGIN};
 	obj_right_pannel.bg_color = UI_MAIN_BG_COLOR;
 	
 	GuiBeginTabs(obj_right_pannel);
 	{
-		if(GuiTab("Tab1"))
+		if(GuiTab("Général +1"))
 		{
 			for(u32 idx = 0; idx < data->social_post_system.available_posts.size(); ++idx)
 			{
-				social_post_gui(&(data->social_post_system.available_posts[idx]), true);
+				social_post_gui(&(data->social_post_system.available_posts[idx]), true, true);
 			}			
 		}
 
-		if(GuiTab("Tab2"))
+		if(GuiTab("Articles"))
 		{
-			GuiBeginContainer(obj2, GuiElementAlignment::HORIZONTAL);
-			if(GuiButton("Click Me"))
+			for(u32 idx = 0; idx < data->social_post_system.available_posts.size(); ++idx)
 			{
-				data->click_counter++;
-			}
-			GuiEndContainer();
+				if(data->social_post_system.available_posts[idx].type == PostType::ARTICLE)
+					social_post_gui(&(data->social_post_system.available_posts[idx]), true,true);
+			}		
 		}
 
-		if(GuiTab("Tab3", GuiElementAlignment::HORIZONTAL))
+		if(GuiTab("Divers", GuiElementAlignment::HORIZONTAL))
 		{
 			GuiBeginContainer(obj3);
 			{

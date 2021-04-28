@@ -20,9 +20,12 @@ constexpr r32 UI_MAIN_TEXT_FS = 15.f*pt2px*invRefWidth;
 constexpr r32 UI_SMALL_TEXT_FS = 13.f*pt2px*invRefWidth;
 constexpr r32 UI_BIG_TEXT_FS = 19.f*pt2px*invRefWidth;
 
-constexpr r32 UI_OUTTER_MARGIN = 25.f*invRefHeight;
-constexpr r32 UI_FEED_INNER_MARGIN = 16.f*invRefWidth;
-constexpr r32 UI_POST_INTER_MARGIN = 9.f*invRefWidth;
+constexpr r32 UI_MARGIN_REF = 25.f*invRefHeight;
+constexpr r32 UI_OUTTER_MARGIN = 25.f*invRefHeight/UI_MARGIN_REF;
+constexpr r32 UI_FEED_INNER_MARGIN = 16.f*invRefHeight/UI_MARGIN_REF;
+constexpr r32 UI_POST_INTER_MARGIN = 9.f*invRefHeight/UI_MARGIN_REF;
+constexpr r32 UI_POST_INNER_MARGIN_SIDES = 14.f*invRefHeight/UI_MARGIN_REF;
+constexpr r32 UI_POST_INNER_MARGIN_TOP = 10.f*invRefHeight/UI_MARGIN_REF; 
 constexpr r32 UI_BORDER_ROUNDING_RADIUS = 4.5f*invRefWidth;
 
 constexpr r32 UI_FEED_RATIO = 284.f/473.f;
