@@ -119,17 +119,22 @@ u32 GuiAddElementToContainer(GuiObject obj, GuiElementAlignment alignment)
 	v2 size = { outer_size.x - (obj.margin.left+obj.margin.right)*gui->margin_unit,
 				outer_size.y - (obj.margin.top+obj.margin.bottom)*gui->margin_unit };
 
+	v2 offset_ratio_change = {0.f, 0.f};
 	if(obj.keep_ratio > 0.f && size.y != 0.f)
 	{
 		r32 ratio = size.x/size.y;
 		
 		if(ratio > obj.keep_ratio)
 		{
+			r32 old_size = size.x;
 			size.x = size.y*obj.keep_ratio;
+			offset_ratio_change.x = .5f*(old_size - size.x);
 		}
 		else
 		{
+			r32 old_size = size.y;
 			size.y = size.x/obj.keep_ratio;
+			offset_ratio_change.y = .5f*(old_size - size.y);
 		}
 	}
 	
@@ -178,7 +183,7 @@ u32 GuiAddElementToContainer(GuiObject obj, GuiElementAlignment alignment)
 	}
 	
 	v2 outer_pos = offset_pos + rect_pos(container_region);
-	v2 pos = outer_pos + v2(obj.margin.left*gui->margin_unit, obj.margin.top*gui->margin_unit);
+	v2 pos = outer_pos + v2(obj.margin.left*gui->margin_unit, obj.margin.top*gui->margin_unit) + offset_ratio_change;
 	v2 inner_pos = pos + v2(obj.padding.left*gui->margin_unit, obj.padding.top*gui->margin_unit);
 
 	gui->elements[idx].set_viewport = false;
