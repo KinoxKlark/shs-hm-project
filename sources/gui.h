@@ -12,9 +12,12 @@ const sf::Color UI_MAIN_TEXT_COLOR = sf::Color({0,0,0});
 const sf::Color UI_SMALL_TEXT_COLOR = sf::Color({96, 103, 112});
 const sf::Color UI_TRANSPARENT = sf::Color({0,0,0,0});
 
+
 constexpr r32 pt2px = 1.33333f;
 constexpr r32 invRefWidth = 1.f/1920.f;
 constexpr r32 invRefHeight = 1.f/1040.f;
+
+constexpr r32 UI_BORDER_WIDTH = 1.f*pt2px*invRefHeight;
 
 constexpr r32 UI_MAIN_TEXT_FS = 12.f*pt2px*invRefHeight;
 constexpr r32 UI_SMALL_TEXT_FS = 10.f*pt2px*invRefHeight;
@@ -78,6 +81,8 @@ struct GuiObject {
 	v4 margin;
 	v4 padding;
 	sf::Color bg_color;
+	sf::Color border_color;
+	r32 border_width;
 
 	// TODO(Sam): Proper text management
 	sf::Text text;

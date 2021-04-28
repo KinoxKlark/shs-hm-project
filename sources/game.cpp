@@ -42,6 +42,9 @@ void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pann
 	
 	obj.bg_color = UI_POST_BG_COLOR;
 
+	obj.border_color = UI_POST_BORDER_COLOR;
+	obj.border_width = 2*UI_BORDER_WIDTH;
+	
 	GuiBeginContainer(post->id, obj, GuiElementAlignment::HORIZONTAL);
 	if(draggable) GuiDefineContainerAsDraggable(post);
 

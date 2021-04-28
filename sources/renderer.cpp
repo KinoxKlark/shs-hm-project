@@ -54,6 +54,10 @@ void render(Renderer *renderer)
 		rect_shape.setSize(rect_size(element->bounds));
 		rect_shape.setPosition(rect_pos(element->bounds));
 		rect_shape.setFillColor(element->obj.bg_color);
+
+		rect_shape.setOutlineColor(element->obj.border_color);
+		rect_shape.setOutlineThickness(element->obj.border_width*gui->current_size.y);
+			
 		renderer->window->draw(rect_shape);
 
 		if(element->obj.text.getString().getSize() > 0)
@@ -123,6 +127,10 @@ void render(Renderer *renderer)
 		rect_shape.setSize(rect_size(element->bounds));
 		rect_shape.setPosition(rect_pos(element->bounds));
 		rect_shape.setFillColor(element->obj.bg_color);
+		
+		rect_shape.setOutlineColor(element->obj.border_color);
+		rect_shape.setOutlineThickness(element->obj.border_width*gui->current_size.y);
+			
 		renderer->window->draw(rect_shape);
 
 		if(element->obj.text.getString().getSize() > 0)
