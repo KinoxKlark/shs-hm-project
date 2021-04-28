@@ -9,7 +9,7 @@ Application* application_init()
 	//random_init(0);
 	
 	Application *app = new Application();
-	app->window = new sf::RenderWindow(sf::VideoMode(800,600), "SHS");
+	app->window = new sf::RenderWindow(sf::VideoMode(1200,800), "SHS");
 	//app->window = new sf::RenderWindow(sf::VideoMode::getFullscreenModes()[0], "SHS", sf::Style::Fullscreen);
 	app->frame_duration = sf::Time::Zero;
 	app->frame_target_duration = sf::seconds(1.f/60.f);

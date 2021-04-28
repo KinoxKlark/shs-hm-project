@@ -444,37 +444,12 @@ void GuiBeginGrid(u32 n_rows, u32 n_cols, GuiObject obj)
 	cell_obj.padding = {};
 	cell_obj.bg_color = sf::Color(0,0,0,0);
 
-	//TODO(Sam): Remove this debug color
-	cell_obj.bg_color = sf::Color(100, 100, 150);
+	//cell_obj.bg_color = sf::Color(100, 100, 150);
 
 	u32 last_id = idx;
 	for(u32 y = 0; y < n_rows; ++y)
 	for(u32 x = 0; x < n_cols; ++x)
-	{
-		/*
-		cell_obj.margin.top = .5*(obj.padding.top+obj.padding.bottom);
-		cell_obj.margin.bottom = 0;
-		if(y == 0)
-		{
-			cell_obj.margin.top = obj.padding.top;
-		}
-		if(y == n_rows-1)
-		{
-			cell_obj.margin.bottom = obj.padding.bottom;
-		}
-
-		cell_obj.margin.left = .5*(obj.padding.left + obj.padding.right);
-		cell_obj.margin.right = 0;
-		if(x == 0)
-		{
-			cell_obj.margin.left = obj.padding.left;
-		}
-		if(x == n_cols-1)
-		{
-			cell_obj.margin.right = obj.padding.right;
-		}
-		*/
-		
+	{		
 		GuiBeginContainer(cell_obj);
 		u32 idx = gui->most_recent_container->id;
 		assert(idx == last_id + 1);
