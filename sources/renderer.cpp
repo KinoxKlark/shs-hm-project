@@ -1,5 +1,76 @@
 #include <stack>
 
+class RoundedRectangleShape : public sf::Shape
+{
+	v2 size;
+	std::vector<v2> points;
+	r32 radius;
+
+	void updateGeometry()
+		{
+			points.clear();
+
+			u32 nb_points = points.size()/4;
+
+			r32 rectWidth = size.x;
+			r32 rectHeight = size.y;
+			
+			float X=0,Y=0;
+			for(int i=0; i<nb_points; i++)
+			{
+				X+=radius/nb_points;
+				Y=sqrt(radius*radius-X*X);
+				points.push_back({X+rectWidth-radius,-Y+radius});
+			}
+			Y=0;
+			for(int i=0; i<nb_points; i++)
+			{
+				Y+=radius/nb_points;
+				X=sqrt(radius*radius-Y*Y);
+				points.push_back({rectWidth+X-radius,rectHeight-radius+Y});
+			}
+			X=0;
+			for(int i=0; i<nb_points; i++)
+			{
+				X+=radius/nb_points;
+				Y=sqrt(radius*radius-X*X);
+				points.push_back({radius-X,rectHeight-radius+Y});
+			}
+			Y=0;
+			for(int i=0; i<nb_points; i++)
+			{
+				Y+=radius/nb_points;
+				X=sqrt(radius*radius-Y*Y);
+				points.push_back({-X+radius,radius-Y});
+			}
+			
+			update();
+		}
+	
+	public:
+
+	RoundedRectangleShape(r32 r = 0.f, u32 np = 10) : points(4*np), radius(r), size({2*r,2*r}) 
+		{
+			updateGeometry();
+		}
+
+	v2 getSize() const { return size; }
+	void setSize(v2 s) { size = s; updateGeometry(); }
+	
+	r32 getRadius() const { return radius; }
+	void setRadius(u32 r) { radius = r; updateGeometry(); }
+	
+	std::size_t getPointCount() const override
+		{
+			return points.size();
+		}
+	
+	sf::Vector2f getPoint(std::size_t index) const override
+		{
+			return points[index];
+		}
+};
+
 void render(Renderer *renderer)
 {
 	v2u render_region = renderer->window->getSize();
@@ -18,6 +89,7 @@ void render(Renderer *renderer)
 	std::stack<viewport_info> viewport_infos;
 	viewport_infos.push({ gui->elements_count, renderer->view });
 
+	//RoundedRectangleShape rect_shape;
 	sf::RectangleShape rect_shape;
 	for(u32 idx(0); idx < gui->elements_count; ++idx)
 	{
@@ -55,11 +127,14 @@ void render(Renderer *renderer)
 		rect_shape.setPosition(rect_pos(element->bounds));
 		rect_shape.setFillColor(element->obj.bg_color);
 
+		//rect_shape.setRadius(5*invRefHeight*gui->current_size.y);
+
 		rect_shape.setOutlineColor(element->obj.border_color);
 		rect_shape.setOutlineThickness(element->obj.border_width*gui->current_size.y);
 			
 		renderer->window->draw(rect_shape);
 
+		
 		if(element->obj.text.getString().getSize() > 0)
 		{
 			rect ref_bounds = global_gui_manager
