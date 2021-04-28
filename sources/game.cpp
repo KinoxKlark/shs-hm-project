@@ -175,7 +175,17 @@ void update(Application *app, sf::Time dt)
 	obj_social_feed_full.size = v2(GUI_STRETCH, GUI_STRETCH);
 	obj_social_feed_full.keep_ratio = UI_FEED_RATIO;
 	obj_social_feed_full.bg_color = UI_MAIN_BG_COLOR;
-	
+
+	r32 header_ratio = .1;
+	GuiObject obj_social_feed_header = {};
+	obj_social_feed_header.size = v2(GUI_STRETCH, header_ratio);
+	obj_social_feed_header.bg_color = UI_POST_BG_COLOR;
+	obj_social_feed_header.padding = {.1, .1, .1, .1};
+	GuiObject obj_social_feed_body = {};
+	obj_social_feed_body.size = v2(GUI_STRETCH, 1.f-header_ratio);
+	obj_social_feed_body.bg_color = UI_TRANSPARENT;
+	obj_social_feed_body.padding = {.1, .1, .1, .1};
+
 	GuiBeginGrid(2, 3, obj_social_feed_grid);
 	{
 		for(u32 idx = 0; idx < data->social_post_system.social_feeds.size(); ++idx)
@@ -184,13 +194,24 @@ void update(Application *app, sf::Time dt)
 
 			GuiSelectGridCell(idx/3, idx % 3);
 			GuiBeginContainer(obj_social_feed_full);
-			GuiTitle(data->users[feed->user_id].fullname);
-			GuiDroppableArea(drag_drop_accept_payload, feed);
 
-			for(u32 post_idx = 0; post_idx < data->social_post_system.social_feeds[idx].posts.size(); ++post_idx)
+			GuiBeginContainer(obj_social_feed_header);
 			{
-				social_post_gui(&(data->social_post_system.social_feeds[idx].posts[post_idx]));
+				GuiTitle(data->users[feed->user_id].fullname);
 			}
+			GuiEndContainer();
+
+			GuiBeginContainer(obj_social_feed_body);
+			{
+				GuiDroppableArea(drag_drop_accept_payload, feed);
+
+				for(u32 post_idx = 0; post_idx < data->social_post_system.social_feeds[idx].posts.size(); ++post_idx)
+				{
+					social_post_gui(&(data->social_post_system.social_feeds[idx].posts[post_idx]));
+				}
+			}
+			GuiEndContainer();
+				
 			GuiEndContainer();
 		}
 				

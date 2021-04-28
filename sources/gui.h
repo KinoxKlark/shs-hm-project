@@ -10,6 +10,7 @@ const sf::Color UI_POST_BG_COLOR = sf::Color({255, 255, 255});
 const sf::Color UI_POST_BORDER_COLOR = sf::Color({228, 230, 235});
 const sf::Color UI_MAIN_TEXT_COLOR = sf::Color({0,0,0});
 const sf::Color UI_SMALL_TEXT_COLOR = sf::Color({96, 103, 112});
+const sf::Color UI_TRANSPARENT = sf::Color({0,0,0,0});
 
 constexpr r32 pt2px = 1.33333f;
 constexpr r32 invRefWidth = 1.f/1920.f;
