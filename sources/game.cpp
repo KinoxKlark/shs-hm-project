@@ -95,7 +95,7 @@ void social_feed_gui(SocialFeed *feed)
 
 	GuiBeginContainer(obj_social_feed_header);
 	{
-		GuiTitle(data->users[feed->user_id].fullname);
+		GuiFeedName(data->users[feed->user_id].fullname);
 	}
 	GuiEndContainer();
 

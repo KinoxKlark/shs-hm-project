@@ -645,7 +645,7 @@ bool _GuiButton(u32 id, sf::String label)
 
 
 inline
-void GuiTitle(sf::String title)
+void GuiTitle(sf::String title, r32 font_size)
 {
 	GuiManager *gui = global_gui_manager;
 
@@ -656,7 +656,7 @@ void GuiTitle(sf::String title)
 	obj.bg_color = sf::Color(0,0,0,0);
 	obj.text.setString(title);
 	obj.text.setFont(gui->font);
-	obj.text.setCharacterSize(18);
+	obj.text.setCharacterSize(font_size*gui->current_size.y);
 	obj.text.setFillColor(sf::Color(50,50,50));
 	
 	assert(("Title can only be puts in container", gui->most_recent_container));
@@ -676,7 +676,7 @@ void GuiTitle(sf::String title)
 }
 
 inline
-void GuiText(sf::String text)
+void GuiText(sf::String text, r32 font_size)
 {
 	GuiManager *gui = global_gui_manager;
 
@@ -693,7 +693,7 @@ void GuiText(sf::String text)
 	obj.bg_color = sf::Color(0,0,0,0);
 	obj.htmltext.setString(text);
 	obj.htmltext.setFont(gui->font);
-	obj.htmltext.setCharacterSize(12);
+	obj.htmltext.setCharacterSize(font_size*gui->current_size.y);
 	obj.htmltext.setFillColor(sf::Color(50,50,50));
 	obj.htmltext.setTextWidth(rect_size(gui->most_recent_container->inner_bounds).x);
 
@@ -709,6 +709,13 @@ void GuiText(sf::String text)
 	u32 idx = GuiAddElementToContainer(obj, GuiElementAlignment::NONE);
 	
 
+}
+
+inline
+void GuiFeedName(sf::String name)
+{
+	GuiManager *gui = global_gui_manager;
+	GuiTitle(name, UI_BIG_TEXT_FS);
 }
 
 #ifdef DEBUG

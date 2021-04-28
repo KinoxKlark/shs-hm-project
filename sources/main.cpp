@@ -55,6 +55,7 @@ int main()
 			// TODO(Sam): Put this at the right place...
 			//gui->margin_unit = .02*global_renderer->window->getSize().x;
 			//gui->margin_unit = UI_MARGIN_REF*Min(global_renderer->window->getSize().x,global_renderer->window->getSize().y);
+			gui->current_size = global_renderer->window->getSize();
 			gui->margin_unit = UI_MARGIN_REF*global_renderer->window->getSize().y; 
 
 			update(app,app->frame_target_duration);

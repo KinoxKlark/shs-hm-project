@@ -16,9 +16,9 @@ constexpr r32 pt2px = 1.33333f;
 constexpr r32 invRefWidth = 1.f/1920.f;
 constexpr r32 invRefHeight = 1.f/1040.f;
 
-constexpr r32 UI_MAIN_TEXT_FS = 15.f*pt2px*invRefWidth;
-constexpr r32 UI_SMALL_TEXT_FS = 13.f*pt2px*invRefWidth;
-constexpr r32 UI_BIG_TEXT_FS = 19.f*pt2px*invRefWidth;
+constexpr r32 UI_MAIN_TEXT_FS = 12.f*pt2px*invRefHeight;
+constexpr r32 UI_SMALL_TEXT_FS = 13.f*pt2px*invRefHeight;
+constexpr r32 UI_BIG_TEXT_FS = 19.f*pt2px*invRefHeight;
 
 constexpr r32 UI_MARGIN_REF = 25.f*invRefHeight;
 constexpr r32 UI_OUTTER_MARGIN = 25.f*invRefHeight/UI_MARGIN_REF;
@@ -159,6 +159,8 @@ struct GuiManager {
 	sf::Font font;
 	sf::Font font_bold;
 
+	v2u current_size;
+	
 	// Debug:
 	u32 intersect_count;
 };
@@ -287,8 +289,9 @@ inline bool _GuiButton(u32 id, sf::String label);
 #define GuiButton(label) _GuiButton(GET_UNIQUE_ID(), label)
 
 // Texts
-inline void GuiTitle(sf::String title);
-inline void GuiText(sf::String text);
+inline void GuiTitle(sf::String title, r32 font_size = UI_BIG_TEXT_FS);
+inline void GuiText(sf::String text, r32 font_size = UI_MAIN_TEXT_FS);
+inline void GuiFeedName(sf::String name);
 
 // Debug
 void GuiDebug();
