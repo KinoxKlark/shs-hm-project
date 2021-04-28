@@ -425,7 +425,7 @@ void GuiBeginGrid(u32 n_rows, u32 n_cols, GuiObject obj)
 	assert(("Grid must contain at least one cell", n_rows*n_cols > 0));
 
 	GuiObject grid_obj = obj;
-	grid_obj.padding = {};
+	grid_obj.padding = .5f*obj.padding;
 	
 	GuiBeginContainer(grid_obj, GuiElementAlignment::HORIZONTAL);
 	u32 idx = gui->most_recent_container->id;
@@ -435,16 +435,18 @@ void GuiBeginGrid(u32 n_rows, u32 n_cols, GuiObject obj)
 	GuiObject cell_obj = {};
 	r32 one_before_epsilon = 1.f - 1e-4;
 	cell_obj.size = { one_before_epsilon*1.f/(r32)n_cols, one_before_epsilon*1.f/(r32)n_rows };
-	cell_obj.margin = {};
+	cell_obj.margin = .5f*obj.padding;
 	cell_obj.padding = {};
 	cell_obj.bg_color = sf::Color(0,0,0,0);
 
+	//TODO(Sam): Remove this debug color
 	cell_obj.bg_color = sf::Color(100, 100, 150);
 
 	u32 last_id = idx;
 	for(u32 y = 0; y < n_rows; ++y)
 	for(u32 x = 0; x < n_cols; ++x)
 	{
+		/*
 		cell_obj.margin.top = .5*(obj.padding.top+obj.padding.bottom);
 		cell_obj.margin.bottom = 0;
 		if(y == 0)
@@ -466,6 +468,7 @@ void GuiBeginGrid(u32 n_rows, u32 n_cols, GuiObject obj)
 		{
 			cell_obj.margin.right = obj.padding.right;
 		}
+		*/
 		
 		GuiBeginContainer(cell_obj);
 		u32 idx = gui->most_recent_container->id;

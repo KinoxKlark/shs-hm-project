@@ -117,6 +117,16 @@ typedef Vector4<i32> v4i;
 typedef Vector4<u32> v4u;
 typedef Vector4<r64> v4_64;
 
+template<typename T>
+inline Vector4<T> operator*(T scal, Vector4<T> vec)
+{
+	vec.x *= scal;
+	vec.y *= scal;
+	vec.z *= scal;
+	vec.w *= scal;
+	return vec;
+}
+
 struct m2x2 {
 	union{
 	r32 data[2][2];
@@ -462,4 +472,14 @@ inline sf::Vector2<T> rect_size(sf::Rect<T> rect)
 {
 	sf::Vector2<T> result = {rect.width, rect.height};
 	return result;
+}
+
+template<typename T>
+inline sf::Rect<T> operator*(T scal, sf::Rect<T> rect)
+{
+	rect.x *= scal;
+	rect.y *= scal;
+	rect.width *= scal;
+	rect.height *= scal;
+	return rect;
 }
