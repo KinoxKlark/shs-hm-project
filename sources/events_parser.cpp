@@ -1158,6 +1158,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 					expect_comma_separator();
 					stoping_error(tokens[idx] != "\"", "article second parameter should be a string delimited with '\"', got '"+tokens[idx]+"'");
 
+					str = "";
 					if(!parseString(tokens, ++idx, str, '"'))
 						return false;
 					constructed_post.article_title = str;

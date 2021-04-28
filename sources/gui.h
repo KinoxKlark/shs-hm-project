@@ -17,8 +17,9 @@ constexpr r32 invRefWidth = 1.f/1920.f;
 constexpr r32 invRefHeight = 1.f/1040.f;
 
 constexpr r32 UI_MAIN_TEXT_FS = 12.f*pt2px*invRefHeight;
-constexpr r32 UI_SMALL_TEXT_FS = 13.f*pt2px*invRefHeight;
-constexpr r32 UI_BIG_TEXT_FS = 19.f*pt2px*invRefHeight;
+constexpr r32 UI_SMALL_TEXT_FS = 10.f*pt2px*invRefHeight;
+constexpr r32 UI_MEDIUM_TEXT_FS = 15.f*pt2px*invRefHeight;
+constexpr r32 UI_BIG_TEXT_FS = 18.f*pt2px*invRefHeight;
 
 constexpr r32 UI_MARGIN_REF = 25.f*invRefHeight;
 constexpr r32 UI_OUTTER_MARGIN = 25.f*invRefHeight/UI_MARGIN_REF;

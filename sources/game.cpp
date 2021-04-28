@@ -40,7 +40,7 @@ void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pann
 	if(in_side_pannel)
 		obj.margin = {0,UI_POST_INNER_MARGIN_SIDES,UI_POST_INNER_MARGIN_SIDES,UI_POST_INTER_MARGIN};
 	
-	obj.bg_color = post->color;
+	obj.bg_color = UI_POST_BG_COLOR;
 
 	GuiBeginContainer(post->id, obj, GuiElementAlignment::HORIZONTAL);
 	if(draggable) GuiDefineContainerAsDraggable(post);
@@ -48,27 +48,33 @@ void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pann
 	switch(post->type)
 	{
 	case PostType::PUBLICATION:
-		GuiTitle(global_app->data->users[post->author_id].fullname);
+		GuiText(global_app->data->users[post->author_id].fullname, UI_SMALL_TEXT_FS);
+		GuiText(post->text);
 		break;
 	case PostType::PARTAGE:
-		GuiTitle(global_app->data->users[post->author_id].fullname+" to "+global_app->data->users[post->receiver_id].fullname);
+		GuiText(global_app->data->users[post->author_id].fullname
+				+" à "+global_app->data->users[post->receiver_id].fullname, UI_SMALL_TEXT_FS);
+		GuiText(post->text);
 		break;
 	case PostType::PHOTO:
-		GuiTitle("Photo de "+global_app->data->users[post->author_id].fullname);
+		GuiText("Photo de "+global_app->data->users[post->author_id].fullname, UI_SMALL_TEXT_FS);
+		GuiText(post->text);
 		break;
 	case PostType::ARTICLE:
-		GuiTitle(post->article_origin+": "+post->article_title);
+		GuiText(post->article_origin, UI_SMALL_TEXT_FS);
+		GuiText(post->article_title, UI_MEDIUM_TEXT_FS);
+		GuiText(post->text);
 		break;
 	case PostType::PUB:
-		GuiTitle("PUB");
+		GuiText("Annonce", UI_SMALL_TEXT_FS);
+		GuiText(post->text);
 		break;
 	case PostType::LOCALISATION:
-		GuiTitle(global_app->data->users[post->author_id].fullname+" se trouve a "+post->localisation);
+		GuiText(global_app->data->users[post->author_id].fullname+" se trouve a "+post->localisation);
 		break;
 		InvalidDefaultCase;
 	};
 
-	GuiText(post->text);
 	GuiEndContainer();
 }
 
