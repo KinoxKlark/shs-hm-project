@@ -4,52 +4,54 @@ class RoundedRectangleShape : public sf::Shape
 {
 	v2 size;
 	std::vector<v2> points;
-	r32 radius;
+	v4 radius;
 
 	void updateGeometry()
 		{
-			points.clear();
-
 			u32 nb_points = points.size()/4;
 
-			r32 rectWidth = size.x;
-			r32 rectHeight = size.y;
-			
+			points.clear();
+
+			r32 width = size.x;
+			r32 height = size.y;
+
 			float X=0,Y=0;
 			for(int i=0; i<nb_points; i++)
 			{
-				X+=radius/nb_points;
-				Y=sqrt(radius*radius-X*X);
-				points.push_back({X+rectWidth-radius,-Y+radius});
-			}
-			Y=0;
-			for(int i=0; i<nb_points; i++)
-			{
-				Y+=radius/nb_points;
-				X=sqrt(radius*radius-Y*Y);
-				points.push_back({rectWidth+X-radius,rectHeight-radius+Y});
-			}
+				Y+=radius[0]/nb_points;
+				X=sqrt(radius[0]*radius[0]-Y*Y+1e-5);
+				points.push_back({radius[0]-X,radius[0]-Y});
+			} // 0,0
+			
 			X=0;
 			for(int i=0; i<nb_points; i++)
 			{
-				X+=radius/nb_points;
-				Y=sqrt(radius*radius-X*X);
-				points.push_back({radius-X,rectHeight-radius+Y});
-			}
+				X+=radius[1]/nb_points;
+				Y=sqrt(radius[1]*radius[1]-X*X);
+				points.push_back({width+X-radius[1],radius[1]-Y});
+			} // width, 0
+			
 			Y=0;
 			for(int i=0; i<nb_points; i++)
 			{
-				Y+=radius/nb_points;
-				X=sqrt(radius*radius-Y*Y);
-				points.push_back({-X+radius,radius-Y});
-			}
+				Y+=radius[2]/nb_points;
+				X=sqrt(radius[2]*radius[2]-Y*Y+1e-5);
+				points.push_back({width+X-radius[2],height+Y-radius[2]});
+			} // width, height
+			X=0;
+			for(int i=0; i<nb_points; i++)
+			{
+				X+=radius[3]/nb_points;
+				Y=sqrt(radius[3]*radius[3]-X*X+1e-5);
+				points.push_back({radius[3]-X,height+Y-radius[3]});
+			}  // 0, height
 			
 			update();
 		}
 	
 	public:
 
-	RoundedRectangleShape(r32 r = 0.f, u32 np = 10) : points(4*np), radius(r), size({2*r,2*r}) 
+	RoundedRectangleShape(v4 r = {}, u32 np = 10) : points(4*np), radius(r), size({r[0]+r[2],r[1]+r[3]}) 
 		{
 			updateGeometry();
 		}
@@ -57,8 +59,8 @@ class RoundedRectangleShape : public sf::Shape
 	v2 getSize() const { return size; }
 	void setSize(v2 s) { size = s; updateGeometry(); }
 	
-	r32 getRadius() const { return radius; }
-	void setRadius(u32 r) { radius = r; updateGeometry(); }
+	v4 getRadius() const { return radius; }
+	void setRadius(v4 r) { radius = r; updateGeometry(); }
 	
 	std::size_t getPointCount() const override
 		{
@@ -90,7 +92,7 @@ void render(Renderer *renderer)
 	viewport_infos.push({ gui->elements_count, renderer->view });
 
 	//RoundedRectangleShape rect_shape;
-	sf::RectangleShape rect_shape;
+	RoundedRectangleShape rect_shape;
 	for(u32 idx(0); idx < gui->elements_count; ++idx)
 	{
 		GuiElement *element = &gui->elements[idx];
@@ -126,9 +128,7 @@ void render(Renderer *renderer)
 		rect_shape.setSize(rect_size(element->bounds));
 		rect_shape.setPosition(rect_pos(element->bounds));
 		rect_shape.setFillColor(element->obj.bg_color);
-
-		//rect_shape.setRadius(5*invRefHeight*gui->current_size.y);
-
+		rect_shape.setRadius((r32)(gui->current_size.y)*element->obj.box_radius);
 		rect_shape.setOutlineColor(element->obj.border_color);
 		rect_shape.setOutlineThickness(element->obj.border_width*gui->current_size.y);
 			
@@ -202,10 +202,9 @@ void render(Renderer *renderer)
 		rect_shape.setSize(rect_size(element->bounds));
 		rect_shape.setPosition(rect_pos(element->bounds));
 		rect_shape.setFillColor(element->obj.bg_color);
-		
+		rect_shape.setRadius((r32)(gui->current_size.y)*element->obj.box_radius);
 		rect_shape.setOutlineColor(element->obj.border_color);
-		rect_shape.setOutlineThickness(element->obj.border_width*gui->current_size.y);
-			
+		rect_shape.setOutlineThickness(element->obj.border_width*gui->current_size.y);			
 		renderer->window->draw(rect_shape);
 
 		if(element->obj.text.getString().getSize() > 0)

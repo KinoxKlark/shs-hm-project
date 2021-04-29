@@ -12,7 +12,6 @@ const sf::Color UI_MAIN_TEXT_COLOR = sf::Color({0,0,0});
 const sf::Color UI_SMALL_TEXT_COLOR = sf::Color({96, 103, 112});
 const sf::Color UI_TRANSPARENT = sf::Color({0,0,0,0});
 
-
 constexpr r32 pt2px = 1.33333f;
 constexpr r32 invRefWidth = 1.f/1920.f;
 constexpr r32 invRefHeight = 1.f/1040.f;
@@ -30,7 +29,7 @@ constexpr r32 UI_FEED_INNER_MARGIN = 16.f*invRefHeight/UI_MARGIN_REF;
 constexpr r32 UI_POST_INTER_MARGIN = 9.f*invRefHeight/UI_MARGIN_REF;
 constexpr r32 UI_POST_INNER_MARGIN_SIDES = 14.f*invRefHeight/UI_MARGIN_REF;
 constexpr r32 UI_POST_INNER_MARGIN_TOP = 10.f*invRefHeight/UI_MARGIN_REF; 
-constexpr r32 UI_BORDER_ROUNDING_RADIUS = 4.5f*invRefWidth;
+constexpr r32 UI_BORDER_ROUNDING_RADIUS = 5.f*invRefHeight;
 
 constexpr r32 UI_FEED_RATIO = 284.f/473.f;
 
@@ -83,6 +82,8 @@ struct GuiObject {
 	sf::Color bg_color;
 	sf::Color border_color;
 	r32 border_width;
+	v4 box_radius;
+
 
 	// TODO(Sam): Proper text management
 	sf::Text text;

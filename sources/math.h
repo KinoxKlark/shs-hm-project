@@ -109,7 +109,13 @@ struct Vector4 {
 		struct {
 			T x, y, z, w;
 		};
+		T data[4];
 	};
+
+	T& operator[](std::size_t i)
+		{
+			return data[i];
+		}
 };
 
 typedef Vector4<r32> v4;

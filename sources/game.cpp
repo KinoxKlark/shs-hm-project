@@ -44,6 +44,7 @@ void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pann
 
 	obj.border_color = UI_POST_BORDER_COLOR;
 	obj.border_width = 2*UI_BORDER_WIDTH;
+	obj.box_radius = {UI_BORDER_ROUNDING_RADIUS,UI_BORDER_ROUNDING_RADIUS,UI_BORDER_ROUNDING_RADIUS,UI_BORDER_ROUNDING_RADIUS};
 	
 	GuiBeginContainer(post->id, obj, GuiElementAlignment::HORIZONTAL);
 	if(draggable) GuiDefineContainerAsDraggable(post);
@@ -89,12 +90,16 @@ void social_feed_gui(SocialFeed *feed)
 	obj_social_feed_full.size = v2(GUI_STRETCH, GUI_STRETCH);
 	obj_social_feed_full.keep_ratio = UI_FEED_RATIO;
 	obj_social_feed_full.bg_color = UI_MAIN_BG_COLOR;
+	obj_social_feed_full.box_radius = {UI_BORDER_ROUNDING_RADIUS,UI_BORDER_ROUNDING_RADIUS,
+									   UI_BORDER_ROUNDING_RADIUS,UI_BORDER_ROUNDING_RADIUS};
 
 	r32 header_ratio = 66.f/473.f;
 	GuiObject obj_social_feed_header = {};
 	obj_social_feed_header.size = v2(GUI_STRETCH, header_ratio);
 	obj_social_feed_header.bg_color = UI_POST_BG_COLOR;
 	obj_social_feed_header.padding = {.1, .1, .1, .1};
+	obj_social_feed_header.box_radius = {UI_BORDER_ROUNDING_RADIUS,UI_BORDER_ROUNDING_RADIUS,0,0};
+
 	GuiObject obj_social_feed_body = {};
 	obj_social_feed_body.size = v2(GUI_STRETCH, 1.f-header_ratio);
 	obj_social_feed_body.bg_color = UI_TRANSPARENT;
