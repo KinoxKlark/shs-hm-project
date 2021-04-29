@@ -98,7 +98,7 @@ void social_feed_gui(SocialFeed *feed)
 	GuiObject obj_social_feed_header = {};
 	obj_social_feed_header.size = v2(GUI_STRETCH, header_ratio);
 	obj_social_feed_header.bg_color = UI_POST_BG_COLOR;
-	obj_social_feed_header.padding = {.1, .1, .1, .1};
+	obj_social_feed_header.padding = {5*UI_FEED_INNER_MARGIN, UI_FEED_INNER_MARGIN, UI_FEED_INNER_MARGIN, UI_FEED_INNER_MARGIN};
 	obj_social_feed_header.box_radius = {UI_BORDER_ROUNDING_RADIUS,UI_BORDER_ROUNDING_RADIUS,0,0};
 
 	GuiObject obj_social_feed_body = {};
@@ -110,15 +110,26 @@ void social_feed_gui(SocialFeed *feed)
 
 	GuiBeginContainer(obj_social_feed_header);
 	{
+		// TODO(Sam): This is hacky stuff for drop shadow
 		v2 shadow_pos = {gui->most_recent_container->bounds.left,
 						 gui->most_recent_container->bounds.top+gui->most_recent_container->bounds.height};
-		v2 shadow_size = {gui->most_recent_container->bounds.width,
-						  15*invRefHeight*gui->current_size.y};
+		v2 shadow_scale = {gui->most_recent_container->bounds.width/(r32)gui->texture_feed_header_shadow.getSize().x,
+						  15*invRefHeight*gui->current_size.y/(r32)gui->texture_feed_header_shadow.getSize().y};
 		sf::Sprite shadow_sprite(gui->texture_feed_header_shadow);
 		shadow_sprite.setPosition(shadow_pos);
-		shadow_sprite.setScale({shadow_size.x/(r32)gui->texture_feed_header_shadow.getSize().x,
-								shadow_size.y/(r32)gui->texture_feed_header_shadow.getSize().y});
+		shadow_sprite.setScale(shadow_scale);
 		gui->sprites.push_back(shadow_sprite);
+
+		// TODO(Sam): This is hacky stuff for profile picture
+		r32 size = .9f*gui->most_recent_container->bounds.height;
+		v2 picture_pos = rect_pos(gui->most_recent_container->bounds) + .5f*v2(.1f*gui->most_recent_container->bounds.height,.1f*gui->most_recent_container->bounds.height);
+		r32 scale = size/(r32)gui->texture_profile_picture.getSize().x;
+		v2 picture_scale = {scale, scale};
+		sf::Sprite picture_sprite(gui->texture_profile_picture);
+		picture_sprite.setPosition(picture_pos);
+		picture_sprite.setScale(picture_scale);
+		gui->sprites.push_back(picture_sprite);
+			
 		
 		GuiFeedName(data->users[feed->user_id].fullname);
 	}
