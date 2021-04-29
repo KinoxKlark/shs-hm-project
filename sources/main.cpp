@@ -8,6 +8,7 @@ struct Application;
 #include "internals.h"
 #include "math.h"
 #include "rng.h"
+#include "rounded_rectangle.h"
 #include "gui.h"
 #include "inputs.h"
 #include "events.h"

@@ -129,7 +129,28 @@ void social_feed_gui(SocialFeed *feed)
 		picture_sprite.setPosition(picture_pos);
 		picture_sprite.setScale(picture_scale);
 		gui->sprites.push_back(picture_sprite);
-			
+
+		r32 radius = 0; //.1f*gui->most_recent_container->bounds.height;
+		RoundedRectangleShape base_rect_life{};
+		base_rect_life.setSize({.6f*gui->most_recent_container->bounds.width,
+						   2*.1f*gui->most_recent_container->bounds.height});
+		base_rect_life.setPosition(rect_pos(gui->most_recent_container->inner_bounds)
+							  + v2(0,gui->most_recent_container->inner_bounds.height-.5f*base_rect_life.getSize().y));
+		base_rect_life.setFillColor(UI_MAIN_BG_COLOR);
+		base_rect_life.setRadius({radius, radius, radius, radius});
+		gui->rectangles.push_back(base_rect_life);
+
+		r32 t = data->users[feed->user_id].interaction_score;
+		RoundedRectangleShape rect_life{};
+		rect_life.setSize({base_rect_life.getSize().x*t,
+						   base_rect_life.getSize().y});
+		rect_life.setPosition(base_rect_life.getPosition());
+		rect_life.setFillColor(sf::Color({
+					(u8)(t > .5 ? (2*t-1)*153 + 2*(1-t)*247 : 2*t*247 + (1-2*t)*221),
+					(u8)(t > .5 ? (2*t-1)*224 + 2*(1-t)*171 : 2*t*181 + (1-2*t)*153),
+					(u8)(t > .5 ? (2*t-1)*160 + 2*(1-t)*89  : 2*t*89  + (1-2*t)*153)}));
+		rect_life.setRadius({radius, radius, radius, radius});
+		gui->rectangles.push_back(rect_life);
 		
 		GuiFeedName(data->users[feed->user_id].fullname);
 	}

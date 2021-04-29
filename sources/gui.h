@@ -170,6 +170,7 @@ struct GuiManager {
 	sf::Texture texture_feed_header_shadow;
 
 	std::vector<sf::Sprite> sprites;
+	std::vector<RoundedRectangleShape> rectangles;
 
 	v2u current_size;
 	
@@ -252,6 +253,7 @@ void GuiReset()
 	GuiManager *gui = global_gui_manager;
 
 	gui->sprites.clear();
+	gui->rectangles.clear();
 	
 	gui->elements_count = 0;
 	gui->most_recent_container = nullptr;

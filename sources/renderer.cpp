@@ -1,78 +1,48 @@
 #include <stack>
 
-class RoundedRectangleShape : public sf::Shape
+void RoundedRectangleShape::updateGeometry()
 {
-	v2 size;
-	std::vector<v2> points;
-	v4 radius;
+	u32 nb_points = points.size()/4;
 
-	void updateGeometry()
-		{
-			u32 nb_points = points.size()/4;
+	points.clear();
 
-			points.clear();
+	r32 width = size.x;
+	r32 height = size.y;
 
-			r32 width = size.x;
-			r32 height = size.y;
-
-			float X=0,Y=0;
-			for(int i=0; i<nb_points; i++)
-			{
-				Y+=radius[0]/nb_points;
-				X=sqrt(radius[0]*radius[0]-Y*Y+1e-5);
-				points.push_back({radius[0]-X,radius[0]-Y});
-			} // 0,0
+	float X=0,Y=0;
+	for(int i=0; i<nb_points; i++)
+	{
+		Y+=radius[0]/nb_points;
+		X=sqrt(radius[0]*radius[0]-Y*Y+1e-5);
+		points.push_back({radius[0]-X,radius[0]-Y});
+	} // 0,0
 			
-			X=0;
-			for(int i=0; i<nb_points; i++)
-			{
-				X+=radius[1]/nb_points;
-				Y=sqrt(radius[1]*radius[1]-X*X);
-				points.push_back({width+X-radius[1],radius[1]-Y});
-			} // width, 0
+	X=0;
+	for(int i=0; i<nb_points; i++)
+	{
+		X+=radius[1]/nb_points;
+		Y=sqrt(radius[1]*radius[1]-X*X);
+		points.push_back({width+X-radius[1],radius[1]-Y});
+	} // width, 0
 			
-			Y=0;
-			for(int i=0; i<nb_points; i++)
-			{
-				Y+=radius[2]/nb_points;
-				X=sqrt(radius[2]*radius[2]-Y*Y+1e-5);
-				points.push_back({width+X-radius[2],height+Y-radius[2]});
-			} // width, height
-			X=0;
-			for(int i=0; i<nb_points; i++)
-			{
-				X+=radius[3]/nb_points;
-				Y=sqrt(radius[3]*radius[3]-X*X+1e-5);
-				points.push_back({radius[3]-X,height+Y-radius[3]});
-			}  // 0, height
+	Y=0;
+	for(int i=0; i<nb_points; i++)
+	{
+		Y+=radius[2]/nb_points;
+		X=sqrt(radius[2]*radius[2]-Y*Y+1e-5);
+		points.push_back({width+X-radius[2],height+Y-radius[2]});
+	} // width, height
+	X=0;
+	for(int i=0; i<nb_points; i++)
+	{
+		X+=radius[3]/nb_points;
+		Y=sqrt(radius[3]*radius[3]-X*X+1e-5);
+		points.push_back({radius[3]-X,height+Y-radius[3]});
+	}  // 0, height
 			
-			update();
-		}
+	update();
+}
 	
-	public:
-
-	RoundedRectangleShape(v4 r = {}, u32 np = 10) : points(4*np), radius(r), size({r[0]+r[2],r[1]+r[3]}) 
-		{
-			updateGeometry();
-		}
-
-	v2 getSize() const { return size; }
-	void setSize(v2 s) { size = s; updateGeometry(); }
-	
-	v4 getRadius() const { return radius; }
-	void setRadius(v4 r) { radius = r; updateGeometry(); }
-	
-	std::size_t getPointCount() const override
-		{
-			return points.size();
-		}
-	
-	sf::Vector2f getPoint(std::size_t index) const override
-		{
-			return points[index];
-		}
-};
-
 void render(Renderer *renderer)
 {
 	v2u render_region = renderer->window->getSize();
@@ -169,6 +139,11 @@ void render(Renderer *renderer)
 	for(auto const& sprite : gui->sprites)
 	{
 		renderer->window->draw(sprite);
+	}
+
+	for(auto const& rectangle : gui->rectangles)
+	{
+		renderer->window->draw(rectangle);
 	}
 	
 	viewport_infos.push({ gui->elements_count, renderer->view });
