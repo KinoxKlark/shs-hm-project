@@ -166,6 +166,11 @@ struct GuiManager {
 	sf::Font font;
 	sf::Font font_bold;
 
+	sf::Texture texture_profile_picture;
+	sf::Texture texture_feed_header_shadow;
+
+	std::vector<sf::Sprite> sprites;
+
 	v2u current_size;
 	
 	// Debug:
@@ -203,6 +208,22 @@ inline GuiManager* gui_init()
 		assert(("Problem with bold font loading!", false));
 	}
 
+	if(!gui->texture_profile_picture.loadFromFile("data\\icons\\profil.png"))
+	{
+		// TODO(Sam): Proper error management
+		assert(("Problem with profile picture loading", false));
+	}
+	gui->texture_profile_picture.generateMipmap();
+	gui->texture_profile_picture.setRepeated(false);
+
+	if(!gui->texture_feed_header_shadow.loadFromFile("data\\icons\\header_shadow.png"))
+	{
+		// TODO(Sam): Proper error management
+		assert(("Problem with profile picture loading", false));
+	}
+	gui->texture_feed_header_shadow.generateMipmap();
+	gui->texture_feed_header_shadow.setRepeated(true);
+
 
 	gui->push_to_dragging_payload = false;
 	gui->dragging_payload = -1;
@@ -229,6 +250,8 @@ inline
 void GuiReset()
 {
 	GuiManager *gui = global_gui_manager;
+
+	gui->sprites.clear();
 	
 	gui->elements_count = 0;
 	gui->most_recent_container = nullptr;

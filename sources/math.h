@@ -100,6 +100,12 @@ typedef sf::Vector2<i32> v2i;
 typedef sf::Vector2<u32> v2u;
 typedef sf::Vector2<r64> v2_64;
 
+v2 vec2_round_to_int(v2 vec)
+{
+	v2 result = v2( (i32)vec.x, (i32)vec.y );
+	return result;
+}
+
 template<typename T>
 struct Vector4 {
 	union {

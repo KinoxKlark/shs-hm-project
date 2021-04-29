@@ -85,6 +85,7 @@ void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pann
 void social_feed_gui(SocialFeed *feed)
 {
 	GameData *data = global_app->data;
+	GuiManager *gui = global_gui_manager;
 	
 	GuiObject obj_social_feed_full = {};
 	obj_social_feed_full.size = v2(GUI_STRETCH, GUI_STRETCH);
@@ -109,6 +110,16 @@ void social_feed_gui(SocialFeed *feed)
 
 	GuiBeginContainer(obj_social_feed_header);
 	{
+		v2 shadow_pos = {gui->most_recent_container->bounds.left,
+						 gui->most_recent_container->bounds.top+gui->most_recent_container->bounds.height};
+		v2 shadow_size = {gui->most_recent_container->bounds.width,
+						  15*invRefHeight*gui->current_size.y};
+		sf::Sprite shadow_sprite(gui->texture_feed_header_shadow);
+		shadow_sprite.setPosition(shadow_pos);
+		shadow_sprite.setScale({shadow_size.x/(r32)gui->texture_feed_header_shadow.getSize().x,
+								shadow_size.y/(r32)gui->texture_feed_header_shadow.getSize().y});
+		gui->sprites.push_back(shadow_sprite);
+		
 		GuiFeedName(data->users[feed->user_id].fullname);
 	}
 	GuiEndContainer();

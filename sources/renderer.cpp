@@ -140,7 +140,7 @@ void render(Renderer *renderer)
 			rect ref_bounds = global_gui_manager
 				->font.getGlyph(L'A', element->obj.text.getCharacterSize(), false).bounds;
 			v2 offset = v2(0, .5*ref_bounds.top);
-			element->obj.text.setPosition(rect_pos(element->inner_bounds) + offset);
+			element->obj.text.setPosition(vec2_round_to_int(rect_pos(element->inner_bounds) + offset));
 			renderer->window->draw(element->obj.text);
 		}
 
@@ -149,7 +149,7 @@ void render(Renderer *renderer)
 			rect ref_bounds = global_gui_manager
 				->font.getGlyph(L'A', element->obj.htmltext.getCharacterSize(), false).bounds;
 			v2 offset = v2(0, .5*ref_bounds.top);
-			element->obj.htmltext.setPosition(rect_pos(element->inner_bounds) + offset);
+			element->obj.htmltext.setPosition(vec2_round_to_int(rect_pos(element->inner_bounds) + offset));
 			renderer->window->draw(element->obj.htmltext);
 		}
 		
@@ -166,6 +166,11 @@ void render(Renderer *renderer)
 	
 	assert(viewport_infos.size() == 0);
 
+	for(auto const& sprite : gui->sprites)
+	{
+		renderer->window->draw(sprite);
+	}
+	
 	viewport_infos.push({ gui->elements_count, renderer->view });
 	
 	// Drag and Drop Payload
@@ -212,7 +217,7 @@ void render(Renderer *renderer)
 			rect ref_bounds = global_gui_manager
 				->font.getGlyph(L'A', element->obj.text.getCharacterSize(), false).bounds;
 			v2 offset = v2(0, .5*ref_bounds.top);
-			element->obj.text.setPosition(rect_pos(element->inner_bounds) + offset);
+			element->obj.text.setPosition(vec2_round_to_int(rect_pos(element->inner_bounds) + offset));
 			renderer->window->draw(element->obj.text);
 		}
 
@@ -221,7 +226,7 @@ void render(Renderer *renderer)
 			rect ref_bounds = global_gui_manager
 				->font.getGlyph(L'A', element->obj.htmltext.getCharacterSize(), false).bounds;
 			v2 offset = v2(0, .5*ref_bounds.top);
-			element->obj.htmltext.setPosition(rect_pos(element->inner_bounds) + offset);
+			element->obj.htmltext.setPosition(vec2_round_to_int(rect_pos(element->inner_bounds) + offset));
 			renderer->window->draw(element->obj.htmltext);
 		}
 		
