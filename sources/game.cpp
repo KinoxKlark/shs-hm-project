@@ -220,13 +220,10 @@ void update(Application *app, sf::Time dt)
 	Inputs *inputs = &app->inputs;
 	EventSystem *event_system = &data->event_system;
 
-	
-
 	if(inputs->quit)
 		app->should_quit = true;
 	
 	main_simulation_update(app, dt);
-	
 	
 	// TODO(Sam): Put this in the right place
 	GuiObject obj1 = {};
@@ -667,17 +664,6 @@ GameData* game_data_init()
 	for(u32 idx = 0; idx < 6; ++idx)
 		data->social_post_system.social_feeds.push_back({idx, {}});
 
-#if 0
-	for(u32 idx = 0; idx < 3; ++idx)
-	{
-		sf::Color color( 0, 0, 0, 255);
-		color.r = get_random_number_between(100,200);
-		color.g = get_random_number_between(100,200);
-		color.b = get_random_number_between(100,200);
-		data->social_post_system.available_posts.push_back({create_id(), (u32)(-1), (u32)(-1), "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id arcu at diam interdum fringilla. Quisque euismod in augue imperdiet aliquet. In ornare fermentum nisl, ut cursus orci commodo eget. In hac habitasse platea dictumst. Ut finibus venenatis tincidunt. Nulla commodo aliquam tellus vel gravida. Aliquam semper elementum lacus, vitae bibendum ante volutpat sagittis. Ut libero velit, vulputate eget suscipit et, hendrerit vehicula tellus. Aliquam erat volutpat. Ut mattis et odio in fringilla. Phasellus pretium aliquet eros, mollis tempor odio. Aliquam auctor ante in turpis lacinia lobortis. Quisque mauris nunc, pulvinar sed euismod et, lacinia sit amet sapien. Fusce tristique mi sed volutpat molestie. Aliquam congue sagittis tellus, vitae pretium tellus rhoncus posuere.", {}, {}, "DEFAULT", color});
-	}
-#endif
-	
 	return data;
 }
 

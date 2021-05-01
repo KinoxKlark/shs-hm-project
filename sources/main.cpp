@@ -43,7 +43,8 @@ int main()
 	init_event_system(&(app->data->event_system));
 
 	importEvents(app->data);
-
+	starter_events(app->data);
+	
 	while(app->window->isOpen())
 	{
 		app->frame_duration += app->update_clock.restart();

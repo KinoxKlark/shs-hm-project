@@ -1,0 +1,72 @@
+event : complot_positif
+{
+	start
+	perso = ?a
+	descr = ?a est pour les theorie du complot
+	cond = like(complot,?a)
+}
+
+post : complot_positif1
+{
+	start
+	event = complot_positif(?a)
+	type = publication(?a)
+	text = "Je suis sûr qu'un complot se prépare !"
+
+}
+
+post : complot_positif2
+{
+	start
+	event = complot_positif(?a)
+	type = publication(?a)
+	text = "Attention à vos moindres faits et gestes, on nous observe !"
+}
+
+post : complot_positif3
+{
+	start
+	event = complot_positif(?a)
+	type = publication(?a)
+	text = "Ne buvez pas l'eau du robinet, elle est contaminée par un produit qui vous empêche de voir la réalité autour de vous !" # Peut-être un peu trop perché
+
+}
+
+######################################################################################
+
+event : complot_negatif
+{
+	start
+	perso = ?a
+	descr = ?a ne croit pas aux théories du complot
+	cond = dislike(complot,?a)
+}
+
+post : complot_negatif1
+{
+	start
+	event = complot_negatif(?a)
+	type = publication(?a)
+	text = "Arrêtez de croire toutes ces soit disantes théories complotistes que certaines personnes tourmentée inventent pour se rendre intéressant !"
+
+}
+
+post : complot_negatif2
+{
+	start
+	event = complot_negatif(?a)
+	type = publication(?a)
+	text = "Je ne crois pas aux extra-terrestre !"
+
+}
+
+post : complot_negatif3
+{
+	start
+	event = complot_negatif(?a)
+	type = publication(?a)
+	text = "Je ne crois pas aux théories du complot illuminati !"
+
+}
+
+	

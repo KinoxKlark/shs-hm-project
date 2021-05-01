@@ -574,6 +574,43 @@ void create_and_push_pattern(std::deque<Fact>& queue, u32& fact_id, SymboleType 
 	queue.back().pattern_proprio = true;
 }
 
+
+bool event_condition_inference_function(SymboleType type, r32 amount)
+{
+	switch(type)
+	{
+	case SymboleType::HIGH:
+		return amount > .5f; 
+		break;
+	case SymboleType::LOW:
+		return amount < .5;
+		break;
+	case SymboleType::LIKE:
+		return amount > .75f;
+		break;
+	case SymboleType::DISLIKE:
+		return amount < .25;
+		break;
+	case SymboleType::LOVE:
+		return amount > .9f;
+		break;
+	case SymboleType::HATE:
+		return amount < .1;
+		break;
+	case SymboleType::FRIEND:
+		return amount > .75f;
+		break;
+	case SymboleType::NEUTRAL:
+		return amount <= .75 && amount >= .25;
+		break;
+	case SymboleType::ENEMY:
+		return amount < .25;
+		break;
+	}
+
+	return false;
+}
+
 void push_precompiled_facts(Application *app, u32& fact_id, std::deque<Fact>& queue)
 {
 	std::unordered_map<SymboleType, u32>& symbole_count = app->data->event_system.symbole_count;
@@ -593,14 +630,14 @@ void push_precompiled_facts(Application *app, u32& fact_id, std::deque<Fact>& qu
 	{		
 		for(auto const& gauge : user.identity.personalities)
 		{
-			if(gauge.amount > .5f)
+			if(event_condition_inference_function(SymboleType::HIGH, gauge.amount))
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::HIGH,
 										SymboleType::PERSONALITY_GAUGE,
 										(u64)gauge.id, user);
 				++symbole_count[SymboleType::HIGH];
 			}
-			else if(gauge.amount < .5)
+			else if(event_condition_inference_function(SymboleType::LOW, gauge.amount))
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::LOW,
 										SymboleType::PERSONALITY_GAUGE,
@@ -608,14 +645,14 @@ void push_precompiled_facts(Application *app, u32& fact_id, std::deque<Fact>& qu
 				++symbole_count[SymboleType::LOW];
 			}
 			
-			if(gauge.amount > .75f)
+			if(event_condition_inference_function(SymboleType::LIKE, gauge.amount))
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::LIKE,
 										SymboleType::PERSONALITY_GAUGE,
 										(u64)gauge.id, user);
 				++symbole_count[SymboleType::LIKE];
 			}
-			else if(gauge.amount < .25)
+			else if(event_condition_inference_function(SymboleType::DISLIKE, gauge.amount))
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::DISLIKE,
 										SymboleType::PERSONALITY_GAUGE,
@@ -623,14 +660,14 @@ void push_precompiled_facts(Application *app, u32& fact_id, std::deque<Fact>& qu
 				++symbole_count[SymboleType::DISLIKE];
 			}
 			
-			if(gauge.amount > .9f)
+			if(event_condition_inference_function(SymboleType::LOVE, gauge.amount))
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::LOVE,
 										SymboleType::PERSONALITY_GAUGE,
 										(u64)gauge.id, user);
 				++symbole_count[SymboleType::LOVE];
 			}
-			else if(gauge.amount < .1)
+			else if(event_condition_inference_function(SymboleType::HATE, gauge.amount))
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::HATE,
 										SymboleType::PERSONALITY_GAUGE,
@@ -642,14 +679,14 @@ void push_precompiled_facts(Application *app, u32& fact_id, std::deque<Fact>& qu
 		for(auto const& gauge : user.identity.interests)
 		{
 
-			if(gauge.amount > .5f)
+			if(event_condition_inference_function(SymboleType::HIGH, gauge.amount))
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::HIGH,
 										SymboleType::INTEREST_GAUGE,
 										(u64)gauge.id, user);
 				++symbole_count[SymboleType::HIGH];
 			}
-			else if(gauge.amount < .5)
+			else if(event_condition_inference_function(SymboleType::LOW, gauge.amount))
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::LOW,
 										SymboleType::INTEREST_GAUGE,
@@ -657,14 +694,14 @@ void push_precompiled_facts(Application *app, u32& fact_id, std::deque<Fact>& qu
 				++symbole_count[SymboleType::LOW];
 			}
 			
-			if(gauge.amount > .75f)
+			if(event_condition_inference_function(SymboleType::LIKE, gauge.amount))
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::LIKE,
 										SymboleType::INTEREST_GAUGE,
 										(u64)gauge.id, user);
 				++symbole_count[SymboleType::LIKE];
 			}
-			else if(gauge.amount < .25)
+			else if(event_condition_inference_function(SymboleType::DISLIKE, gauge.amount))
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::DISLIKE,
 										SymboleType::INTEREST_GAUGE,
@@ -672,14 +709,14 @@ void push_precompiled_facts(Application *app, u32& fact_id, std::deque<Fact>& qu
 				++symbole_count[SymboleType::DISLIKE];
 			}
 			
-			if(gauge.amount > .9f)
+			if(event_condition_inference_function(SymboleType::LOVE, gauge.amount))
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::LOVE,
 										SymboleType::INTEREST_GAUGE,
 										(u64)gauge.id, user);
 				++symbole_count[SymboleType::LOVE];
 			}
-			else if(gauge.amount < .1)
+			else if(event_condition_inference_function(SymboleType::HATE, gauge.amount))
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::HATE,
 										SymboleType::INTEREST_GAUGE,
@@ -695,13 +732,13 @@ void push_precompiled_facts(Application *app, u32& fact_id, std::deque<Fact>& qu
 
 			User const& other_user = app->data->users[idx];
 
-			if(relation > .75f)
+			if(event_condition_inference_function(SymboleType::FRIEND, relation))
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::FRIEND, user, other_user);
 				create_and_push_pattern(queue, fact_id, SymboleType::FRIEND, other_user, user);
 				++symbole_count[SymboleType::FRIEND];
 			}
-			else if(relation < .25)
+			else if(event_condition_inference_function(SymboleType::ENEMY, relation))
 			{
 				create_and_push_pattern(queue, fact_id, SymboleType::ENEMY, user, other_user);
 				create_and_push_pattern(queue, fact_id, SymboleType::ENEMY, other_user, user);
@@ -1054,6 +1091,76 @@ void event_selection()
 	#if DEBUG
 	global_app->data->event_duration = global_app->data->event_chrono.getElapsedTime();
 	#endif
+}
+
+void starter_events(GameData *data)
+{
+	EventSystem *event_system = &data->event_system;
+	SocialPostSystem *social_post_system= &data->social_post_system;
+	
+	for(auto const& user : data->users)
+	{
+		for(auto const& personality : user.identity.personalities)
+		{
+			r32 r = get_random_number_between(0.f, 1.f);
+
+			if(r < .75)
+			{
+				for(auto& rule : data->event_system.starter_rules)
+				{
+					Pattern *pattern = rule.conditions[0].first;
+					if(pattern->next->type != SymboleType::PERSONALITY_GAUGE)
+						continue;
+					
+					if(pattern->next->data == personality.id
+					   && event_condition_inference_function(pattern->type, personality.amount))
+					{
+						Event event = event_system->starter_events[rule.conclusion.data];
+						event.users[event.major_variables[0]] = user.id;
+						assert(event.major_variables.size() == 1);
+						
+						instanciate_starter_social_post_for_event(global_app, &event);
+						SocialPost *post = &social_post_system->available_posts.back();
+					}
+				}
+			}
+			
+		}
+
+		for(auto const& interest : user.identity.interests)
+		{
+			r32 r = get_random_number_between(0.f, 1.f);
+
+			if(r < .75)
+			{
+				for(auto& rule : data->event_system.starter_rules)
+				{
+					Pattern *pattern = rule.conditions[0].first;
+					if(pattern->next->type != SymboleType::INTEREST_GAUGE)
+						continue;
+					
+					if(pattern->next->data == interest.id
+					   && event_condition_inference_function(pattern->type, interest.amount))
+					{
+						Event event = event_system->starter_events[rule.conclusion.data];
+						event.users[event.major_variables[0]] = user.id;
+						assert(event.major_variables.size() == 1);
+						
+						instanciate_starter_social_post_for_event(global_app, &event);
+						SocialPost *post = &social_post_system->available_posts.back();
+
+						r32 r = get_random_number_between(0.f, 1.f);
+						if(r < .5)
+						{
+							//social_post_system->social_feeds[user.id].posts.push_back(*post);
+							social_post_system->available_posts.pop_back();
+						}
+					}
+				}
+			}
+			
+		}
+	}
 }
 
 #include <sstream>

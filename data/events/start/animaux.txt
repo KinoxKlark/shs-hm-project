@@ -1,0 +1,73 @@
+event : animaux_positif
+{
+	start
+	perso = ?a
+	descr = ?a aime les animaux
+	cond = like(animaux,?a)
+}
+
+post : animaux_positif1
+{
+	start
+	event = animaux_positif(?a)
+	type = publication(?a)
+	text = "J'adore les animaux, ils sont tout aussi fascinant les uns que les autres !"
+
+}
+
+post : animaux_positif2
+{
+	start
+	event = animaux_positif(?a)
+	type = publication(?a)
+	text = "Mon animal de compagnie est presque comme mon meilleur amis pour moi."
+
+}
+
+post : animaux_positif3
+{
+	start
+	event = animaux_positif(?a)
+	type = publication(?a)
+	text = "Mon rêve est d'observer tous les animaux de la terre dans leur milieux naturel !"
+
+}
+
+######################################################################################
+
+event : animaux_negatif
+{
+	start
+	perso = ?a
+	descr = ?a n'aime pas les animaux
+	cond = dislike(animaux,?a)
+}
+
+post : animaux_negatif1
+{
+	start
+	event = animaux_negatif(?a)
+	type = publication(?a)
+	text = "Je n'aime pas trop les animaux, ils me répugnent pour la plupart."
+
+}
+
+post : animaux_negatif2
+{
+	start
+	event = animaux_negatif(?a)
+	type = publication(?a)
+	text = "Je n'ai pas vraiment le feeling avec les animaux, mis à part les êtres humains."
+
+}
+
+post : animaux_negatif3
+{
+	start
+	event = animaux_negatif(?a)
+	type = publication(?a)
+	text = "Aujourd'hui, on m'a proposé d'aller au Zoo, mais comme je déteste les animaux, il m'a fallu trouver une excuse !"
+
+}
+
+	

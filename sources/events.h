@@ -273,6 +273,9 @@ struct EventSystem {
 	std::vector<Event> selected_events;
 	std::vector<u32> events_without_rules;
 
+	std::vector<Event> starter_events;
+	std::vector<Rule> starter_rules;
+	
 	std::vector<Event> debut_instancied_events;
 };
 

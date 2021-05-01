@@ -1,0 +1,73 @@
+event : sport_positif
+{
+	start
+	perso = ?a
+	descr =  ?a aime le sport
+	cond = like(sport,?a)
+}
+
+post : sport_positif1
+{
+	start
+	event = sport_positif(?a)
+	type = publication(?a)
+	text = "J'aime garder la forme en faisant du sport."
+
+}
+
+post : sport_positif2
+{
+	start
+	event = sport_positif(?a)
+	type = publication(?a)
+	text = "On m'a toujours dit que je pourrai être un sportif de haut niveau !"
+
+}
+
+post : sport_positif3
+{
+	start
+	event = sport_positif(?a)
+	type = publication(?a)
+	text = "Je vais faire du sport cet après-midi, qui vient avec moi ?"
+
+}
+
+######################################################################################
+
+event : sport_negatif
+{
+	start
+	perso = ?a
+	descr =  ?a n'aime pas le sport
+	cond = dislike(sport,?a)
+}
+
+post : sport_negatif1
+{
+	start
+	event = sport_negatif(?a)
+	type = publication(?a)
+	text = "Je ne suis pas très sportif, mais j'ai pleins d'autres qualités !"
+
+}
+
+post : sport_negatif2
+{
+	start
+	event = sport_negatif(?a)
+	type = publication(?a)
+	text = "Je ne comprends pas quel est l'intéret de faire du sport, se fatiguer pour rien..."
+
+}
+
+post : sport_negatif3
+{
+	start
+	event = sport_negatif(?a)
+	type = publication(?a)
+	text = "Je ne serai jamais un grand sportif et cela me va très bien !"
+
+}
+
+	

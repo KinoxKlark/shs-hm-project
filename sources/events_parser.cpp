@@ -148,6 +148,8 @@ bool importEventsFile(GameData *data, std::string const& filename)
 	}
 
 	{
+		bool starter = false;
+		
 		u32 next_event_id = event_system->all_events.size();
 		u32 next_post_id = social_post_system->all_posts.size();
 		std::unordered_map<std::string, u32> event_ids;
@@ -155,6 +157,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 		bool event_has_conds = false;
 
 		char variable_id = 'A';
+		std::string constructed_str_id = "";
 		Event constructed_event = {};
 		SocialPost constructed_post = {};
 		std::unordered_map<std::string, char> current_variables;
@@ -177,6 +180,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 				}
 				else if(token == "post")
 				{
+					constructed_post.free = true;
 					states.push(EventTokenParserState::PostHeader);
 					break;
 				}
@@ -236,23 +240,23 @@ bool importEventsFile(GameData *data, std::string const& filename)
 					return false;
 				}
 					
-				std::string event_id = "";
+				constructed_str_id = "";
 				--idx;
 				while(white_chars.count(tokens[++idx][0]) == 0 && tokens[idx] != "{" && tokens[idx] != "\n")
 				{
-					event_id += tokens[idx];
+					constructed_str_id += tokens[idx];
 				}
 				--idx;
 
 				// TODO(Sam): Log system pour debug
-				std::cout << "EVENT ID: " << event_id << "\n";
-				if(event_ids.count(event_id) > 0)
+				std::cout << "EVENT ID: " << constructed_str_id << "\n";
+				if(event_ids.count(constructed_str_id) > 0)
 				{
-					std::cout << "ERROR:" << "This event id is already used: '" << event_id << "'." << "\n";
+					std::cout << "ERROR:" << "This event id is already used: '" << constructed_str_id << "'." << "\n";
 					return false;
 				}
 				u32 id = next_event_id++;
-				event_ids[event_id] = id;
+				event_ids[constructed_str_id] = id;
 				constructed_event.id = id;
 				constructed_event.timestamp = 0;
 		
@@ -271,23 +275,23 @@ bool importEventsFile(GameData *data, std::string const& filename)
 					return false;
 				}
 					
-				std::string post_id = "";
+				constructed_str_id = "";
 				--idx;
 				while(white_chars.count(tokens[++idx][0]) == 0 && tokens[idx] != "{" && tokens[idx] != "\n")
 				{
-					post_id += tokens[idx];
+					constructed_str_id += tokens[idx];
 				}
 				--idx;
 
 				// TODO(Sam): Log system pour debug
-				std::cout << "POST ID: " << post_id << "\n";
-				if(post_ids.count(post_id) > 0)
+				std::cout << "POST ID: " << constructed_str_id << "\n";
+				if(post_ids.count(constructed_str_id) > 0)
 				{
-					std::cout << "ERROR:" << "This post id is already used: '" << post_id << "'." << "\n";
+					std::cout << "ERROR:" << "This post id is already used: '" << constructed_str_id << "'." << "\n";
 					return false;
 				}
 				u32 id = next_post_id++;
-				post_ids[post_id] = id;
+				post_ids[constructed_str_id] = id;
 				constructed_post.id = id;
 				constructed_post.event_id = -1;
 				constructed_post.social_post_id = id;
@@ -306,15 +310,20 @@ bool importEventsFile(GameData *data, std::string const& filename)
 
 				if(token == "}")
 				{
-					if(!event_has_conds)
+					if(!event_has_conds && !starter)
 						event_system->events_without_rules.push_back(constructed_event.id);
 					event_has_conds = false;
-					
-					event_system->all_events.push_back(constructed_event);
+
+					if(!starter)
+						event_system->all_events.push_back(constructed_event);
+					else
+						event_system->starter_events.push_back(constructed_event);
+
 					constructed_event.id = 0;
 					constructed_event.description = "";
 					constructed_event.major_variables.clear();
 					constructed_event.users_modifs.clear();
+					starter = false;
 					current_variables.clear();
 					variable_id = 'A';
 					
@@ -337,6 +346,14 @@ bool importEventsFile(GameData *data, std::string const& filename)
 				else if(token == "modifs" || token == "modif")
 				{
 					states.push(EventTokenParserState::EventFieldModifs);
+				}
+				else if(token == "start" || token == "starter")
+				{
+					starter = true;
+					constructed_event.id = event_system->starter_events.size();
+					event_ids[constructed_str_id] = constructed_event.id;
+					--next_event_id;
+					break;
 				}
 				else
 				{
@@ -385,8 +402,11 @@ bool importEventsFile(GameData *data, std::string const& filename)
 									std::string("?")+pair.second);
 					}
 					
-					
-					social_post_system->all_posts.push_back(constructed_post);
+					if(!starter)
+						social_post_system->all_posts.push_back(constructed_post);
+					else
+						social_post_system->starter_posts.push_back(constructed_post);
+
 					constructed_post.id = 0;
 					constructed_post.event_id = -1;
 					constructed_post.social_post_id = 0;
@@ -400,6 +420,8 @@ bool importEventsFile(GameData *data, std::string const& filename)
 					constructed_post.article_title = "";
 					constructed_post.localisation = "";
 					constructed_post.text = "";
+					constructed_post.free = true;
+					starter = false;
 					
 					current_variables.clear();
 					variable_id = 'A';
@@ -423,6 +445,14 @@ bool importEventsFile(GameData *data, std::string const& filename)
 				else if(token == "modifs" || token == "modif")
 				{
 					states.push(EventTokenParserState::PostFieldModifs);
+				}
+				else if(token == "start" || token == "starter")
+				{
+					starter = true;
+					constructed_event.id = event_system->starter_events.size();
+					event_ids[constructed_str_id] = constructed_event.id;
+					--next_event_id;
+					break;
 				}
 				else
 				{
@@ -870,7 +900,10 @@ bool importEventsFile(GameData *data, std::string const& filename)
 				rule.conclusion.type = SymboleType::_SELECT_EVENT;
 				rule.conclusion.data = constructed_event.id;
 
-				event_system->rules.push_back(rule);
+				if(!starter)
+					event_system->rules.push_back(rule);
+				else
+					event_system->starter_rules.push_back(rule);
 				
 				if(array && tokens[idx] != "]")
 				{
@@ -1955,7 +1988,7 @@ bool importEventsFiles(GameData *data)
 	std::string line;
 	while(std::getline(file, line))
 	{
-		if(line.size() == 0 || line[0] == '#') continue;
+		if(line.size() == 0 || line[0] == '#' || line[0] == '\n') continue;
 		filename_list.push_back(line);
 	}
 

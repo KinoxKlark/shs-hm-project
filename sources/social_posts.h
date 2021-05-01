@@ -32,7 +32,7 @@ struct SocialPost {
 	// info about users, maybe this should be changed?
 	u32 event_id;
 	u32 social_post_id;
-
+	bool free;
 	
 	std::vector<u32> major_user_ids;
 	std::vector<Modifs> users_modifs;
@@ -48,6 +48,7 @@ struct SocialFeed {
 
 struct SocialPostSystem {
 	std::vector<SocialPost> all_posts;
+	std::vector<SocialPost> starter_posts;
 	
 	std::vector<SocialPost> available_posts;
 	std::vector<SocialFeed> social_feeds;
@@ -55,3 +56,4 @@ struct SocialPostSystem {
 
 	
 void instanciate_social_post_for_event(Application *app, Event *event);
+void instanciate_starter_social_post_for_event(Application *app, Event *event);
