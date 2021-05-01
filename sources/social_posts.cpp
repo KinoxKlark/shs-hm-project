@@ -76,6 +76,17 @@ void instanciate_social_post_for_event(Application *app, Event *event)
 		}
 		
 		social_post_system->available_posts.push_back(post);
+		
+		if(post.type == PostType::PUBLICATION ||
+		   post.type == PostType::PARTAGE ||
+		   post.type == PostType::PHOTO ||
+		   post.type == PostType::LOCALISATION)
+		{
+			social_post_system->social_feeds[post.author_id].posts.push_back(post);
+
+			if(post.type == PostType::PARTAGE)
+				user_see_post(event_system, &social_post_system->social_feeds[post.receiver_id], &post);
+		}
 	}
 }
 
@@ -131,5 +142,16 @@ void instanciate_starter_social_post_for_event(Application *app, Event *event)
 		post.receiver_id = event->users[(char)post.receiver_id];
 		
 	social_post_system->available_posts.push_back(post);
+
+	if(post.type == PostType::PUBLICATION ||
+	   post.type == PostType::PARTAGE ||
+	   post.type == PostType::PHOTO ||
+	   post.type == PostType::LOCALISATION)
+	{
+		social_post_system->social_feeds[post.author_id].posts.push_back(post);
+
+		if(post.type == PostType::PARTAGE)
+			user_see_post(event_system, &social_post_system->social_feeds[post.receiver_id], &post);
+	}
 	
 }
