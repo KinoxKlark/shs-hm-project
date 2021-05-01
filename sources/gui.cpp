@@ -482,7 +482,7 @@ void GuiSelectGridCell(u32 row, u32 col)
 }
 
 inline
-void _GuiDefineContainerAsDraggable(u32 id, void* payload)
+u32 _GuiDefineContainerAsDraggable(u32 id, void* payload)
 {
 	GuiManager *gui = global_gui_manager;
 	
@@ -494,6 +494,7 @@ void _GuiDefineContainerAsDraggable(u32 id, void* payload)
 		props->drag_grab_offset = {0,0};
 		props->drag_target = {};
 		props->dropped = false;
+		props->last_frame_bounds = gui->most_recent_container->inner_bounds;
 	}
 	else
 	{
@@ -504,14 +505,25 @@ void _GuiDefineContainerAsDraggable(u32 id, void* payload)
 
 	GuiElement *drag_source = gui->most_recent_container;
 
+	v2 delta = rect_size(props->last_frame_bounds) - rect_size(drag_source->inner_bounds);
+	//drag_source->inner_bounds.width += delta.x;
+	drag_source->inner_bounds.height += delta.y;
+	//drag_source->bounds.width += delta.x;
+	drag_source->bounds.height += delta.y;
+	//drag_source->outer_bounds.width += delta.x;
+	drag_source->outer_bounds.height += delta.y;
+	drag_source->parent->next_valid_block_pos.y += delta.y;
+	
 	GuiObject obj = drag_source->obj;
 	
 	GuiObject drag_source_obj = obj;
 	if(props->dragged || props->drag_pos != props->drag_target_pos)
+	{
 		drag_source_obj.bg_color = sf::Color(255,255,255,50);
+	}
 	drag_source->obj = drag_source_obj;
 	drag_source->draggable = true;
-	
+
 	props->drag_source_pos = rect_pos(drag_source->bounds);
 
 	if(gui->dragging_payload == -1)
@@ -575,6 +587,8 @@ void _GuiDefineContainerAsDraggable(u32 id, void* payload)
 
 		gui->most_recent_container = payload;
 	}
+
+	return id;
 }
 
 inline
@@ -707,7 +721,6 @@ void GuiText(sf::String text, r32 font_size)
 	};
 
 	u32 idx = GuiAddElementToContainer(obj, GuiElementAlignment::NONE);
-	
 
 }
 

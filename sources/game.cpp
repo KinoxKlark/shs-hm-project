@@ -47,7 +47,9 @@ void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pann
 	obj.box_radius = {UI_BORDER_ROUNDING_RADIUS,UI_BORDER_ROUNDING_RADIUS,UI_BORDER_ROUNDING_RADIUS,UI_BORDER_ROUNDING_RADIUS};
 	
 	GuiBeginContainer(post->id, obj, GuiElementAlignment::HORIZONTAL);
-	if(draggable) GuiDefineContainerAsDraggable(post);
+
+	u32 dragg_id = GET_UNIQUE_ID();
+	if(draggable) dragg_id = _GuiDefineContainerAsDraggable(dragg_id,post);
 
 	switch(post->type)
 	{
@@ -78,6 +80,24 @@ void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pann
 		break;
 		InvalidDefaultCase;
 	};
+	
+	GuiManager *gui = global_gui_manager;
+	rect last_element_bounds = gui->elements[gui->elements_count-1].outer_bounds;
+	rect container_bounds = gui->most_recent_container->inner_bounds;
+	r32 delta_y = (last_element_bounds.top + last_element_bounds.height)
+		- (container_bounds.top + container_bounds.height);
+
+	gui->most_recent_container->inner_bounds.height += delta_y;
+	gui->most_recent_container->bounds.height += delta_y;
+	gui->most_recent_container->outer_bounds.height += delta_y;
+
+	gui->most_recent_container->parent->next_valid_block_pos.y += delta_y;
+
+	if(draggable)
+	{
+		gui->properties[dragg_id].last_frame_bounds = gui->most_recent_container->inner_bounds;
+		gui->properties[dragg_id].touched = true;
+	}
 
 	GuiEndContainer();
 }

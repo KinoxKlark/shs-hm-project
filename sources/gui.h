@@ -146,6 +146,8 @@ struct GuiElementProperties {
 	v2 drag_source_pos;
 	GuiElementPayloadTarget drag_target;
 	void *payload;
+
+	rect last_frame_bounds;
 };
 
 struct GuiManager {
@@ -312,7 +314,7 @@ inline void GuiEndGrid();
 inline void GuiSelectGridCell(u32 row, u32 col);
 
 // Drag & Drop
-inline void _GuiDefineContainerAsDraggable(u32 id, void *payload);
+inline u32 _GuiDefineContainerAsDraggable(u32 id, void *payload);
 #define GuiDefineContainerAsDraggable(payload) _GuiDefineContainerAsDraggable(GET_UNIQUE_ID(), payload)
 inline void GuiDroppableArea(DropCallback callback, void *user_data = nullptr);
 
@@ -324,6 +326,8 @@ inline bool _GuiButton(u32 id, sf::String label);
 inline void GuiTitle(sf::String title, r32 font_size = UI_BIG_TEXT_FS);
 inline void GuiText(sf::String text, r32 font_size = UI_MAIN_TEXT_FS);
 inline void GuiFeedName(sf::String name);
+
+
 
 // Debug
 void GuiDebug();
