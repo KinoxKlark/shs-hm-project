@@ -28,16 +28,16 @@ void instanciate_social_post_for_event(Application *app, Event *event)
 		{
 			User *user = &app->data->users[pair.second];
 			str_replace(post.text,
-						std::string("?")+pair.first,
+						sf::String("?")+pair.first,
 						user->fullname);
 			str_replace(post.article_origin,
-						std::string("?")+pair.first,
+						sf::String("?")+pair.first,
 						user->fullname);
 			str_replace(post.article_title,
-						std::string("?")+pair.first,
+						sf::String("?")+pair.first,
 						user->fullname);
 			str_replace(post.localisation,
-						std::string("?")+pair.first,
+						sf::String("?")+pair.first,
 						user->fullname);
 	
 			//TODO(Sam): If publication or partage -> score up
@@ -116,16 +116,16 @@ void instanciate_starter_social_post_for_event(Application *app, Event *event)
 	{
 		User *user = &app->data->users[pair.second];
 		str_replace(post.text,
-					std::string("?")+pair.first,
+					sf::String("?")+pair.first,
 					user->fullname);
 		str_replace(post.article_origin,
-					std::string("?")+pair.first,
+					sf::String("?")+pair.first,
 					user->fullname);
 		str_replace(post.article_title,
-					std::string("?")+pair.first,
+					sf::String("?")+pair.first,
 					user->fullname);
 		str_replace(post.localisation,
-					std::string("?")+pair.first,
+					sf::String("?")+pair.first,
 					user->fullname);
 	}
 

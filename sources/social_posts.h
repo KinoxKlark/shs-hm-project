@@ -22,10 +22,10 @@ struct SocialPost {
 	u32 author_id;
 	u32 receiver_id;
 	ImageType image_type;
-	std::string article_origin;
-	std::string article_title;
-	std::string localisation;
-	std::string text;
+	sf::String article_origin;
+	sf::String article_title;
+	sf::String localisation;
+	sf::String text;
 
 	
 	// NOTE(Sam): Id of raw event, not instanciated event. Thus can't be used to access

@@ -74,7 +74,8 @@ const std::unordered_set<char> special_chars = {
 };
 
 
-bool parseString(std::vector<std::string> const& tokens, u32& idx, std::string& str, char terminator = '"');
+bool parseString(std::vector<std::string> const& tokens, u32& idx, sf::String& str, char terminator = '"');
+bool parseStdString(std::vector<std::string> const& tokens, u32& idx, std::string& str, char terminator);
 bool parseVariableName(std::vector<std::string> const& tokens, u32& idx, std::string& str,
 					   std::unordered_map<std::string, char>& current_variables, char& variable_id);
 bool parseStringNumber(std::vector<std::string> const& tokens, u32& idx, std::string &str);
@@ -511,11 +512,11 @@ bool importEventsFile(GameData *data, std::string const& filename)
 					++idx;
 				}
 
-				std::string str;
+				sf::String str;
 				if(!parseString(tokens, idx, str, terminator))
 					return false;
 
-				std::cout << "- DESCRIPTION: \"" << str << "\"\n";
+				std::cout << "- DESCRIPTION: \"" << std::string(str) << "\"\n";
 				constructed_event.description = str;
 
 				if(terminator == '\n') --idx;
@@ -580,7 +581,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 								{
 									++idx;
 									item.str = "";
-									if(!parseString(tokens, idx, item.str, '"'))
+									if(!parseStdString(tokens, idx, item.str, '"'))
 										return false;
 									
 								}
@@ -954,7 +955,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 						if(tokens[++idx][0] == '"')
 						{
 							++idx;
-							if(!parseString(tokens, idx, field, '"'))
+							if(!parseStdString(tokens, idx, field, '"'))
 								return false;
 						}
 						else
@@ -1183,7 +1184,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 				{
 					stoping_error(tokens[idx] != "\"", "article first parameter should be a string delimited with '\"', got '"+tokens[idx]+"'");
 
-					std::string str;
+					sf::String str;
 					if(!parseString(tokens, ++idx, str, '"'))
 						return false;
 					constructed_post.article_origin = str;
@@ -1231,7 +1232,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 					expect_comma_separator();
 					stoping_error(tokens[idx] != "\"", "localisation second parameter should be a string delimited with '\"', got '"+tokens[idx]+"'");
 
-					std::string str;
+					sf::String str;
 					if(!parseString(tokens, ++idx, str, '"'))
 						return false;
 					constructed_post.localisation = str;
@@ -1260,11 +1261,11 @@ bool importEventsFile(GameData *data, std::string const& filename)
 					++idx;
 				}
 
-				std::string str;
+				sf::String str;
 				if(!parseString(tokens, idx, str, terminator))
 					return false;
 
-				std::cout << "- TEXT: \"" << str << "\"\n";
+				std::cout << "- TEXT: \"" << std::string(str) << "\"\n";
 				constructed_post.text = str;
 
 				if(terminator == '\n') --idx;
@@ -1330,7 +1331,7 @@ bool importEventsFile(GameData *data, std::string const& filename)
 						if(tokens[idx][0] == '"')
 						{
 							++idx;
-							if(!parseString(tokens, idx, field, '"'))
+							if(!parseStdString(tokens, idx, field, '"'))
 								return false;
 						}
 						else
@@ -1432,7 +1433,30 @@ bool importEventsFile(GameData *data, std::string const& filename)
 	return true;
 }
 
-bool parseString(std::vector<std::string> const& tokens, u32& idx, std::string& str, char terminator)
+bool parseString(std::vector<std::string> const& tokens, u32& idx, sf::String& str, char terminator)
+{
+	--idx;
+	while(tokens[++idx][0] != terminator)
+	{
+		if(tokens[idx] == "\\")
+		{
+			if(tokens[idx+1][0] == terminator)
+				++idx;
+		}
+
+		str += tokens[idx];
+
+		if(idx+1 == tokens.size())
+		{
+			std::cout << "ERROR:" << "Missing string terminator!" << "\n";
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool parseStdString(std::vector<std::string> const& tokens, u32& idx, std::string& str, char terminator)
 {
 	--idx;
 	while(tokens[++idx][0] != terminator)

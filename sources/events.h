@@ -282,13 +282,13 @@ struct EventSystem {
 
 // Thanks to stackoverflow
 inline
-void str_replace(std::string& str,
-				 const std::string& oldStr,
-				 const std::string& newStr)
+void str_replace(sf::String& str,
+				 const sf::String& oldStr,
+				 const sf::String& newStr)
 {
-  std::string::size_type pos = 0u;
-  while((pos = str.find(oldStr, pos)) != std::string::npos){
-     str.replace(pos, oldStr.length(), newStr);
-     pos += newStr.length();
-  }
+	std::size_t pos = 0;
+	while((pos = str.find(oldStr, pos)) != sf::String::InvalidPos){
+		str.replace(pos, oldStr.getSize(), newStr);
+		pos += newStr.getSize();
+	}
 }
