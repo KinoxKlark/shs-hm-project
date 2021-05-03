@@ -172,6 +172,7 @@ struct GuiManager {
 
 	sf::Texture texture_profile_picture;
 	sf::Texture texture_feed_header_shadow;
+	sf::Texture texture_like;
 
 	std::vector<sf::Sprite> sprites;
 	std::vector<RoundedRectangleShape> rectangles;
@@ -224,11 +225,18 @@ inline GuiManager* gui_init()
 	if(!gui->texture_feed_header_shadow.loadFromFile("data\\icons\\header_shadow.png"))
 	{
 		// TODO(Sam): Proper error management
-		assert(("Problem with profile picture loading", false));
+		assert(("Problem with feed header shadow loading", false));
 	}
 	gui->texture_feed_header_shadow.generateMipmap();
 	gui->texture_feed_header_shadow.setRepeated(true);
 
+	if(!gui->texture_like.loadFromFile("data\\icons\\like.png"))
+	{
+		// TODO(Sam): Proper error management
+		assert(("Problem with like icone loading", false));
+	}
+	gui->texture_like.generateMipmap();
+	gui->texture_like.setRepeated(true);
 
 	gui->push_to_dragging_payload = false;
 	gui->dragging_payload = -1;

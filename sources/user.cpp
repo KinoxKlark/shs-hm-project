@@ -105,7 +105,7 @@ r32 user_modif_nudge_down(r32 value)
 	return 1.f - std::sqrt(1.f - value);
 }
 
-void user_react_to_modifs(User *user, std::vector<Modif> *modifs, bool modify_score)
+bool user_react_to_modifs(User *user, std::vector<Modif> *modifs)
 {
 	i8 nudge_alignment = 0;
 	
@@ -156,27 +156,27 @@ void user_react_to_modifs(User *user, std::vector<Modif> *modifs, bool modify_sc
 			*sym_val = *value;
 		}
 	}
-	
-	if(modify_score)
+
+	bool result = false;
+
+	if(nudge_alignment > 0)
 	{
-		user_score_up(user, 0.005f);
-		if(nudge_alignment > 0)
-		{
-			user_score_up(user, 0.05f*nudge_alignment);
-		}
-		else
-		{
-			user_score_down(user, 0.05f*std::abs(nudge_alignment));
-		}
+		result = true;
 	}
+	else
+	{
+		result = false;
+	}
+	
+	return result;
 }
 
-void user_react_to_modifs(std::vector<Modifs> *users_modifs, bool modify_score)
+void user_react_to_modifs(std::vector<Modifs> *users_modifs)
 {
 	for(u32 i = 0; i < users_modifs->size(); ++i)
 	{
 		Modifs *modifs = &((*users_modifs)[i]);
-		user_react_to_modifs(&global_app->data->users[modifs->user_id], &modifs->modifs, modify_score);	
+		user_react_to_modifs(&global_app->data->users[modifs->user_id], &modifs->modifs);	
 	}
 }
 	
@@ -251,20 +251,41 @@ void user_see_post(EventSystem *event_system, SocialFeed *feed, SocialPost *post
 	}
 
 	// TODO(Sam): If post type is a publication on another wall, multiple viewers should be considered ?
+	i32 like_counter = 0;
 	if(modifs_ids.size() > 0)
 	{
 		for(auto const& idx : modifs_ids)
 		{
 			auto& modifs = post->users_modifs[idx];
-			user_react_to_modifs(&global_app->data->users[modifs.user_id],&modifs.modifs, true);
+			if(user_react_to_modifs(&global_app->data->users[modifs.user_id],&modifs.modifs))
+				++like_counter;
+			else
+				--like_counter;
 		}
 	}
 	else
 	for(auto& modifs : post->users_modifs)
 	{
 		if(modifs.user_id == feed->user_id)
-			user_react_to_modifs(&global_app->data->users[feed->user_id],&modifs.modifs, true);
+			if(user_react_to_modifs(&global_app->data->users[feed->user_id],&modifs.modifs))
+				++like_counter;
+			else
+				--like_counter;
 		
+	}
+
+	User *user = &global_app->data->users[feed->user_id];
+	
+	user_score_up(user, 0.005f);
+	if(like_counter > 0)
+	{
+		post->liked_by_pnj = true;
+		user_score_up(user, 0.05f*like_counter);
+	}
+	else
+	{
+		post->liked_by_pnj = false;
+		user_score_down(user, -0.05f*like_counter);
 	}
 }
 

@@ -39,6 +39,7 @@ struct SocialPost {
 
 	sf::Time instanciation_time;
 	bool isDraggedByUser;
+	bool liked_by_pnj;
 };
 
 struct SocialFeed {

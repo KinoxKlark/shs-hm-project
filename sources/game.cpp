@@ -82,8 +82,9 @@ void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pann
 		break;
 		InvalidDefaultCase;
 	};
-	
+
 	GuiManager *gui = global_gui_manager;
+	
 	rect last_element_bounds = gui->elements[gui->elements_count-1].outer_bounds;
 	rect container_bounds = gui->most_recent_container->inner_bounds;
 	r32 delta_y = (last_element_bounds.top + last_element_bounds.height)
@@ -104,6 +105,22 @@ void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pann
 		post->isDraggedByUser = props->dragged || props->drag_pos != props->drag_target_pos;
 	}
 
+
+	
+	if(post->liked_by_pnj)
+	{
+		// TODO(Sam): This is hacky stuff for like button
+		r32 size = .11f*gui->most_recent_container->bounds.width;
+		v2 pos = rect_pos(gui->most_recent_container->bounds) + rect_size(gui->most_recent_container->bounds)
+			- v2(1.1f*size, .7f*size);
+		r32 s = size/(r32)gui->texture_like.getSize().x;
+		v2 scale = {s,s};
+		sf::Sprite sprite(gui->texture_like);
+		sprite.setPosition(pos);
+		sprite.setScale(scale);
+		gui->sprites.push_back(sprite);
+
+	}
 	
 	GuiEndContainer();
 }
