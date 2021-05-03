@@ -64,6 +64,8 @@ struct GameData {
 	std::vector<GaugeInfo> personalities;
 	std::vector<GaugeInfo> interests;
 
+	sf::Clock main_clock;
+
 #ifdef DEBUG
 	DebugEventCounter event_counters;
 	DebugEventCounter event_counters_first;

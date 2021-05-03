@@ -95,10 +95,14 @@ void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pann
 
 	if(draggable)
 	{
-		gui->properties[dragg_id].last_frame_bounds = gui->most_recent_container->inner_bounds;
-		gui->properties[dragg_id].touched = true;
+		GuiElementProperties *props = &gui->properties[dragg_id];
+		props->last_frame_bounds = gui->most_recent_container->inner_bounds;
+		props->touched = true;
+
+		post->isDraggedByUser = props->dragged || props->drag_pos != props->drag_target_pos;
 	}
 
+	
 	GuiEndContainer();
 }
 
@@ -199,7 +203,7 @@ void main_simulation_update(Application *app, sf::Time dt)
 
 	const r32 SPEED_SCORE_REDUCTION = 6e-3f; // score/seconds
 	
-	const sf::Time EVENT_SYSTEM_INFERENCE_DT(sf::seconds(3.f));
+	const sf::Time EVENT_SYSTEM_INFERENCE_DT(sf::seconds(6.f));
 	event_system->time_since_last_inference += dt;
 	if(event_system->time_since_last_inference > EVENT_SYSTEM_INFERENCE_DT)
 	{
@@ -388,6 +392,21 @@ void update(Application *app, sf::Time dt)
 		}
 	}
 	GuiEndTabs();
+
+
+	const sf::Time MAX_POST_DURATION = sf::seconds(30.f);
+	sf::Time current_time = app->data->main_clock.getElapsedTime();
+	for(auto it = data->social_post_system.available_posts.begin();
+		it != data->social_post_system.available_posts.end(); ++it)
+	{
+		if(it->isDraggedByUser) continue;
+		if( current_time - it->instanciation_time > MAX_POST_DURATION )
+		{
+			it = data->social_post_system.available_posts.erase(it);
+			--it;
+		}
+	}
+	
 
 	gui_post_treatment();
 

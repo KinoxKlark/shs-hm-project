@@ -36,9 +36,9 @@ struct SocialPost {
 	
 	std::vector<u32> major_user_ids;
 	std::vector<Modifs> users_modifs;
-	
-    // TODO(Sam): faire un vrai system de types
-	sf::Color color;	
+
+	sf::Time instanciation_time;
+	bool isDraggedByUser;
 };
 
 struct SocialFeed {

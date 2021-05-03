@@ -21,6 +21,7 @@ void instanciate_social_post_for_event(Application *app, Event *event)
 		
 		SocialPost post = social_post_system->all_posts[idx];
 		post.id = create_id();
+		post.instanciation_time = app->data->main_clock.getElapsedTime();
 		
 		for(auto const& pair : event->users)
 		{
