@@ -81,7 +81,8 @@ inline void gui_post_treatment()
 
 			if(target_any)
 			{
-				payload_props->drag_target_pos = rect_pos(gui->payload_targets[drop_id].element->bounds);
+				//payload_props->drag_target_pos = rect_pos(gui->payload_targets[drop_id].element->bounds);
+				payload_props->drag_target_pos = rect_pos(gui->payload_targets[drop_id].element->bounds)+gui->payload_targets[drop_id].element->next_valid_block_pos;
 				payload_props->drag_target = gui->payload_targets[drop_id];
 			}
 			else
