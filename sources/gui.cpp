@@ -355,14 +355,14 @@ bool _GuiTab(u32 id, sf::String label, GuiElementAlignment alignment)
 	r32 tab_bar_height = 2*gui->margin_unit;
 	
 	GuiObject obj = {};
-	obj.margin = {.5,.5,0,0};
-	obj.padding = {.5,.5,.5,.5};
-	obj.bg_color = container->selected_tab_id == id ? sf::Color(50, 100, 100) : sf::Color(100, 150, 150);
+	obj.margin = {.2,.2,0,0};
+	obj.padding = {.5,.5,.75,0};
+	obj.bg_color = container->selected_tab_id == id ? UI_MAIN_BG_COLOR : UI_POST_BG_COLOR;
 	obj.text.setString(label);
 	obj.text.setFont(gui->font);
-	obj.text.setCharacterSize(18);
-	obj.text.setFillColor(sf::Color::White);
-
+	obj.text.setCharacterSize(UI_BIG_TEXT_FS*gui->current_size.y);
+	obj.text.setFillColor(UI_MAIN_TEXT_COLOR);
+	
 	rect region = container->inner_bounds;
 	region.top -= tab_bar_height;
 	region.height = tab_bar_height;

@@ -310,20 +310,38 @@ void update(Application *app, sf::Time dt)
 	}
 	GuiEndGrid();
 
-
 	GuiObject obj_right_pannel = {};
 	obj_right_pannel.size = v2(.5, GUI_STRETCH);
 	obj_right_pannel.margin = {};
-	obj_right_pannel.padding = {UI_OUTTER_MARGIN,UI_OUTTER_MARGIN,0,UI_OUTTER_MARGIN};
-	obj_right_pannel.bg_color = UI_MAIN_BG_COLOR;
+	obj_right_pannel.padding = {};
+	obj_right_pannel.bg_color = UI_POST_BG_COLOR;
+
+	GuiObject obj_right_pannel_tab = {};
+	obj_right_pannel_tab.size = v2(GUI_STRETCH, GUI_STRETCH);
+	obj_right_pannel_tab.margin = {};
+	obj_right_pannel_tab.padding = {UI_OUTTER_MARGIN,UI_OUTTER_MARGIN,0,UI_OUTTER_MARGIN};
+	obj_right_pannel_tab.bg_color = UI_MAIN_BG_COLOR;
 	
-	GuiBeginTabs(obj_right_pannel);
+	
+	GuiBeginContainer(obj_right_pannel);
+	GuiBeginTabs(obj_right_pannel_tab);
 	{
-		if(GuiTab("Général +1"))
+		if(GuiTab("Tout"))
 		{
 			for(u32 idx = 0; idx < data->social_post_system.available_posts.size(); ++idx)
 			{
 				social_post_gui(&(data->social_post_system.available_posts[idx]), true, true);
+			}			
+		}
+
+		if(GuiTab("Publications"))
+		{
+			for(u32 idx = 0; idx < data->social_post_system.available_posts.size(); ++idx)
+			{
+				if(data->social_post_system.available_posts[idx].type == PostType::PUBLICATION ||
+					data->social_post_system.available_posts[idx].type == PostType::PARTAGE ||
+					data->social_post_system.available_posts[idx].type == PostType::PHOTO)
+					social_post_gui(&(data->social_post_system.available_posts[idx]), true, true);
 			}			
 		}
 
@@ -336,6 +354,25 @@ void update(Application *app, sf::Time dt)
 			}		
 		}
 
+		if(GuiTab("Publicités"))
+		{
+			for(u32 idx = 0; idx < data->social_post_system.available_posts.size(); ++idx)
+			{
+				if(data->social_post_system.available_posts[idx].type == PostType::PUB)
+					social_post_gui(&(data->social_post_system.available_posts[idx]), true, true);
+			}			
+		}
+
+		if(GuiTab("Localisations"))
+		{
+			for(u32 idx = 0; idx < data->social_post_system.available_posts.size(); ++idx)
+			{
+				if(data->social_post_system.available_posts[idx].type == PostType::LOCALISATION)
+					social_post_gui(&(data->social_post_system.available_posts[idx]), true, true);
+			}			
+		}
+
+#if 0
 		if(GuiTab("Divers", GuiElementAlignment::HORIZONTAL))
 		{
 			GuiBeginContainer(obj3);
@@ -390,8 +427,10 @@ void update(Application *app, sf::Time dt)
 			}
 			GuiEndContainer();
 		}
+#endif
 	}
 	GuiEndTabs();
+	GuiEndContainer();
 
 
 	const sf::Time MAX_POST_DURATION = sf::seconds(30.f);
