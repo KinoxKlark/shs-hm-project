@@ -2,6 +2,8 @@
 #include <unordered_map>
 #include <stack>
 
+#include <sysinfoapi.h>
+
 #include "HTMLText.h"
 
 const sf::Color BACKGROUND_COLOR = sf::Color({24, 119, 242});
@@ -330,4 +332,6 @@ inline void GuiFeedName(sf::String name);
 
 
 // Debug
+#if DEBUG
 void GuiDebug();
+#endif

@@ -66,7 +66,7 @@ struct GameData {
 
 	sf::Clock main_clock;
 
-#ifdef DEBUG
+#if DEBUG
 	DebugEventCounter event_counters;
 	DebugEventCounter event_counters_first;
 	sf::Clock event_chrono;

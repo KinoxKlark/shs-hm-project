@@ -18,6 +18,7 @@ template<> class CompileAssertClass<true>{ };
 
 #define CompileAssert(ignore) ((void)0)
 #define Assert(ignore) ((void)0)
+#define assert(ignore) ((void)0)
 #define InvalidCodePath ((void)0)
 #define InvalidDefaultCase default: {}
 #define NotImplemented ((void)0)

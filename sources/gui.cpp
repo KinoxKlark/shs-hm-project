@@ -731,7 +731,7 @@ void GuiFeedName(sf::String name)
 	GuiTitle(name, UI_BIG_TEXT_FS);
 }
 
-#ifdef DEBUG
+#if DEBUG
 void GuiDebug()
 {
 	GuiManager *gui = global_gui_manager;

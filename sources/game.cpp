@@ -24,7 +24,9 @@ bool drag_drop_accept_payload(void *payload, void* user_data)
 		}
 	}
 
+#if DEBUG
 	++global_app->data->drop_counter;
+#endif
 	
 	return true;
 }
@@ -449,9 +451,8 @@ void update(Application *app, sf::Time dt)
 
 	gui_post_treatment();
 
-#ifdef DEBUG
+#if DEBUG
 	GuiDebug();
-#endif
 
 	ImGui::Begin("Click");
 	ImGui::Text("Clicked %u times!", data->click_counter);
@@ -661,8 +662,7 @@ void update(Application *app, sf::Time dt)
 		}
 	}
 	ImGui::End();
-	
-#ifdef DEBUG
+
 	//ImGui::ShowDemoWindow();
 	ImGui::Begin("Debug Infos");
 	int debug_time = app->debug_clock.restart().asMilliseconds();
@@ -735,10 +735,12 @@ GameData* game_data_init()
 			data->users[idx1].identity.relations[idx2] = relation;
 			data->users[idx2].identity.relations[idx1] = relation;
 		}
-	
+
+#if DEBUG
 	data->click_counter = 0;
 	data->drop_counter = 0;
-
+#endif
+	
 	for(u32 idx = 0; idx < 6; ++idx)
 		data->social_post_system.social_feeds.push_back({idx, {}});
 
