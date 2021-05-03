@@ -282,7 +282,7 @@ void user_see_post(EventSystem *event_system, SocialFeed *feed, SocialPost *post
 		post->liked_by_pnj = true;
 		user_score_up(user, 0.05f*like_counter);
 	}
-	else
+	else if(like_counter < 0)
 	{
 		post->liked_by_pnj = false;
 		user_score_down(user, -0.05f*like_counter);
