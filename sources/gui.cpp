@@ -187,8 +187,10 @@ u32 GuiAddElementToContainer(GuiObject obj, GuiElementAlignment alignment)
 	v2 inner_pos = pos + v2(obj.padding.left*gui->margin_unit, obj.padding.top*gui->margin_unit);
 
 	gui->elements[idx].set_viewport = false;
+	gui->elements[idx].always_show = true;
 	gui->elements[idx].container_one_past_last = idx+1;
 	gui->elements[idx].id = idx;
+	gui->elements[idx].container_id = 0;
 	gui->elements[idx].render = parent_container->render;
 	gui->elements[idx].parent = parent_container;
 	gui->elements[idx].inner_bounds = rect(inner_pos, inner_size);
