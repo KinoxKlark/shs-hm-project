@@ -156,9 +156,10 @@ void user_react_to_modifs(User *user, std::vector<Modif> *modifs, bool modify_sc
 			*sym_val = *value;
 		}
 	}
-
+	
 	if(modify_score)
 	{
+		user_score_up(user, 0.005f);
 		if(nudge_alignment > 0)
 		{
 			user_score_up(user, 0.05f*nudge_alignment);
