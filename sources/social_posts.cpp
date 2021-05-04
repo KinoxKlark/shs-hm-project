@@ -16,7 +16,7 @@ void instanciate_social_post_for_event(Application *app, Event *event)
 	for(auto const& idx : post_compatibles)
 	{
 		r32 r = get_random_number_between(0.f, 1.f);
-		if(r > .5)
+		if(r > 2.f/post_compatibles.size())
 			continue;
 		
 		SocialPost post = social_post_system->all_posts[idx];
