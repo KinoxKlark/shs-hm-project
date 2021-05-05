@@ -33,8 +33,12 @@ bool drag_drop_accept_payload(void *payload, void* user_data)
 
 void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pannel = false)
 {
+	GuiManager *gui = global_gui_manager;
+
 	GuiObject obj = {};
-	obj.size = { draggable ? 1.f/3.f : -1, .25 };
+	//obj.size = { draggable ? 1.f/3.f : -1, .25 };
+	obj.size = { gui->inner_feed_width, .25 };
+	obj.size_type = { (u32)GuiSizeType::ABSOLUTE_SIZE, (u32)GuiSizeType::RELATIVE_SIZE };
 	obj.margin = {0,0,UI_POST_INTER_MARGIN,0};
 	obj.padding = {UI_POST_INNER_MARGIN_SIDES,UI_POST_INNER_MARGIN_SIDES,
 				   UI_POST_INNER_MARGIN_TOP,UI_POST_INNER_MARGIN_SIDES};
@@ -83,7 +87,6 @@ void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pann
 		InvalidDefaultCase;
 	};
 
-	GuiManager *gui = global_gui_manager;
 	
 	rect last_element_bounds = gui->elements[gui->elements_count-1].outer_bounds;
 	rect container_bounds = gui->most_recent_container->inner_bounds;
@@ -201,6 +204,8 @@ void social_feed_gui(SocialFeed *feed)
 
 	GuiBeginContainer(obj_social_feed_body);
 	{
+		gui->inner_feed_width = gui->most_recent_container->inner_bounds.width;
+		
 		GuiDroppableArea(drag_drop_accept_payload, feed);
 
 		for(u32 post_idx = 0; post_idx < feed->posts.size(); ++post_idx)

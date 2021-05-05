@@ -110,12 +110,21 @@ u32 GuiAddElementToContainer(GuiObject obj, GuiElementAlignment alignment)
 	v2 next_valid_block_pos = parent_container->next_valid_block_pos;
 	GuiElementAlignment parent_alignment = parent_container->alignment;
 	r32 parent_line_width = parent_container->line_width;
-	
-	v2 relative_size = {
-		obj.size.x < 0 ? 1.f : obj.size.x,
-		obj.size.y < 0 ? 1.f : obj.size.y
-	};
 
+	v2 relative_size = {0, 0};
+	
+	if(obj.size_type.x == (u32)GuiSizeType::RELATIVE_SIZE)
+		relative_size.x = obj.size.x < 0 ? 1.f : obj.size.x;
+	else if(obj.size_type.x == (u32)GuiSizeType::ABSOLUTE_SIZE)
+		relative_size.x = obj.size.x / container_region.width;
+	else { InvalidCodePath; }
+
+	if(obj.size_type.y == (u32)GuiSizeType::RELATIVE_SIZE)
+		relative_size.y = obj.size.y < 0 ? 1.f : obj.size.y;
+	else if(obj.size_type.y == (u32)GuiSizeType::ABSOLUTE_SIZE)
+		relative_size.y = obj.size.y / container_region.height;
+	else { InvalidCodePath; }
+	
 	v2 outer_size = hadamar(rect_size(container_region), relative_size);
 	v2 size = { outer_size.x - (obj.margin.left+obj.margin.right)*gui->margin_unit,
 				outer_size.y - (obj.margin.top+obj.margin.bottom)*gui->margin_unit };
@@ -378,10 +387,21 @@ bool _GuiTab(u32 id, sf::String label, GuiElementAlignment alignment)
 		1
 	};
 
-	v2 relative_size = {
-		obj.size.x < 0 ? 1.f : obj.size.x,
-		obj.size.y < 0 ? 1.f : obj.size.y
-	};
+	v2 relative_size = {0, 0};
+	
+	if(obj.size_type.x == (u32)GuiSizeType::RELATIVE_SIZE)
+		relative_size.x = obj.size.x < 0 ? 1.f : obj.size.x;
+	else if(obj.size_type.x == (u32)GuiSizeType::ABSOLUTE_SIZE)
+		relative_size.x = obj.size.x / region.width;
+	else { InvalidCodePath; }
+
+	if(obj.size_type.y == (u32)GuiSizeType::RELATIVE_SIZE)
+		relative_size.y = obj.size.y < 0 ? 1.f : obj.size.y;
+	else if(obj.size_type.y == (u32)GuiSizeType::ABSOLUTE_SIZE)
+		relative_size.y = obj.size.y / region.height;
+	else { InvalidCodePath; }
+
+	
 	v2 outer_size = hadamar(rect_size(region), relative_size);
 	v2 size = { outer_size.x - (obj.margin.left+obj.margin.right)*gui->margin_unit,
 				outer_size.y - (obj.margin.top+obj.margin.bottom)*gui->margin_unit };

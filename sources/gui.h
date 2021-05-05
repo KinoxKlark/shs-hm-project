@@ -73,11 +73,16 @@ constexpr size_t hash ( const char (&s)[N] ) {
 
 // ---
 
-
 #define GUI_STRETCH -1
+
+enum class GuiSizeType {
+	RELATIVE_SIZE = 0,
+	ABSOLUTE_SIZE
+};
 
 struct GuiObject {
 	v2 size;
+	sf::Vector2<u32> size_type;
 	r32 keep_ratio;
 	v4 margin;
 	v4 padding;
@@ -178,6 +183,8 @@ struct GuiManager {
 	std::vector<RoundedRectangleShape> rectangles;
 
 	v2u current_size;
+
+	r32 inner_feed_width;
 	
 	// Debug:
 	u32 intersect_count;
@@ -243,6 +250,8 @@ inline GuiManager* gui_init()
 	gui->dragging_payload_size = 0;
 
 	gui->intersect_count = 0;
+
+	gui->inner_feed_width = 0.f;
 	
 	global_gui_manager = gui;
 	return gui;
