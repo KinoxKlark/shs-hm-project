@@ -38,7 +38,7 @@ void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pann
 	GuiObject obj = {};
 	if(post->gui_size.x == 0 && post->gui_size.y == 0)
 	{
-		obj.size = { gui->inner_feed_width, .25 };
+		obj.size = { gui->inner_feed_width, .01 };
 		obj.size_type = { (u32)GuiSizeType::ABSOLUTE_SIZE, (u32)GuiSizeType::RELATIVE_SIZE };
 	}
 	else
@@ -475,7 +475,7 @@ void update(Application *app, sf::Time dt)
 	GuiEndContainer();
 
 
-	const sf::Time MAX_POST_DURATION = sf::seconds(30.f);
+	const sf::Time MAX_POST_DURATION = sf::seconds(100.f);
 	sf::Time current_time = app->data->main_clock.getElapsedTime();
 	for(auto it = data->social_post_system.available_posts.begin();
 		it != data->social_post_system.available_posts.end(); ++it)

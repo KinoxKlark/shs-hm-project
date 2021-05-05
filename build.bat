@@ -25,7 +25,9 @@ echo VS Pipeline:
 
 REM /P for output preprocessor
 
-cl /std:c++14 /Od /DDEBUG /Zi /EHsc ^
+REM set /DDEBUG=0 for avoid compilation of debug code
+
+cl /std:c++14 /Od /DDEBUG=0 /Zi /EHsc ^
    /I ..\sources\includes ^
    /I "%INC_SFML%" ^
    /I ..\vendors\imgui ^
@@ -39,7 +41,9 @@ cl /std:c++14 /Od /DDEBUG /Zi /EHsc ^
    sfml-window.lib^
    sfml-system.lib^
    sfml-audio.lib^
+   /SUBSYSTEM:WINDOWS^	
    /out:main.exe
+
    
    REM Pour enlever le terminal
    REM /SUBSYSTEM:WINDOWS ^
@@ -50,7 +54,7 @@ cl /std:c++14 /Od /DDEBUG /Zi /EHsc ^
     echo GCC Pipeline:
 
 	REM -E pour afficher la sortie du preprocessor
-    g++ -w -g -DDEBUG -c ..\%SOURCES_DIR%main.cpp -o main.o -I..\sources\includes -I%INC_SFML% -I..\vendors\imgui -I..\vendors\imgui-sfml
+    g++ -w -g -DDEBUG=0 -c ..\%SOURCES_DIR%main.cpp -o main.o -I..\sources\includes -I%INC_SFML% -I..\vendors\imgui -I..\vendors\imgui-sfml
 	g++ main.o -o main.exe -lOpengl32 -L%LIB_SFML% -lsfml-main -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
     
 )
