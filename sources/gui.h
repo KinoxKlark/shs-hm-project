@@ -100,7 +100,8 @@ struct GuiObject {
 enum class GuiElementAlignment {
 	NONE,
 	HORIZONTAL,
-	VERTICAL
+	VERTICAL,
+	VERTICAL_SCROLL_FROM_BOTTOM
 };
 
 struct GuiElement {
@@ -154,7 +155,7 @@ struct GuiElementProperties {
 	GuiElementPayloadTarget drag_target;
 	void *payload;
 
-	rect last_frame_bounds;
+	//rect last_frame_bounds;
 };
 
 struct GuiManager {

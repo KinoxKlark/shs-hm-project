@@ -82,7 +82,10 @@ inline void gui_post_treatment()
 			if(target_any)
 			{
 				//payload_props->drag_target_pos = rect_pos(gui->payload_targets[drop_id].element->bounds);
-				payload_props->drag_target_pos = rect_pos(gui->payload_targets[drop_id].element->bounds)+gui->payload_targets[drop_id].element->next_valid_block_pos;
+				//payload_props->drag_target_pos = rect_pos(gui->payload_targets[drop_id].element->bounds)+gui->payload_targets[drop_id].element->next_valid_block_pos;
+				payload_props->drag_target_pos = rect_pos(gui->payload_targets[drop_id].element->inner_bounds)
+					+v2(0.f, gui->payload_targets[drop_id].element->inner_bounds.height
+						- payload->outer_bounds.height);
 				payload_props->drag_target = gui->payload_targets[drop_id];
 			}
 			else
@@ -188,6 +191,10 @@ u32 GuiAddElementToContainer(GuiObject obj, GuiElementAlignment alignment)
 				parent_container->next_valid_block_pos = offset_pos;
 		}
 	} break;
+	case GuiElementAlignment::VERTICAL_SCROLL_FROM_BOTTOM:
+	{
+		offset_pos -= v2(0, outer_size.y);
+	} break;
 	case GuiElementAlignment::NONE: break;
 	InvalidDefaultCase;
 	}
@@ -197,7 +204,7 @@ u32 GuiAddElementToContainer(GuiObject obj, GuiElementAlignment alignment)
 	v2 inner_pos = pos + v2(obj.padding.left*gui->margin_unit, obj.padding.top*gui->margin_unit);
 
 	gui->elements[idx].set_viewport = false;
-	gui->elements[idx].always_show = true;
+	gui->elements[idx].always_show = false;
 	gui->elements[idx].container_one_past_last = idx+1;
 	gui->elements[idx].id = idx;
 	gui->elements[idx].container_id = 0;
@@ -212,6 +219,10 @@ u32 GuiAddElementToContainer(GuiObject obj, GuiElementAlignment alignment)
 	gui->elements[idx].obj = obj;
 	gui->elements[idx].draggable = false;
 
+	if(alignment == GuiElementAlignment::VERTICAL_SCROLL_FROM_BOTTOM)
+		gui->elements[idx].next_valid_block_pos = { 0.f, inner_size.y };
+	
+
 	if(parent_container)
 	{
 		switch(parent_alignment)
@@ -224,6 +235,11 @@ u32 GuiAddElementToContainer(GuiObject obj, GuiElementAlignment alignment)
 		case GuiElementAlignment::VERTICAL:
 		{
 			parent_container->next_valid_block_pos.y += outer_size.y;
+			parent_container->line_width = Max(parent_line_width, outer_size.x);
+		} break;
+		case GuiElementAlignment::VERTICAL_SCROLL_FROM_BOTTOM:
+		{
+			parent_container->next_valid_block_pos.y -= outer_size.y;
 			parent_container->line_width = Max(parent_line_width, outer_size.x);
 		} break;
 		case GuiElementAlignment::NONE:
@@ -281,7 +297,7 @@ void GuiBeginContainer(u32 container_id, GuiObject obj, GuiElementAlignment alig
 	
 	if(!parent_container)
 		GuiCreateRootContainer();
-	
+
 	u32 idx = GuiAddElementToContainer(obj, alignment);
 	gui->elements[idx].container_id = container_id;
 	
@@ -517,7 +533,7 @@ u32 _GuiDefineContainerAsDraggable(u32 id, void* payload)
 		props->drag_grab_offset = {0,0};
 		props->drag_target = {};
 		props->dropped = false;
-		props->last_frame_bounds = gui->most_recent_container->inner_bounds;
+		//props->last_frame_bounds = gui->most_recent_container->inner_bounds;
 	}
 	else
 	{
@@ -528,14 +544,14 @@ u32 _GuiDefineContainerAsDraggable(u32 id, void* payload)
 
 	GuiElement *drag_source = gui->most_recent_container;
 
-	v2 delta = rect_size(props->last_frame_bounds) - rect_size(drag_source->inner_bounds);
+	//v2 delta = rect_size(props->last_frame_bounds) - rect_size(drag_source->inner_bounds);
 	//drag_source->inner_bounds.width += delta.x;
-	drag_source->inner_bounds.height += delta.y;
+	//drag_source->inner_bounds.height += delta.y;
 	//drag_source->bounds.width += delta.x;
-	drag_source->bounds.height += delta.y;
+	//drag_source->bounds.height += delta.y;
 	//drag_source->outer_bounds.width += delta.x;
-	drag_source->outer_bounds.height += delta.y;
-	drag_source->parent->next_valid_block_pos.y += delta.y;
+	//drag_source->outer_bounds.height += delta.y;
+	//drag_source->parent->next_valid_block_pos.y += delta.y;
 	
 	GuiObject obj = drag_source->obj;
 	

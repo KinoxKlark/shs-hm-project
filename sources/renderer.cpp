@@ -78,14 +78,30 @@ void render(Renderer *renderer)
 		if(element->set_viewport)
 		{
 			sf::View view;
-			rect viewport;
-			viewport_infos.top().view.getViewport().intersects({
+			rect viewport, bounds;
+
+			rect old_viewport = viewport_infos.top().view.getViewport();
+			old_viewport.intersects({
 					element->bounds.left / render_region.x,
 					element->bounds.top / render_region.y,
 					element->bounds.width / render_region.x,
 					element->bounds.height / render_region.y }, viewport);
 
-			view.reset(element->bounds);
+			rect old_bounds = element->bounds;
+
+			r32 border_thickness = element->obj.border_width*gui->current_size.y;
+			old_bounds.top -= border_thickness;
+			old_bounds.left -= border_thickness;
+			old_bounds.width += 2*border_thickness;
+			old_bounds.height += 2*border_thickness;
+			
+			old_bounds.intersects({
+					old_viewport.left * render_region.x,
+					old_viewport.top * render_region.y,
+					old_viewport.width * render_region.x,
+					old_viewport.height * render_region.y }, bounds);
+			
+			view.reset(bounds);
 			view.setViewport(viewport);
 			renderer->window->setView(view);
 
@@ -162,14 +178,30 @@ void render(Renderer *renderer)
 		if(element->set_viewport)
 		{
 			sf::View view;
-			rect viewport;
-			viewport_infos.top().view.getViewport().intersects({
+			rect viewport, bounds;
+
+			rect old_viewport = viewport_infos.top().view.getViewport();
+			old_viewport.intersects({
 					element->bounds.left / render_region.x,
 					element->bounds.top / render_region.y,
 					element->bounds.width / render_region.x,
 					element->bounds.height / render_region.y }, viewport);
 
-			view.reset(element->bounds);
+			rect old_bounds = element->bounds;
+
+			r32 border_thickness = element->obj.border_width*gui->current_size.y;
+			old_bounds.top -= border_thickness;
+			old_bounds.left -= border_thickness;
+			old_bounds.width += 2*border_thickness;
+			old_bounds.height += 2*border_thickness;
+			
+			old_bounds.intersects({
+					old_viewport.left * render_region.x,
+					old_viewport.top * render_region.y,
+					old_viewport.width * render_region.x,
+					old_viewport.height * render_region.y }, bounds);
+			
+			view.reset(bounds);
 			view.setViewport(viewport);
 			renderer->window->setView(view);
 

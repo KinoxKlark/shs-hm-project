@@ -40,6 +40,8 @@ struct SocialPost {
 	sf::Time instanciation_time;
 	bool isDraggedByUser;
 	bool liked_by_pnj;
+
+	v2 gui_size;
 };
 
 struct SocialFeed {

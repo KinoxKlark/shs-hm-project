@@ -36,9 +36,16 @@ void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pann
 	GuiManager *gui = global_gui_manager;
 
 	GuiObject obj = {};
-	//obj.size = { draggable ? 1.f/3.f : -1, .25 };
-	obj.size = { gui->inner_feed_width, .25 };
-	obj.size_type = { (u32)GuiSizeType::ABSOLUTE_SIZE, (u32)GuiSizeType::RELATIVE_SIZE };
+	if(post->gui_size.x == 0 && post->gui_size.y == 0)
+	{
+		obj.size = { gui->inner_feed_width, .25 };
+		obj.size_type = { (u32)GuiSizeType::ABSOLUTE_SIZE, (u32)GuiSizeType::RELATIVE_SIZE };
+	}
+	else
+	{
+		obj.size = {gui->inner_feed_width, post->gui_size.y};
+		obj.size_type = { (u32)GuiSizeType::ABSOLUTE_SIZE, (u32)GuiSizeType::ABSOLUTE_SIZE };
+	}
 	obj.margin = {0,0,UI_POST_INTER_MARGIN,0};
 	obj.padding = {UI_POST_INNER_MARGIN_SIDES,UI_POST_INNER_MARGIN_SIDES,
 				   UI_POST_INNER_MARGIN_TOP,UI_POST_INNER_MARGIN_SIDES};
@@ -82,28 +89,34 @@ void social_post_gui(SocialPost *post, bool draggable = false, bool in_side_pann
 		GuiText(post->text);
 		break;
 	case PostType::LOCALISATION:
-		GuiText(global_app->data->users[post->author_id].fullname+" se trouve a "+post->localisation);
+		GuiText(global_app->data->users[post->author_id].fullname+" se trouve à "+post->localisation);
 		break;
 		InvalidDefaultCase;
 	};
 
-	
 	rect last_element_bounds = gui->elements[gui->elements_count-1].outer_bounds;
 	rect container_bounds = gui->most_recent_container->inner_bounds;
 	r32 delta_y = (last_element_bounds.top + last_element_bounds.height)
 		- (container_bounds.top + container_bounds.height);
 
+	post->gui_size = rect_size(gui->most_recent_container->outer_bounds) + v2(0.f, delta_y);
+
+#if 0
 	gui->most_recent_container->inner_bounds.height += delta_y;
 	gui->most_recent_container->bounds.height += delta_y;
 	gui->most_recent_container->outer_bounds.height += delta_y;
 
 	gui->most_recent_container->parent->next_valid_block_pos.y += delta_y;
-
+#endif
+	
 	if(draggable)
 	{
 		GuiElementProperties *props = &gui->properties[dragg_id];
+		
+#if 0
 		props->last_frame_bounds = gui->most_recent_container->inner_bounds;
 		props->touched = true;
+#endif
 
 		post->isDraggedByUser = props->dragged || props->drag_pos != props->drag_target_pos;
 	}
@@ -202,15 +215,20 @@ void social_feed_gui(SocialFeed *feed)
 	}
 	GuiEndContainer();
 
-	GuiBeginContainer(obj_social_feed_body);
+	GuiBeginContainer(obj_social_feed_body, GuiElementAlignment::VERTICAL_SCROLL_FROM_BOTTOM);
 	{
 		gui->inner_feed_width = gui->most_recent_container->inner_bounds.width;
 		
 		GuiDroppableArea(drag_drop_accept_payload, feed);
 
-		for(u32 post_idx = 0; post_idx < feed->posts.size(); ++post_idx)
+		for(i32 post_idx = feed->posts.size()-1; post_idx >= 0; --post_idx)
 		{
 			social_post_gui(&(feed->posts[post_idx]));
+
+			/*
+			if(gui->most_recent_container->next_valid_block_pos.y < gui->most_recent_container->bounds.top)
+				break;
+			*/
 		}
 	}
 	GuiEndContainer();
