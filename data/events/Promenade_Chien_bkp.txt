@@ -1,0 +1,54 @@
+event : baladechien1
+{
+	perso = ?a 
+	descr = ?a va promener son chien
+	cond = [?a.animaux > .6, ?a.nature > .7]
+}
+
+post : balade_chien1
+{
+	event = baladechien1(?a)
+	type = publication(?a)
+	text = " ?a est en train de faire une ballade avec son chien. "
+
+}
+event : baladechien2
+{
+	perso = ?a, ?b
+	descr = Le chien de ?a à attaqué celui de ?b
+	cond = [event(baladechien1,?a),event(baladechien1,?b),?a.respectueux < .5, ?b.respectueux > .5, ?a.lien.?b < .5]
+	modif = ?a.lien.?b--
+}
+post : balade_chien2
+{
+	event = baladechien2(?a,?b)
+	type = publication(?b)
+	text = " Le chien de ?a a attaque le mien."
+}
+# Peut-être faire des reactions à ce post etc et mettre des conditions qui vont faire que le gars porte plainte ou non.
+
+event : baladechien3
+{
+	perso = ?a, ?b
+	descr = ?b porte plainte contre ?a 
+	cond = [event(baladechien2,?a,?b), ?b.humour < .5 ]
+	modif = ?a.respectueux-
+}
+post : balade_chien3
+{
+	event = baladechien3(?a,?b)
+	type = publication(?b)
+	text = "?a à porté plaine contre moi !"
+
+}
+
+event : baladechien4
+{
+	perso = ?a 
+	descr = ?a doit faire piqué son chien 
+	cond = event(baladechien3,?a,?b)
+	modif = [?a.humour--, ?a.respectueux--, ?a.respectueux--]
+}
+# Suite ou il publie ça et dautres reagissent par exemple ...
+# D'autres gens peuvent intervenir etc...
+

@@ -59,13 +59,13 @@ event: cours_de_respect {
 
 post : reaction_cours_1 {
   event = cours_de_respect(?aaa,?bbb)
-  type = partage(?bbb => ?aaa)
+  type = partage(?bbb , ?aaa)
   text = "C'etait vraiment super ce cours! Merci ?aaa!!!"
 }
 
 post : reaction_cours_2 {
   event = cours_de_respect(?a,?b)
-  type = partage(?a => ?b)
+  type = partage(?a , ?b)
   text = "Alors ?b, tu as aimé ce cours de respect ?"
 }
 
@@ -76,8 +76,8 @@ event : trololo {
 }
 
 post : hehe {
-  event = trololo
-  type = nope
+  event = trololo(?a)
+  type = publication(?a)
   text = "C'est une super jeux !"
 }
 

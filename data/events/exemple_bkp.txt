@@ -24,14 +24,14 @@ post : test_post_fast_food {
 event : my_event_02
 {
 	perso = ?alfred
-	descr = ?alfred tombe malade après avoir mangé au fast food
+	descr = ?alfred tombe malade aprÃ¨s avoir mangÃ© au fast food
 	cond = event(my_event_id_01, ?alfred)	 
 }
 
 event : my_event_02.1
 {
 	perso = ?A1, ?B1
-	descr = ?A1 guéri grace à ?B1
+	descr = ?A1 guÃ©ri grace Ã  ?B1
 	conds = [
 		  event(my_event_02, ?A1),
 		  ?B1.nature > 0.71234
@@ -45,7 +45,7 @@ event:story2
 {
 	#Autre test
   perso=?A1
-  descr = ?A1 va/est à l'hopital
+  descr = ?A1 va/est Ã  l'hopital
 conds =[event(my_event_02, ?A1), !event(my_event_02.1),?A1.creatif>12.]
 	   modifs=[?A1.nature-,?A1."fast food"--]
 }

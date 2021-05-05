@@ -11,8 +11,8 @@ post : animaux_positif1
 	start
 	event = animaux_positif(?a)
 	type = publication(?a)
-	text = "J'adore les animaux, ils sont tout aussi fascinant les uns que les autres !"
-
+	text = "Je suis allé en forêt observer les animaux, ils sont tout aussi fascinant les uns que les autres !"
+	modif = ?&.animaux+
 }
 
 post : animaux_positif2
@@ -21,7 +21,7 @@ post : animaux_positif2
 	event = animaux_positif(?a)
 	type = publication(?a)
 	text = "Mon animal de compagnie est presque comme mon meilleur amis pour moi."
-
+	modif = ?&.animaux+
 }
 
 post : animaux_positif3
@@ -29,8 +29,8 @@ post : animaux_positif3
 	start
 	event = animaux_positif(?a)
 	type = publication(?a)
-	text = "Mon rÃªve est d'observer tous les animaux de la terre dans leur milieux naturel !"
-
+	text = "Mon rêve est d'observer tous les animaux de la terre dans leur milieux naturel !"
+	modif = ?&.animaux+
 }
 
 ######################################################################################
@@ -48,8 +48,8 @@ post : animaux_negatif1
 	start
 	event = animaux_negatif(?a)
 	type = publication(?a)
-	text = "Je n'aime pas trop les animaux, ils me rÃ©pugnent pour la plupart."
-
+	text = "Le chien de ma voisine fait que de hurler, j'ai hésité à lui donner de la mort au rat. A ma voisine donc ! (je plaisante bien sûr)"
+	modif = ?&.animaux-
 }
 
 post : animaux_negatif2
@@ -57,8 +57,8 @@ post : animaux_negatif2
 	start
 	event = animaux_negatif(?a)
 	type = publication(?a)
-	text = "Je n'ai pas vraiment le feeling avec les animaux, mis Ã  part les Ãªtres humains."
-
+	text = "Je n'ai pas vraiment le feeling avec les animaux, mis à part les êtres humains."
+	modif = ?&.animaux-
 }
 
 post : animaux_negatif3
@@ -66,8 +66,8 @@ post : animaux_negatif3
 	start
 	event = animaux_negatif(?a)
 	type = publication(?a)
-	text = "Aujourd'hui, on m'a proposÃ© d'aller au Zoo, mais comme je dÃ©teste les animaux, il m'a fallu trouver une excuse !"
-
+	text = "Aujourd'hui, on m'a proposé d'aller au Zoo, mais comme je n'aime pas trop ça, il m'a fallu trouver une excuse !"
+	modif = ?&.animaux-
 }
 
 	

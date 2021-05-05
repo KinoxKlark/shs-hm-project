@@ -2,7 +2,7 @@ event : sport_positif
 {
 	start
 	perso = ?a
-	descr =  ?a aime le sport
+	descr = ?a aime le sport
 	cond = like(sport,?a)
 }
 
@@ -12,7 +12,7 @@ post : sport_positif1
 	event = sport_positif(?a)
 	type = publication(?a)
 	text = "J'aime garder la forme en faisant du sport."
-
+	modif = ?&.sport+
 }
 
 post : sport_positif2
@@ -20,8 +20,8 @@ post : sport_positif2
 	start
 	event = sport_positif(?a)
 	type = publication(?a)
-	text = "On m'a toujours dit que je pourrai Ãªtre un sportif de haut niveau !"
-
+	text = "On m'a toujours dit que je pourrai être un sportif de haut niveau !"
+	modif = ?&.sport+
 }
 
 post : sport_positif3
@@ -29,8 +29,8 @@ post : sport_positif3
 	start
 	event = sport_positif(?a)
 	type = publication(?a)
-	text = "Je vais faire du sport cet aprÃ¨s-midi, qui vient avec moi ?"
-
+	text = "Je vais faire du sport cet après-midi, qui vient avec moi ?"
+	modif = ?&.sport+
 }
 
 ######################################################################################
@@ -48,8 +48,8 @@ post : sport_negatif1
 	start
 	event = sport_negatif(?a)
 	type = publication(?a)
-	text = "Je ne suis pas trÃ¨s sportif, mais j'ai pleins d'autres qualitÃ©s !"
-
+	text = "Je ne suis pas très sportif, mais j'ai pleins d'autres qualités !"
+	modif = ?&.sport-
 }
 
 post : sport_negatif2
@@ -57,8 +57,8 @@ post : sport_negatif2
 	start
 	event = sport_negatif(?a)
 	type = publication(?a)
-	text = "Je ne comprends pas quel est l'intÃ©ret de faire du sport, se fatiguer pour rien..."
-
+	text = "Je ne comprends pas quel est l'intéret de faire du sport, se fatiguer pour rien..."
+	modif = ?&.sport-
 }
 
 post : sport_negatif3
@@ -66,8 +66,8 @@ post : sport_negatif3
 	start
 	event = sport_negatif(?a)
 	type = publication(?a)
-	text = "Je ne serai jamais un grand sportif et cela me va trÃ¨s bien !"
-
+	text = "Je ne serai jamais un grand sportif et cela me va très bien !"
+	modif = ?&.sport-
 }
 
 	

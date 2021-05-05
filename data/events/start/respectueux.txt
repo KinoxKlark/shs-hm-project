@@ -1,0 +1,73 @@
+event : respectueux_positif
+{
+	start
+	perso = ?a
+	descr = ?a est respectueux
+	cond = like(respectueux,?a)
+}
+
+post : respectueux_positif1
+{
+	start
+	event = respectueux_positif(?a)
+	type = publication(?a)
+	text = "C'est malheureusement les personnes les plus honnêtes qui se font avoir par les autres ..."
+	modif = ?&.respectueux+
+}
+
+post : respectueux_positif2
+{
+	start
+	event = respectueux_positif(?a)
+	type = publication(?a)
+	text = "Je me suis souvent fait marcher dessus dans la vie, mais au moins j'ai la conscience tranquille contrairement à d'autres !"
+	modif = ?&.respectueux+
+}
+
+post : respectueux_positif3
+{
+	start
+	event = respectueux_positif(?a)
+	type = publication(?a)
+	text = "Soyez gentils avec les autres, cela vous sera rendu un jour ou l'autre croyez moi!"
+	modif = ?&.respectueux+
+}
+
+######################################################################################
+
+event : respectueux_negatif
+{
+	start
+	perso = ?a
+	descr = ?a  n'est pas respectueux
+	cond = dislike(respectueux,?a)
+}
+
+post : respectueux_negatif1
+{
+	start
+	event = respectueux_negatif(?a)
+	type = publication(?a)
+	text = "Les gens sont tous des  $£%&*@6 Pardon..."
+	modif = ?&.respectueux-
+}
+
+post : respectueux_negatif2
+{
+	start
+	event = respectueux_negatif(?a)
+	type = publication(?a)
+	text = "A quoi bon trier ses déchets, si les voisins de le font pas..."
+	modif = ?&.respectueux-
+}
+
+post : respectueux_negatif3
+{
+	start
+	event = respectueux_negatif(?a)
+	type = publication(?a)
+	text = "Rien à faire de vos reproches, on n'a qu'une vie autant en profiter !"
+	modif = ?&.respectueux-
+}
+
+	

@@ -1,0 +1,78 @@
+
+event : rando
+{
+    perso = ?a, ?b
+    desc = ?a et ?b vont en balade
+    conds = [friend(?a,?b), high(nature, ?a), high(nature, ?b)]
+    modif = [?a.lien.?b+, ?a.nature+, ?b.nature+]
+}
+
+post : post_rando
+{
+    event = rando(?a,?b)
+    type = publication(?a)
+    text = "Petite rando avec ?b, hâte de voire de beau paysages!"
+    modif = [?&.nature+, ?b.lien.?a+]
+}
+
+post : post_rando_2
+{
+    event = rando(?a,?b)
+    type = photo(?a, boise)
+    text = ?b sur un chemin champêtre.
+    modif = [nature+]
+}
+
+post : post_rando_3
+{
+    event = rando(?a,?b)
+    type = photo(?b, boise)
+    text = ?a et ?b en forêt.
+    modif = [nature+]
+}
+
+post : post_rando_4
+{
+    event = rando(?a,?b)
+    type = localisation(?a, "Sentier des 3 pins")
+    modif = [nature+]
+}
+
+post : post_rando_5
+{
+    event = rando(?a,?b)
+    type = localisation(?b, "Sentier des 3 pins")
+    modif = [nature+]
+}
+
+event : accident
+{
+    perso = ?a, ?b
+    desc = ?b a un accident
+    conds = [event(rando,?a,?b)]
+    modif = ?b.nature--
+}
+
+post : post_accident
+{
+    event = accident(?a,?b)
+    type = publication(?b)
+    text = "Et c'est parti pour 3 mois de béquilles..."
+    modif = ?&.lien.?b+
+}
+
+post : post_accident_2
+{
+    event = accident(?a,?b)
+    type = partage(?b , ?a)
+    text = "Sympa la balade mais merci pour la cheville :("
+    modif = ?&.lien.?b+
+}
+
+post : post_accident_3
+{
+    event = accident(?a,?b)
+    type = photo(?b,hot)
+    text = "Un plâtre autour d'une cheville cassée."
+    modif = humour-
+}

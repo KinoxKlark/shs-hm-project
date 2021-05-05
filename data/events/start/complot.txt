@@ -11,8 +11,8 @@ post : complot_positif1
 	start
 	event = complot_positif(?a)
 	type = publication(?a)
-	text = "Je suis sÃ»r qu'un complot se prÃ©pare !"
-
+	text = "Je suis sûr qu'un complot se prépare !"
+	modif = ?&.complot+
 }
 
 post : complot_positif2
@@ -20,7 +20,8 @@ post : complot_positif2
 	start
 	event = complot_positif(?a)
 	type = publication(?a)
-	text = "Attention Ã  vos moindres faits et gestes, on nous observe !"
+	text = "Attention à vos moindres faits et gestes, on nous observe !"
+	modif = ?&.complot+
 }
 
 post : complot_positif3
@@ -28,8 +29,8 @@ post : complot_positif3
 	start
 	event = complot_positif(?a)
 	type = publication(?a)
-	text = "Ne buvez pas l'eau du robinet, elle est contaminÃ©e par un produit qui vous empÃªche de voir la rÃ©alitÃ© autour de vous !" # Peut-Ãªtre un peu trop perchÃ©
-
+	text = "Ne buvez pas l'eau du robinet, elle est contaminée par un produit qui vous empèche de voir la réalité autour de vous !" # Peut-Ãªtre un peu trop perchÃ©
+	modif = ?&.complot+
 }
 
 ######################################################################################
@@ -38,7 +39,7 @@ event : complot_negatif
 {
 	start
 	perso = ?a
-	descr = ?a ne croit pas aux thÃ©ories du complot
+	descr = ?a ne croit pas aux théories du complot
 	cond = dislike(complot,?a)
 }
 
@@ -47,8 +48,8 @@ post : complot_negatif1
 	start
 	event = complot_negatif(?a)
 	type = publication(?a)
-	text = "ArrÃªtez de croire toutes ces soit disantes thÃ©ories complotistes que certaines personnes tourmentÃ©e inventent pour se rendre intÃ©ressant !"
-
+	text = "Arrêtez de croire toutes ces soit disantes théories complotistes que certaines personnes tourmentée inventent pour se rendre intéressant !"
+	modif = ?&.complot-
 }
 
 post : complot_negatif2
@@ -57,7 +58,7 @@ post : complot_negatif2
 	event = complot_negatif(?a)
 	type = publication(?a)
 	text = "Je ne crois pas aux extra-terrestre !"
-
+	modif = ?&.complot-
 }
 
 post : complot_negatif3
@@ -65,8 +66,8 @@ post : complot_negatif3
 	start
 	event = complot_negatif(?a)
 	type = publication(?a)
-	text = "Je ne crois pas aux thÃ©ories du complot illuminati !"
-
+	text = "Je ne crois pas aux théories du complot illuminati !"
+	modif = ?&.complot-
 }
 
 	

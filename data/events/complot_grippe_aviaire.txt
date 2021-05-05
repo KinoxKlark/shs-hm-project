@@ -1,0 +1,77 @@
+event : choppe_grippe_aviaire
+{
+	perso = ?a
+	descr = ?a  attrape la grippe aviaire
+	cond =  high(animaux,?a)
+}
+
+post : malade_grippe
+{
+	event = choppe_grippe_aviaire(?a)
+	type  = publication(?a)
+	text = "J'ai attrapé la grippe aviaire."
+	modifs = ?&.animaux-
+}
+
+post : malade_grippe1
+{
+	event = choppe_grippe_aviaire(?a)
+	type  = article("journalocal","Epidémie de grippe aviaire !", lac)
+	text = "La grippe aviaire sévit actuellement, plusieurs cas confirmé après avoir eu contact avec des canards, pigeons ou autres volatiles. Certaine cas plus grave ont abouti à une hospitalisation d'urgence ..."
+	modifs = ?&.animaux-
+}
+
+event : amis_grippe_aviaire
+{
+	perso = ?a, ?b 
+	descr = ?a a un amis/connaissance qui a attrapé la grippe aviaire  ?b .
+	cond =  [event(choppe_grippe_aviaire,?b),friend(?a,?b)]
+	modifs = ?a.animaux-
+}
+# Reaction face aux articles ----certains expliquent que c'est pa la faute des oiseaux, d'autres vont dénopncé l'état #et mensonges puis la personne qui a des amis qui ont eu la grippe va essayé de raisonné les autres ! 
+# trop loin...
+
+
+post : choque_grippe
+{
+	event = amis_grippe_aviaire(?a,?b)
+	type = publication(?a)
+	text = " J'ai un amis qui a attrapé la grippe aviaire ! "
+	modifs = ?&.animaux-,?a.lien.?b+
+}
+
+
+post : choque_grippe2
+{
+	event = amis_grippe_aviaire(?a,?b)
+	type = pub(hot)
+	text = "En avez-vous assez des excréments de pigeons sur vos balcons ou vos fenêtres ? Cela tombe bien, nous avons une offre exceptionnelle sur les pics anti-oiseaux toutes dimensions confondues !"
+	modifs = ?&.animaux-
+
+}
+
+event : complot_grippe
+{
+	perso = ?a
+	descr = ?a suspecte un complot derrière la grippe
+	cond = [high(complot,?a),saw(choque_grippe,?a,?x,?y)]
+	
+}
+post : complot_grippe1
+{
+	event = complot_grippe(?a)
+	type=publication(?a)
+	text = "Toutes ces histoires de grippe aviaire, je n'y crois pas ! Cela est un complot !"
+	modifs = ?&.complot+
+
+}
+
+post : complot_grippe2
+{
+	event = complot_grippe(?a)
+	type=article("nous-ne-sommes-pas-seul.ch","La grippe aviaire, un complot organisé par les grandes sociétés !",mystere)
+	text = "Depuis quelques jours, on nous signale des cas de contamination de la grippe aviaire. Nous avons des preuves qui laisseraient supposé que cela est un complot organisé par une société pharmaceutique dans le but de ..."
+	modifs = ?&.complot++
+}
+
+

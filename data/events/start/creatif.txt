@@ -1,0 +1,73 @@
+event : creatif_positif
+{
+	start
+	perso = ?a
+	descr = ?a est creatif
+	cond = like(creatif,?a)
+}
+
+post : creatif_positif1
+{
+	start
+	event = creatif_positif(?a)
+	type = photo(?a,turf)
+	text = "Nouvelle sculpture."
+	modif = ?&.creatif+
+}
+
+post : creatif_positif2
+{
+	start
+	event = creatif_positif(?a)
+	type = publication(?a)
+	text = "Ma prof de dessin était contente de moi aujourd'hui"
+	modif = ?&.creatif+
+}
+
+post : creatif_positif3
+{
+	start
+	event = creatif_positif(?a)
+	type = photo(?a,lac)
+	text = "Ma peinture de cet après-midi au bord du lac !"
+	modif = ?&.creatif+
+}
+
+######################################################################################
+
+event : creatif_negatif
+{
+	start
+	perso = ?a
+	descr = ?a n'est pas creatif
+	cond = dislike(creatif,?a)
+}
+
+post : creatif_negatif1
+{
+	start
+	event = creatif_negatif(?a)
+	type = publication(?a)
+	text = "Encore des peintures ridicules, j'aurai pu faire ça moi même !"
+	modif = ?&.creatif-
+}
+
+post : creatif_negatif2
+{
+	start
+	event = creatif_negatif(?a)
+	type = publication(?a)
+	text = "Je suis allé visité un musée dârt avec ma classe, quel ennuis !"
+	modif = ?&.creatif-
+}
+
+post : creatif_negatif3
+{
+	start
+	event = creatif_negatif(?a)
+	type = publication(?a)
+	text = "Je dois rendre un travail d'art pour demain, mais je n'ai pas d'idée, est-ce que quelqu'un peut m'aider ?"
+	modif = ?&.creatif-
+}
+
+	

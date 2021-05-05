@@ -1,0 +1,146 @@
+event : baladechien1
+{
+	perso = ?a 
+	descr = ?a va promener son chien
+	cond = [like(animaux,?a)]
+}
+
+post : balade_chien1
+{
+	event = baladechien1(?a)
+	type = publication(?a)
+	text = "Ptite promenad tranquilou avec mon chien! C'est le meilleur!"
+    modif = nature+
+}
+
+post : balade_chien1_2
+{
+    event = balade_chien1(?a)
+    type = localisation(?a, "Forêt de Martino")
+    modif = nature+
+}
+
+post : balade_chien1_3
+{
+    event = balade_chien1(?a)
+    type = photo(?a, boise)
+    text = "Un chien en forêt."
+    modif = nature+
+}
+
+# V2
+event : baladechien1_v2
+{
+	perso = ?b 
+	descr = ?b va promener son chien
+	cond = [event(baladechien1,?a), like(animaux,?b)]
+}
+
+post : balade_chien1_v2
+{
+	event = baladechien1_v2(?a)
+	type = publication(?a)
+	text = "Ptite promenad tranquilou avec mon chien! C'est le meilleur!"
+    modif = nature+
+}
+
+post : balade_chien1_2_v2
+{
+    event = balade_chien1_v2(?a)
+    type = localisation(?a, "Forêt de Martino")
+    modif = nature+
+}
+
+post : balade_chien1_3_v2
+{
+    event = balade_chien1_v2(?a)
+    type = photo(?a, boise)
+    text = "Un chien en forêt."
+    modif = nature+
+}
+
+# Rencontre
+
+event : baladechien2
+{
+	perso = ?a, ?b
+	descr = Le chien de ?a à attaqué celui de ?b
+	cond = [event(baladechien1,?a),event(baladechien1_v2,?b),low(respectueux,?a)]
+	modif = ?a.lien.?b--
+}
+
+post : balade_chien2
+{
+	event = baladechien2(?a,?b)
+	type = publication(?b)
+	text = "Le chien de ?a a attaque le mien. C'est du grand n'importe quoi!!!"
+}
+
+post : balade_chien2_2
+{
+    event = balade_chien2(?a,?b)
+    type = localisation(?b, "Vétérinaire Lacourtepatte")
+}
+
+# Peut-être faire des reactions à ce post etc et mettre des conditions qui vont faire que le gars porte plainte ou non.
+
+event : baladechien3
+{
+	perso = ?a, ?b
+	descr = ?b porte plainte contre ?a 
+	cond = [event(baladechien2,?a,?b), low(humour,?b) ]
+	modif = ?a.respectueux-
+}
+post : balade_chien3
+{
+	event = baladechien3(?a,?b)
+	type = publication(?b)
+	text = "?a à porté plaine pour l'accident de chien. Franchement y en à je vous jure..."
+    modif = ?a.lien.?b--
+}
+
+event : chien_deced
+{
+	perso = ?a 
+	descr = ?a doit faire piqué son chien 
+	cond = event(baladechien3,?a,?b)
+	modif = [?a.humour--, ?a.respectueux--, ?a.respectueux--]
+}
+
+post : chien_deced_1
+{
+    event = chien_deced(?a)
+    type = publication(?a)
+    text = "J'ai dû faire piquer mon chien finalement. :'("
+    modif = [animaux-, humour-]
+}
+
+post : chien_deced_2
+{
+    event = chien_deced(?a)
+    type = article("AmiDesAnimaux.com","De plus en plus de meurtre!")
+    text = "Le nombre de maître devant faire piquer leur chien est à la hausse. Bien triste constat pour..."
+    modif = [animaux-, humour-]
+}
+
+event : chien_deced_compation
+{
+	perso = ?a, ?b
+	descr = ?b réagit au décèd du chien de ?a 
+	cond = [saw(chien_deced_1, ?b,?a), friend(?a,?b)]
+	modif = [?a.humour--, ?a.respectueux--, ?a.respectueux--]
+}
+
+post : chien_deced_compation_1
+{
+    event=  chien_deced_compation(?a,?b)
+    type = partage(?b,?a)
+    text = "Oh non mon ami, c'est beaucoup trop triste :("
+    modif = [animaux-, ?&.lien.?b+]
+}
+
+
+
+# Suite ou il publie ça et dautres reagissent par exemple ...
+# D'autres gens peuvent intervenir etc...
+

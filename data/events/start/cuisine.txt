@@ -10,9 +10,9 @@ post : cuisine_positif1
 {
 	start
 	event = cuisine_positif(?a)
-	type = publication(?a)
-	text = "J'aime vraiment cuisiner ! Je cuisine d√®s que j'en ai le temps !"
-
+	type = photo(?a,hot)
+	text = "Petit g‚teau que j'ai fait en suivant la recette de ma grand-mËre."
+	modifs = ?&.cuisine+
 }
 
 post : cuisine_positif2
@@ -20,8 +20,8 @@ post : cuisine_positif2
 	start
 	event = cuisine_positif(?a)
 	type = publication(?a)
-	text = "J'aime bien recevoir des amis pour manger chez moi, car cel√† me fait cuisiner et j'adore √ßa !"
-
+	text = "J'aime bien recevoir des amis pour manger chez moi, car cel‡ me permet de tester des nouvelles recettes !"
+	modifs = ?&.cuisine+
 }
 
 post : cuisine_positif3
@@ -29,8 +29,8 @@ post : cuisine_positif3
 	start
 	event = cuisine_positif(?a)
 	type = publication(?a)
-	text = "Je ne suis peut-√™tre pas un grand chef √©toil√©, mais je cuisine avec le coeur et la passion."
-
+	text = "Je ne suis peut-Ítre pas un grand chef ÈtoilÈ, mais je cuisine avec le coeur et la passion."
+	modifs = ?&.cuisine+
 }
 
 ######################################################################################
@@ -48,8 +48,8 @@ post : cuisine_negatif1
 	start
 	event = cuisine_negatif(?a)
 	type = publication(?a)
-	text = "J'ai horreur de cuisiner !"
-
+	text = "Qui m'invite chez lui pour manger ? Je n'ai pas envie de cuisiner mais j'apporte le vin !"
+	modifs = ?&.cuisine-
 }
 
 post : cuisine_negatif2
@@ -57,8 +57,8 @@ post : cuisine_negatif2
 	start
 	event = cuisine_negatif(?a)
 	type = publication(?a)
-	text = "Je ne cuisine pas tr√®s bien, donc je pr√©f√®re manger au r√©staurant o√π achet√© des petits plats d√©j√† faits."
-
+	text = "Je prÈfËre manger au restaurant o˘ acheter des petits plats dÈj‡ faits plutÙt que perdre du temps en cuisine."
+	modifs = ?&.cuisine-
 }
 
 post : cuisine_negatif3
@@ -67,7 +67,7 @@ post : cuisine_negatif3
 	event = cuisine_negatif(?a)
 	type = publication(?a)
 	text = "La cuisine est une perte de temps. Il faut laisser les professionels s'en occuper"
-
+	modifs = ?&.cuisine-
 }
 
 	

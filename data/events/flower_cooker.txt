@@ -1,0 +1,158 @@
+
+event : achatfleurs
+{
+	perso = ?a
+	descr = ?a va acheter des fleurs
+	cond = [high(nature,?a) , high(creatif,?a)]
+}
+
+post : achat
+{
+	event = achatfleur(?a)
+	type  = publication(?a)
+	text = "Je suis allé voir les fleurs au magasin de fleurs, elles sont pas magnifiques !"
+	modifs = ?&.nature+
+}
+
+post : achat2
+{
+	event = achatfleur(?a)
+	type  = photo(?a,boise)
+	text = "Regardez ces fleurs, ne sont-elles pas magnifiques ?"
+	modifs =  ?&.nature+
+}
+
+post : achat3
+{
+	event = achatfleur(?a)
+	type  = publication(?a)
+	text = "J'ai acheté de belles fleurs aujourd'hui ! "
+	modifs = ?&.nature+
+}
+
+post : achat4
+{
+	event = achatfleur(?a)
+	type  = pub(boise)
+	text = "Réduction de 10% pour tout achat de fleurs supérieur à 100.- !"
+	modifs = ?&.nature++
+}
+
+post : achat5
+{
+	event = achatfleur(?a)
+	type  = pub(boise)
+	text = "Offre spéciale sur toutes les herbes aromatiques, deux plantes achetée= = une offerte !"
+	modifs = ?&.nature+
+}
+
+post : achat6
+{
+	event = achatfleur(?a)
+	type  = pub(boise)
+	text = "Marre des mauvaises herbes ? Achetez ce nouveau produits anti-mauvaises herbes ! Ultra-efficace même contre le liseron !"
+	modifs = ?&.nature--
+}
+post : achat7
+{
+	event = achatfleur(?a)
+	type  = article("Vive-la-nature.ch","Les pesticides, ce fléau !",boise)
+	text = "Actuellement, l'utilisation des pesticides connait une hausse considérable et ses composants sont loins d'être  en accord avec la nature..."
+	modifs = ?&.nature++
+}
+
+post : achat8
+{
+    event = achatfleur(?a)
+    type = localisation(?a, "Fleuriste")
+	modifs = ?&.nature+
+}
+
+# Suite des posts...
+
+# todo : faire un seul event ou non ?
+
+event : rencontrefleuriste 
+{
+	perso = ?a, ?b
+	descr = ?a rencontre ?b chez le fleuriste
+	cond = [event(achatfleurs,?a),event(achatfleurs,?b)]
+}
+
+post : photo_fleuriste
+{
+	event = rencontrefleuriste(?a,?b)
+	type  = photo(?a,boise)
+	text = " Petite photo avec une connaissance au magasin de fleurs. "
+	modifs = [?a.lien.?b+,?&.nature+]
+}
+event : rencontrefleuriste2
+{
+	perso = ?a, ?b
+	descr = ?a invite  ?b à manger et ce dernier accepte
+	cond = [event(rencontrefleuriste,?a,?b),
+			friend(?a,?b),
+			like(cuisine,?a),
+			high(curieux,?b)]
+}
+
+post : remerciement_invitation
+{
+	event = rencontrefleuriste2(?a,?b)
+	type  = partage(?b, ?a)
+	text = " Merci pour l'invitation à dinner ! "
+	modifs = [?a.lien.?b++]
+}
+
+# todo : Faire une suite ou il ne va pas au diner ...
+
+event : dinner
+{
+	perso = ?a, ?b
+	descr = ?b mange chez ?a
+	cond = [event(rencontrefleuriste2,?a,?b), high(respectueux,?b)]
+	modif = ?a.lien.?b++
+}
+
+# A suivre 
+post : dinner1
+{
+	event = dinner(?a,?b)
+	type  = publication(?a)
+	text = "Ce soir petit dinner entre amis, je me réjouis de tester ma nouvelle recette !"
+	modifs = ?&.cuisine+
+}
+
+post : dinner2
+{
+	event = dinner(?a,?b)
+	type  = publication(?b)
+	text = "Magnifique repas chez ?b ce soir ! " # todo : je sais plus si j'ai le droit à ça (me dire si ca marche pas)
+	modifs = ?&.cuisine+
+}
+
+
+post : dinner3
+{
+	event = dinner(?a,?b)
+	type  = article("cuisiner-la-courgette.ch","Préférez cuisiner pour bien manger.",boise)
+	text = "En plus de permettre de faire des économies, cuisiner soit même est en général plus sain et permet de varier et ..."
+	modifs = ?&.cuisine++
+}
+
+post : dinner4
+{
+	event = dinner(?a,?b)
+	type  = article("fast-food-force.ch","Ne perdez pas votre temps à cuisiner !",hot)
+	text = "Dans la société actuelle, il n'y a plus besoin de perdre du temps à cuisiner lorsque vous en perdez assez au travail. Il existe de nombreux restaurants autour de chez vous, mais aussi des fast-food de qualité qui évite toute perte de temps et ..."
+	modifs = ?&.cuisine--
+}
+# todo : Reaction des gens qui part sur une dénonciation de la viande des fast-food et la maltraitance des animaux p.ex. ...
+
+
+
+
+
+
+
+

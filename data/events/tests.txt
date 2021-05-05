@@ -1,0 +1,33 @@
+
+event : without_cond {
+    desc = "Un pont s'effondre qqpart"
+    conds = []
+}
+
+post : article1 {
+    event = without_cond()
+    type = article("Fait divers", "Effondrement d'un pont")
+    text = "Samedi le pont Reliemoi s'est effondré dans l'après midi. Heureusement aucune victime n'est a déplorer ..."
+}
+
+event : xxx {
+    cond = event(without_cond)
+}
+
+post : xxxxx {
+    event = xxx
+    type = article("lol", "article")
+    text = "C'est un test"
+}
+
+event : without2 {
+    perso = ?a
+    desc = "Sortie d'une piece de theatre avec ?a en acteur principal"
+    modifs = ?a.creatif+ # , ?b.creatif- <- Ceci devrait crashé, attention !
+}
+
+post : post1 {
+    event = without2(?a)
+    type = publication(?a)
+    text = "Hey! venez a ma nouvelle pièce de théatre!"
+}

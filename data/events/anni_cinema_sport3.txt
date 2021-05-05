@@ -1,0 +1,154 @@
+# Rajouter anni_ devant certain post peut-etre pas assez spécifique ?
+
+event : anni0 
+{
+	perso = ?a
+	descr = ?a a son anni
+	#cond = [love(respectueux,?a) , like(humour,?a), high(curieux,?a)] # opt (sacha?) peut-être trouvé un autre moyen ... je veux pas que tlm ait son anni en meme temps (idee prochaine histoire)
+    
+    cond = love(respectueux,?a)
+    
+}
+###### Posts
+
+event : invit_anni
+{
+	perso = ?a, ?b
+	descr = ?a invite ?b a son anni
+	cond = [event(anni0,?a), friend(?a,?b), high(culture,?b)] # peut-être enlever culture
+}
+# opt : Les deux suivants peut-être pas nécéssaire a 100% mais utile plus tard (remplacer ces events pas des conditions dans les futurs cond...)
+event : pas_invit_ami
+{
+	perso = ?a, ?b
+	descr = ?a n'invite pas ?b (connaissance) a son anni
+	cond = [event(anni0,?a), neutral(?a,?b), low(culture,?b)] # opt peut-être enlever culture
+}
+
+event : pas_invit_enemy # (todo sacha) Pour imaginer une suite ou un gars vient foutre la merde
+{
+	perso = ?a, ?b
+	descr = ?a n'invite pas ?b (enemy) a son anni 
+	cond = [event(anni0,?a),
+			enemy(?a,?b), 
+			low(culture,?b), # opt (=option)
+			hate(respectueux,?b)] 
+}
+############
+post : invit_envoi
+{
+	event = invit_anni(?a,?b)
+	type  = partage(?a => ?b)
+	text = " Salut, veux tu venir à mon anniversaire ? "
+	modifs = [?a.lien.?b+]
+}
+post : invit_merci
+{
+	event = invit_anni(?a,?b)
+	type  = partage(?b => ?a)
+	text = " Merci pour l'invitation, je viendrai probablement pour ton anniversaire ! "
+	modifs = [?a.lien.?b++]
+}
+### pas encore fait les modif des events plus haut...
+event : anni
+{
+	perso = ?a, ?x , ?y ,?z ,?intru
+	descr = ?a fete son anni avec x? , y? et ?z et ?intru s'incruste
+	cond = [event(invit_anni,?a,?x),
+			event(invit_anni,?a,?y),
+			event(invit_anni,?a,?z),
+			event(pas_invit_ami,?a,?intru),
+			friend(?x,?intru)]
+	
+}
+
+event : engeulade
+{
+	perso = ?a, ?x , ?intru
+	descr = ?a remarque que ?intru s'est incrusté et ?x l'a invité, il vire l'intru et se dispute avec ?x !
+	cond = [event(anni,?a,?x,?y,?z,?intru),
+			high(rationnel,?a)] # opt
+}
+
+post : engeulade1
+{
+	event = engeulade(?a,?x, ?intru)
+	type  = partage(?a => ?intru)
+	text = "Merci de ne plus jamais revenir sans invitation !"
+	modifs = [?a.lien.?intru--, ?a.lien.?x-, ?a.humour-,?&.lien.?intru--] # opt
+
+}
+
+post : engeulade2
+{
+	event = engeulade(?a,?x, ?intru)
+	type  = partage(?a => ?x)
+	text = "Merci de ne plus inviter quelqu'un à mon anniversaire sans ma permission !"
+	modifs = [?a.lien.?intru--, ?a.lien.?x-, ?a.humour- ,?&.lien.?x-- ] # opt
+
+}
+
+post : engeulade3
+{
+	event = engeulade(?a,?x, ?intru)
+	type  = partage(?intru => ?a)
+	text = "Je n'ai plus l'intention de te revoir !"
+	modifs = ?a.lien.?intru-
+
+}
+
+
+# Un peu de positif 
+
+# (Sacha) faire différentes suites ... p.ex en fct de quel post a été lu  par exemple..if saw(engeulade1 --> anni1) if saw(engeulade2) --> anni2
+# Ou sinon en fct de qui reste ou qui reste pas c'est pas mal...
+ 
+event : continue1
+{
+	perso = ?a, ?b
+	descr = La fete de ?a continue sans l'intru et sans la personne qui l'a invité 
+	cond = [event(anni,?a,?x,?y,?z,?intru), neutral(?a,?x)] #todo (sacha) faire un cas ou ils sont devenus ennemy ?
+}
+# A continuer ...
+
+event : continue2
+{
+	perso = ?a, ?x,?y,?z 
+	descr = La fete de ?a continue sans l'intru. ?a réconcilié avec ?x.
+	cond = [event(anni,?a,?x,?y,?z,?intru), friend(?a,?x)]
+	modif = ?a.lien.?x++
+}
+post : anni_cinema1
+{
+	event = continue2(?a,?x,?y,?z)
+	type  = publication(?z)
+	text = "Super le cinema ! Encore merci à ?a"
+	modifs = [?a.lien.?z+, ?z.cinema++]
+	
+}
+post : anni_cinema2
+{
+	event = continue2(?a,?x,?y,?z)
+	type  = publication(?y)
+	text = "Sympa le cinoche avec ?a!"
+	modifs = [?a.lien.?y+, ?z.cinema+]
+	
+}
+# TODO Continuer l'anni cool ? ...
+
+
+# Deuxième hess
+event : anni_intru_enemy1
+{
+	perso = ?a, ?b
+	descr = ?b s'incruste à l'anni de ?a pour mettre le bazard !
+	cond = [event(pas_invit_ami,?a,?b), saw(anni_cinema1,?b,?a,?x,?y,?z)]
+}
+
+event : anni_intru_enemy2
+{
+	perso = ?a, ?b
+	descr = ?b s'incruste à l'anni de ?a pour mettre le bazard !
+	cond = [event(pas_invit_ami,?a,?b), saw(anni_cinema2,?b,?a,?x,?y,?z)]
+}
+# Posts ...

@@ -1,0 +1,73 @@
+event : humour_positif
+{
+	start
+	perso = ?a
+	descr = ?a a de l'humour
+	cond = like(humour,?a)
+}
+
+post : humour_positif1
+{
+	start
+	event = humour_positif(?a)
+	type = publication(?a)
+	text = "Poisson d'avril !"
+	modif = ?&.humour+
+}
+
+post : humour_positif2
+{
+	start
+	event = humour_positif(?a)
+	type = publication(?a)
+	text = "Quelle est la femelle du hamster ? - L'Amsterdam"
+	modif = ?&.humour+
+}
+
+post : humour_positif3
+{
+	start
+	event = humour_positif(?a)
+	type = publication(?a)
+	text = "Que se fait un Schtroumpf quand il tombe ? - un Bleu"
+	modif = ?&.humour+
+}
+
+######################################################################################
+
+event : humour_negatif
+{
+	start
+	perso = ?a
+	descr = ?a n'a pas d'humour
+	cond = dislike(humour,?a)
+}
+
+post : humour_negatif1
+{
+	start
+	event = humour_negatif(?a)
+	type = photo(?a,street)
+	text = "J'aimerai bien savoir qui est le petit mâlin qui à collé ça sur ma porte pour lui dire un mot !"
+	modif = ?&.humour-
+}
+
+post : humour_negatif2
+{
+	start
+	event = humour_negatif(?a)
+	type = publication(?a)
+	text = "Le monde irait mieux si les gens étaient un peu plus sérieux !"
+	modif = ?&.humour-
+}
+
+post : humour_negatif3
+{
+	start
+	event = humour_negatif(?a)
+	type = publication(?a)
+	text = "Cet humoriste ... Bof bof"
+	modif = ?&.humour-
+}
+
+	

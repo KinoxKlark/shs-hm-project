@@ -1,0 +1,83 @@
+event : bordu1
+{
+	perso = ?a , ?b
+	descr = ?a propose à ?b d'aller au bordu
+	cond = [?a.nature > .5, ?a.lien.?b > .7]
+	modif = ?a.nature+
+}
+
+event : bordu2
+{
+	perso = ?a , ?b
+	descr = ?a et ?b vont au bordu ensemble.
+	cond = event(bordu1, ?a, ?b)
+	modif = [?a.lien.?b+, ?b.nature+]
+}
+
+post : bordu01
+{
+  event = bordu2(?a,?b)
+  type = publication(?a)
+  text = "?a publie une photo au bord d'un lac avec ?b"
+
+}
+
+post : bordu02
+{
+  event = bordu2(?a,?b)
+  type = publication(?b)
+  text = "?b publie une photo au bord d'un lac avec ?a"
+}
+
+# J'ai mis que l'obs a peu dans nature pour etre sur qu il est pas allé au bordu aussi pour l'instant ...j vais modif
+event : reaction_jalou_bordu01
+{
+	perso = ?obs, ?a , ?b
+	descr = ?obs est jaloux de ne pas avoir été invité au bordu par ?a
+	cond = [event(bordu2,?a,?b),saw(bordu01, ?obs, ?a), ?obs.rationnel < .5 , ?obs.lien.?a > .5 , ?obs.lien.?b < .5, ?obs.nature<.4]
+	modif = [?obs.lien.?b-- , ?obs.rationnel-]
+}
+
+event : reaction_jalou_bordu02
+{
+	perso = ?obs, ?a , ?b
+	descr = ?obs est jaloux de ne pas être allé au bordu avec ?b
+	cond = [event(bordu2,?a,?b), saw(bordu02, ?obs, ?b), ?obs.rationnel < .5 , ?obs.lien.?b > .5 , ?obs.lien.?a < .5, ?obs.nature<.4]
+	modif = [?obs.lien.?a-- , ?obs.rationnel-]
+}
+
+# Suite où il devient jaloux par exemple ou il s'enerve avec qq1 (un ou deux postes)
+
+
+# Note ici j'ai fait 2 différents en reaction de 2 posts différents mais similaires ...
+event : reaction_cool_bordu1
+{
+	perso = ?obs, ?a , ?b
+	descr = ?obs trouve ça cool la ballade au bordu de ?b et ?a
+	cond = [event(bordu2,?a,?b),saw(bordu01, ?obs,?a), ?obs.nature > .5 , ?obs.lien.?b > .5 , ?obs.lien.?a > .5]
+	modif = [?obs.lien.?a+ ,?obs.lien.?b+, ?obs.nature+]
+}
+
+event : reaction_cool_bordu2
+{
+	perso = ?obs, ?a , ?b
+	descr = ?obs trouve ça cool la ballade au bordu de ?a et ?b
+	cond = [event(bordu2,?a,?b),saw(bordu02, ?obs,?b), ?obs.nature > .5 , ?obs.lien.?b > .5 , ?obs.lien.?a > .5]
+	modif = [?obs.lien.?a+ ,?obs.lien.?b+, ?obs.nature+]
+}
+
+post : reaction_pour_bordu
+{
+	event = reaction_cool_bordu1(?obs,?a,?b)
+  	type = publication(?obs)
+  	text = "?obs aime la photos de ?a et ?b"
+
+}
+
+post : reaction_pour_bordu2
+{
+	event = reaction_cool_bordu2(?obs,?a,?b)
+  	type = publication(?obs)
+  	text = "?obs aime la photos de ?a et ?b"
+
+}

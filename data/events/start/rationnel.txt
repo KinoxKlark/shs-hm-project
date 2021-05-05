@@ -1,0 +1,73 @@
+event : rationnel_positif
+{
+	start
+	perso = ?a
+	descr = ?a est rationnel
+	cond = like(rationnel,?a)
+}
+
+post : rationnel_positif1
+{
+	start
+	event = rationnel_positif(?a)
+	type = publication(?a)
+	text = "Certaines personnes n'ont apparement pas les pieds sur terre..."
+	modif = ?&.rationnel+
+}
+
+post : rationnel_positif2
+{
+	start
+	event = rationnel_positif(?a)
+	type = publication(?a)
+	text = "Arrêtez de croire tout ce que vous lisez sur internet, cela me fait souvent rire !"
+	modif = ?&.rationnel+
+}
+
+post : rationnel_positif3
+{
+	start
+	event = rationnel_positif(?a)
+	type = publication(?a)
+	text = "Je crois que ce que je vois !"
+	modif = ?&.rationnel+
+}
+
+######################################################################################
+
+event : rationnel_negatif
+{
+	start
+	perso = ?a
+	descr = ?a n'est pas rationnel
+	cond = dislike(rationnel,?a)
+}
+
+post : rationnel_negatif1
+{
+	start
+	event = rationnel_negatif(?a)
+	type = publication(?a)
+	text = "Je pense qu'il est possible de guérir le cancer avec la pensée !"
+	modif = ?&.rationnel-
+}
+
+post : rationnel_negatif2
+{
+	start
+	event = rationnel_negatif(?a)
+	type = publication(?a)
+	text = "Il y a une sorte de connexion entre chacun de nous, une force invisible qui nous lient !"
+	modif = ?&.rationnel-
+}
+
+post : rationnel_negatif3
+{
+	start
+	event = rationnel_negatif(?a)
+	type = publication(?a)
+	text = "Est-il possible de faire le tour du monde à la nage ?"
+	modif = ?&.rationnel-
+}
+
+	
